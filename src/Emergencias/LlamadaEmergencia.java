@@ -333,9 +333,7 @@ public class LlamadaEmergencia extends JFrame {
         }
     }
 
-    /**
-     * Elemento para JComboBox de médicos responsables.
-     */
+    // Elemento para JComboBox de médicos responsables.
     private static class ResponsableItem {
         final int id;
         final String nombre;
