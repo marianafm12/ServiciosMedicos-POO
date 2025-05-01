@@ -1,0 +1,41 @@
+name: "Sincronizar ramas con main"
+
+# Se dispara cada vez que se haga push en main
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write   # Necesario para poder hacer push
+
+jobs:
+  sync-branches:
+    name: Fusionar main → ramas feature
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Clona todo el repositorio, con historial completo
+      - name: Checkout completo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # 2) Configura usuario para los commits automáticos
+      - name: Configurar Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # 3) Lista y actualiza cada rama feature/*
+      - name: Fusionar main en cada feature
+        run: |
+          for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/feature/*); do
+            echo "➡️ Procesando $branch..."
+            git checkout "$branch"
+            git merge origin/main --no-edit || {
+              echo "❗ Conflictos en $branch, se detiene el job"
+              exit 1
+            }
+            git push origin "$branch"
+          done
