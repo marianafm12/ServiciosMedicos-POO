@@ -11,7 +11,7 @@ public class NotificacionCitasFrame extends JFrame {
     private JLabel estadoLabel;
 
     public NotificacionCitasFrame(String fecha, String hora, String tipoServicio) {
-        setTitle("Notificación de Cita Disponible");
+        setTitle("Notificación de Citas Disponibles");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
