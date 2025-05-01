@@ -16,7 +16,7 @@ public class PlantillaJustificanteFrame extends JFrame {
     private JLabel errorLabel;
 
     public PlantillaJustificanteFrame() {
-        setTitle("Plantilla de Justificante Médico");
+        setTitle("Plantilla para Justificante Médico");
         setLayout(new GridLayout(12, 2));
         setSize(500, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

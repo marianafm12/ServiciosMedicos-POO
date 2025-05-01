@@ -6,7 +6,7 @@ import java.awt.*;
 public class PortadaFrame extends JFrame {
 
     public PortadaFrame() {
-        setTitle("UDLAP Servicios Médicos");
+        setTitle("Sistema de Servicios Médicos UDLAP");
         setSize(500, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
