@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class InicioFrame extends JFrame {
     public InicioFrame() {
-        setTitle("Generación de Justificantes Médicos");
+        setTitle("Generación para Justificantes Médicos");
         setSize(400, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
