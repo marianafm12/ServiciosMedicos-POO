@@ -17,7 +17,7 @@ public class AgendaCitaFrame extends JFrame {
     private static final String NO_EDITABLE = "No editable";
 
     public AgendaCitaFrame() {
-        setTitle("Agendar Cita");
+        setTitle("Agendar Citas");
         setSize(500, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
