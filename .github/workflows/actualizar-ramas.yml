@@ -1,40 +1,56 @@
-name: "Sincronizar ramas con main"
+# .github/workflows/sync-project-branches.yml
+name: "Sincronizar ramas de proyecto"
 
-# Se dispara cada vez que se haga push en main
+# Se dispara al hacer push a main o a dev
 on:
   push:
     branches:
       - main
+      - dev
 
 permissions:
-  contents: write   # Necesario para poder hacer push
+  contents: write   # para poder hacer push de vuelta
+
+env:
+  # Lista de ramas de proyecto a sincronizar
+  PROJECT_BRANCHES: >
+    BaseDeDatos
+    Consultas
+    Emergencias
+    GestionCitas
+    GestionEnfermedades
+    Inicio
+    Justificantes
+    Registro
+  # Rama origen (main o dev) que disparó el workflow
+  SOURCE_REF: ${{ github.ref_name }}
 
 jobs:
-  sync-branches:
-    name: Fusionar main → ramas feature
+  sync:
+    name: Fusionar ${{ env.SOURCE_REF }} → ramas de proyecto
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Clona todo el repositorio, con historial completo
+      # 1) Clonar con todo el historial
       - name: Checkout completo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 2) Configura usuario para los commits automáticos
+      # 2) Configurar identidad para los commits automáticos
       - name: Configurar Git
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # 3) Lista y actualiza cada rama feature/*
-      - name: Fusionar main en cada feature
+      # 3) Iterar sobre cada rama y fusionar
+      - name: Fusionar ${{ env.SOURCE_REF }} en cada rama de proyecto
         run: |
-          for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/feature/*); do
+          for branch in $PROJECT_BRANCHES; do
             echo "➡️ Procesando $branch..."
             git checkout "$branch"
-            git merge origin/main --no-edit || {
-              echo "❗ Conflictos en $branch, se detiene el job"
+            git merge origin/${SOURCE_REF} --no-edit || {
+              echo "❗ Conflictos en $branch al fusionar $SOURCE_REF"
               exit 1
             }
             git push origin "$branch"
