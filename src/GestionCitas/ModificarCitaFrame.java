@@ -15,7 +15,7 @@ public class ModificarCitaFrame extends JFrame {
     private JLabel errorLabel;
 
     public ModificarCitaFrame() {
-        setTitle("Modificar Citas");
+        setTitle("Modificar Cita");
         setSize(500, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
