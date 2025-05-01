@@ -1,1 +1,4 @@
+# Directorio de clases compiladas
+/bin/
+# Ficheros de clase Java
 *.class
