@@ -22,7 +22,7 @@ public class LlamadaEmergencia extends JFrame {
     private final JSpinner spinnerFechaIncidente;
 
     public LlamadaEmergencia() {
-        setTitle("Emergencias UDLAP");
+        setTitle("Registro de una llamada de emergencia UDLAP");
         setSize(550, 700);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new GridBagLayout());
