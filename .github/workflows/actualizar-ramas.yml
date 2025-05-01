@@ -9,7 +9,7 @@ on:
       - dev
 
 permissions:
-  contents: write   # para poder hacer push de vuelta
+  contents: write
 
 env:
   # Lista de ramas de proyecto a sincronizar
@@ -27,30 +27,28 @@ env:
 
 jobs:
   sync:
-    name: Fusionar ${{ env.SOURCE_REF }} → ramas de proyecto
+    # Aquí ya no usamos env.SOURCE_REF sino github.ref_name
+    name: Fusionar ${{ github.ref_name }} → ramas de proyecto
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Clonar con todo el historial
       - name: Checkout completo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 2) Configurar identidad para los commits automáticos
-      - name: Configurar Git
+      - name: Configurar identidad de Git
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # 3) Iterar sobre cada rama y fusionar
-      - name: Fusionar ${{ env.SOURCE_REF }} en cada rama de proyecto
+      - name: Fusionar ${{ github.ref_name }} en cada rama de proyecto
         run: |
           for branch in $PROJECT_BRANCHES; do
             echo "➡️ Procesando $branch..."
             git checkout "$branch"
             git merge origin/${SOURCE_REF} --no-edit || {
-              echo "❗ Conflictos en $branch al fusionar $SOURCE_REF"
+              echo "❗ Conflictos en $branch al fusionar ${SOURCE_REF}"
               exit 1
             }
             git push origin "$branch"
