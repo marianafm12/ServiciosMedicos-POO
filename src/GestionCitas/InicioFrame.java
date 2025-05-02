@@ -6,7 +6,7 @@ import java.awt.*;
 public class InicioFrame extends JFrame {
 
     public InicioFrame() {
-        setTitle("Gestión de Citas - Menú Principal");
+        setTitle("Gestión de Citas-Menú Principal");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
