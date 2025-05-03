@@ -24,12 +24,27 @@ public class NotificacionDAO {
         }
     }
 
-    // Devuelve todas las notificaciones de un paciente
+    // Agrega una notificación pendiente para un paciente
+    public static void agregarNotificacion(String idPaciente, String fecha, String hora, String servicio) throws SQLException {
+        try (Connection conn = ConexionSQLite.conectar()) {
+            String sql = "INSERT INTO Notificaciones (idPaciente, mensaje, estado, fecha, hora, servicio) VALUES (?, ?, 'pendiente', ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, idPaciente);
+                stmt.setString(2, "Se ha liberado una cita para " + servicio + " el " + fecha + " a las " + hora);
+                stmt.setString(3, fecha);
+                stmt.setString(4, hora);
+                stmt.setString(5, servicio);
+                stmt.executeUpdate();
+            }
+        }
+    }
+
+    // Devuelve todas las notificaciones pendientes de un paciente
     public static List<Notificacion> obtenerNotificaciones(int idPaciente) {
         List<Notificacion> notificaciones = new ArrayList<>();
 
         try (Connection conn = ConexionSQLite.conectar()) {
-            String sql = "SELECT * FROM Notificaciones WHERE idPaciente = ?";
+            String sql = "SELECT * FROM Notificaciones WHERE idPaciente = ? AND estado = 'pendiente'";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, idPaciente);
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -67,7 +82,7 @@ public class NotificacionDAO {
     // Verifica si un paciente tiene al menos una notificación pendiente
     public static boolean tieneNotificacionesNoLeidas(int idPaciente) {
         boolean tiene = false;
-        String sql = "SELECT COUNT(*) FROM Notificaciones WHERE idPaciente = ?";
+        String sql = "SELECT COUNT(*) FROM Notificaciones WHERE idPaciente = ? AND estado = 'pendiente'";
 
         try (Connection conn = ConexionSQLite.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -84,4 +99,17 @@ public class NotificacionDAO {
 
         return tiene;
     }
-}
+
+    // Marcar como atendida una notificación específica (opcional si no se elimina)
+    public static void marcarComoAtendida(int idNotificacion) {
+        try (Connection conn = ConexionSQLite.conectar()) {
+            String sql = "UPDATE Notificaciones SET estado = 'atendida' WHERE idNotificacion = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, idNotificacion);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al marcar como atendida: " + e.getMessage());
+        }
+    }
+} 

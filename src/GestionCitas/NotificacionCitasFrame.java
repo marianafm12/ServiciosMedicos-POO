@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class NotificacionCitasFrame extends JFrame {
     private JTextArea mensajeNotificacion;
@@ -72,9 +73,7 @@ public class NotificacionCitasFrame extends JFrame {
         rechazarCitaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                estadoLabel.setText("Has rechazado esta cita.");
-                aceptarCitaButton.setEnabled(false);
-                rechazarCitaButton.setEnabled(false);
+                rechazarCita();
             }
         });
 
@@ -82,9 +81,77 @@ public class NotificacionCitasFrame extends JFrame {
     }
 
     private void aceptarCita() {
+        final int MAX_REINTENTOS = 3;
+        int intentos = 0;
+        boolean exito = false;
+
+        while (intentos < MAX_REINTENTOS && !exito) {
+            try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+                conn.setAutoCommit(false);
+
+                // Insertar cita nueva
+                String sqlInsert = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
+                PreparedStatement stmt = conn.prepareStatement(sqlInsert);
+                stmt.setString(1, idPaciente);
+                stmt.setString(2, fecha);
+                stmt.setString(3, hora);
+                stmt.setString(4, servicio);
+                stmt.executeUpdate();
+
+                // Eliminar de ListaEspera
+                String sqlDelEspera = "DELETE FROM ListaEsperaCitas WHERE idPaciente = ? AND fechaDeseada = ? AND horaDeseada = ? AND servicio = ?";
+                PreparedStatement delStmt = conn.prepareStatement(sqlDelEspera);
+                delStmt.setString(1, idPaciente);
+                delStmt.setString(2, fecha);
+                delStmt.setString(3, hora);
+                delStmt.setString(4, servicio);
+                delStmt.executeUpdate();
+
+                // Marcar notificación como atendida
+                String sqlNotif = "UPDATE Notificaciones SET estado = 'atendida' WHERE idPaciente = ? AND fecha = ? AND hora = ? AND servicio = ?";
+                PreparedStatement upStmt = conn.prepareStatement(sqlNotif);
+                upStmt.setString(1, idPaciente);
+                upStmt.setString(2, fecha);
+                upStmt.setString(3, hora);
+                upStmt.setString(4, servicio);
+                upStmt.executeUpdate();
+
+                conn.commit();
+
+                estadoLabel.setForeground(new Color(0, 128, 0));
+                estadoLabel.setText("Cita agendada exitosamente.");
+                aceptarCitaButton.setEnabled(false);
+                rechazarCitaButton.setEnabled(false);
+                exito = true;
+
+            } catch (SQLException ex) {
+                if (ex.getMessage().contains("database is locked")) {
+                    intentos++;
+                    estadoLabel.setForeground(Color.RED);
+                    estadoLabel.setText("Reintentando... (" + intentos + "/" + MAX_REINTENTOS + ")");
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    estadoLabel.setForeground(Color.RED);
+                    estadoLabel.setText("Error al agendar: " + ex.getMessage());
+                    break;
+                }
+            }
+        }
+
+        if (!exito) {
+            estadoLabel.setForeground(Color.RED);
+            estadoLabel.setText("No se pudo agendar la cita. Intenta más tarde.");
+        }
+    }
+
+    private void rechazarCita() {
         try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            // Insertar la cita para el paciente
-            String sql = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
+            String sql = "UPDATE Notificaciones SET estado = 'rechazada' WHERE idPaciente = ? AND fecha = ? AND hora = ? AND servicio = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, idPaciente);
             stmt.setString(2, fecha);
@@ -92,18 +159,16 @@ public class NotificacionCitasFrame extends JFrame {
             stmt.setString(4, servicio);
             stmt.executeUpdate();
 
-            estadoLabel.setForeground(new Color(0, 128, 0));
-            estadoLabel.setText("Cita agendada exitosamente.");
+            estadoLabel.setText("Has rechazado esta cita.");
             aceptarCitaButton.setEnabled(false);
             rechazarCitaButton.setEnabled(false);
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             estadoLabel.setForeground(Color.RED);
-            estadoLabel.setText("Error al agendar: " + ex.getMessage());
+            estadoLabel.setText("Error al rechazar: " + ex.getMessage());
         }
     }
 
     public static void main(String[] args) {
-        // Para pruebas aisladas
         new NotificacionCitasFrame("2025-05-10", "14:00", "Consulta", "123456");
     }
 }
