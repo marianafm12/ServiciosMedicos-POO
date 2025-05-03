@@ -5,25 +5,57 @@ import java.awt.*;
 import java.io.File;
 import java.sql.*;
 
+import Inicio.MenuPacientesFrame;
+import Inicio.PortadaFrame;
+
 public class FormularioJustificanteFrame extends JFrame {
-    private JTextField motivoField, diasField;
-    private JButton subirArchivoBtn, siguienteBtn;
+    private JTextField idField, nombreField, motivoField;
+    private JComboBox<String> diaInicio, mesInicio, anioInicio;
+    private JComboBox<String> diaFin, mesFin, anioFin;
+    private JButton subirArchivoBtn, siguienteBtn, menuPrincipalBtn, regresarBtn;
     private File justificanteFile;
 
     public FormularioJustificanteFrame() {
         setTitle("Solicitud de Justificante Médico");
-        setSize(500, 300);
+        setSize(600, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        String[] dias = new String[31];
+        for (int i = 0; i < 31; i++) dias[i] = String.valueOf(i + 1);
+
+        String[] meses = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        String[] anios = new String[10];
+        for (int i = 0; i < 10; i++) anios[i] = String.valueOf(2020 + i);
+
+        JLabel idLabel = new JLabel("ID:");
+        idField = new JTextField(10);
+        JLabel nombreLabel = new JLabel("Nombre:");
+        nombreField = new JTextField(20);
+        nombreField.setEditable(false);
+
+        idField.addActionListener(e -> cargarNombreDesdeBD());
 
         JLabel motivoLabel = new JLabel("Motivo:");
-        JLabel diasLabel = new JLabel("Días de Ausencia:");
         motivoField = new JTextField(20);
-        diasField = new JTextField(20);
-        subirArchivoBtn = new JButton("Subir Justificante (PDF)");
+
+        JLabel inicioLabel = new JLabel("Inicio de Reposo:");
+        diaInicio = new JComboBox<>(dias);
+        mesInicio = new JComboBox<>(meses);
+        anioInicio = new JComboBox<>(anios);
+
+        JLabel finLabel = new JLabel("Fin de Reposo:");
+        diaFin = new JComboBox<>(dias);
+        mesFin = new JComboBox<>(meses);
+        anioFin = new JComboBox<>(anios);
+
+        subirArchivoBtn = new JButton("Subir receta (PDF)");
         siguienteBtn = new JButton("Siguiente");
+        menuPrincipalBtn = new JButton("Menú Principal");
+        regresarBtn = new JButton("Regresar");
 
         subirArchivoBtn.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -35,110 +67,75 @@ public class FormularioJustificanteFrame extends JFrame {
         });
 
         siguienteBtn.addActionListener(e -> {
+            String idTexto = idField.getText();
             String motivo = motivoField.getText();
-            String diasStr = diasField.getText();
 
-            if (motivo.isEmpty() || diasStr.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor completa todos los campos.");
+            if (idTexto.isEmpty() || motivo.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Por favor completa todos los campos obligatorios.");
                 return;
             }
 
-            try {
-                int diasAusencia = Integer.parseInt(diasStr);
+            new CorreosProfesoresFrame(1).setVisible(true); // Simulación con ID 1
+            dispose();
+        });
 
-                Connection conn = BaseDeDatos.ConexionSQLite.conectar();
+        menuPrincipalBtn.addActionListener(e -> {
+            new PortadaFrame().setVisible(true);
+            dispose();
+        });
 
-                // Crear tabla si no existe
-                String crearTabla = "CREATE TABLE IF NOT EXISTS SolicitudJustificantes (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "motivo TEXT NOT NULL, " +
-                        "dias_ausencia INTEGER NOT NULL)";
-                Statement stmt = conn.createStatement();
-                stmt.execute(crearTabla);
+        regresarBtn.addActionListener(e -> {
+            new MenuPacientesFrame().setVisible(true);
+            dispose();
+        });
 
-                // Insertar datos
-                String sql = "INSERT INTO SolicitudJustificantes (motivo, dias_ausencia) VALUES (?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                pstmt.setString(1, motivo);
-                pstmt.setInt(2, diasAusencia);
+        gbc.gridx = 0; gbc.gridy = 0; add(idLabel, gbc);
+        gbc.gridx = 1; add(idField, gbc);
 
-                int filas = pstmt.executeUpdate();
-                if (filas > 0) {
-                    ResultSet rs = pstmt.getGeneratedKeys();
-                    if (rs.next()) {
-                        int id = rs.getInt(1);
-                        JOptionPane.showMessageDialog(this,
-                                "Justificante registrado exitosamente.\nID generado: " + id,
-                                "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                        dispose();
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo guardar el justificante.");
-                }
+        gbc.gridx = 0; gbc.gridy = 1; add(nombreLabel, gbc);
+        gbc.gridx = 1; add(nombreField, gbc);
 
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "El campo de días debe ser un número entero.");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar en la base de datos:\n" + ex.getMessage());
-                ex.printStackTrace();
+        gbc.gridx = 0; gbc.gridy = 2; add(motivoLabel, gbc);
+        gbc.gridx = 1; add(motivoField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3; add(inicioLabel, gbc);
+        gbc.gridx = 1; add(diaInicio, gbc);
+        gbc.gridx = 2; add(mesInicio, gbc);
+        gbc.gridx = 3; add(anioInicio, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 4; add(finLabel, gbc);
+        gbc.gridx = 1; add(diaFin, gbc);
+        gbc.gridx = 2; add(mesFin, gbc);
+        gbc.gridx = 3; add(anioFin, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5; add(subirArchivoBtn, gbc);
+        gbc.gridx = 1; add(siguienteBtn, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 6; add(menuPrincipalBtn, gbc);
+        gbc.gridx = 1; add(regresarBtn, gbc);
+    }
+
+    private void cargarNombreDesdeBD() {
+        String idTexto = idField.getText();
+        if (idTexto.isEmpty()) return;
+
+        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+            String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, Integer.parseInt(idTexto));
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                String nombreCompleto = rs.getString("Nombre") + " " + rs.getString("ApellidoPaterno") + " " + rs.getString("ApellidoMaterno");
+                nombreField.setText(nombreCompleto);
+            } else {
+                JOptionPane.showMessageDialog(this, "ID no encontrado en InformacionAlumno.");
             }
-        });
-
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton menuPrincipalButton = new JButton("Menú Principal");
-        JButton regresarButton = new JButton("Regresar");
-        bottomPanel.add(menuPrincipalButton);
-        bottomPanel.add(regresarButton);
-
-        menuPrincipalButton.addActionListener(e -> {
-            new Inicio.PortadaFrame().setVisible(true);
-            dispose();
-        });
-
-        regresarButton.addActionListener(e -> {
-            new Inicio.MenuPacientesFrame().setVisible(true);
-            dispose();
-        });
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(10, 5, 5, 5);
-        JLabel titleLabel = new JLabel("Solicitud Justificantes Médicos UDLAP", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        add(titleLabel, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        add(motivoLabel, gbc);
-
-        gbc.gridx = 1;
-        add(motivoField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        add(diasLabel, gbc);
-
-        gbc.gridx = 1;
-        add(diasField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        add(subirArchivoBtn, gbc);
-
-        gbc.gridx = 1;
-        add(siguienteBtn, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        add(bottomPanel, gbc);
-
-        setVisible(true);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al buscar en la base de datos: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(FormularioJustificanteFrame::new);
+        SwingUtilities.invokeLater(() -> new FormularioJustificanteFrame().setVisible(true));
     }
 }
