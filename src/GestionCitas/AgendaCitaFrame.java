@@ -13,7 +13,6 @@ public class AgendaCitaFrame extends JFrame {
     private JComboBox<Integer> comboDia, comboAño;
     private JLabel errorLabel;
 
-    // Placeholders
     private static final String NO_EDITABLE = "No editable";
 
     public AgendaCitaFrame() {
@@ -35,7 +34,7 @@ public class AgendaCitaFrame extends JFrame {
         title.setFont(new Font("Arial", Font.BOLD, 18));
         add(title, gbc);
 
-        // Campo Nombre (no editable) con placeholder
+        // Campo Nombre
         gbc.gridwidth = 1;
         gbc.gridy++;
         gbc.gridx = 0;
@@ -46,7 +45,7 @@ public class AgendaCitaFrame extends JFrame {
         campoNombre.setForeground(Color.GRAY);
         add(campoNombre, gbc);
 
-        // Campo Apellidos (no editable) con placeholder
+        // Campo Apellidos
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Apellidos:"), gbc);
@@ -70,24 +69,23 @@ public class AgendaCitaFrame extends JFrame {
             }
         });
 
+        // Servicio
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Servicio:"), gbc);
         gbc.gridx = 1;
-        comboServicio = new JComboBox<>(new String[] { "Consulta", "Enfermería", "Examen Médico" });
+        comboServicio = new JComboBox<>(new String[]{"Consulta", "Enfermería", "Examen Médico"});
         add(comboServicio, gbc);
 
+        // Fecha
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Fecha de la Cita:"), gbc);
-        comboMes = new JComboBox<>(
-                new String[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" });
+        comboMes = new JComboBox<>(new String[]{"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"});
         comboDia = new JComboBox<>();
         comboAño = new JComboBox<>();
-        for (int i = 1; i <= 31; i++)
-            comboDia.addItem(i);
-        for (int i = LocalDate.now().getYear(); i <= 2030; i++)
-            comboAño.addItem(i);
+        for (int i = 1; i <= 31; i++) comboDia.addItem(i);
+        for (int i = LocalDate.now().getYear(); i <= 2030; i++) comboAño.addItem(i);
         JPanel fechaPanel = new JPanel();
         fechaPanel.add(comboDia);
         fechaPanel.add(comboMes);
@@ -95,19 +93,19 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 1;
         add(fechaPanel, gbc);
 
+        // Hora
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Hora de la Cita:"), gbc);
-        comboHora = new JComboBox<>(
-                new String[] { "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21" });
-        comboMinuto = new JComboBox<>(new String[] { "00", "30" });
+        comboHora = new JComboBox<>(new String[]{"08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"});
+        comboMinuto = new JComboBox<>(new String[]{"00", "30"});
         JPanel horaPanel = new JPanel();
         horaPanel.add(comboHora);
         horaPanel.add(comboMinuto);
         gbc.gridx = 1;
         add(horaPanel, gbc);
 
-        // Label de error
+        // Error label
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
@@ -129,7 +127,7 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 1;
         add(btnRegresar, gbc);
 
-        // Listeners de botones
+        // Eventos
         btnConfirmar.addActionListener(e -> validarYConfirmarCita());
         btnMenu.addActionListener(e -> {
             new Inicio.PortadaFrame().setVisible(true);
@@ -143,46 +141,33 @@ public class AgendaCitaFrame extends JFrame {
         setVisible(true);
     }
 
-    // Carga nombre y apellidos según el ID. Si existe registro, muestra datos en
-    // negro
     private void cargarDatosPersonales() {
         String idText = campoID.getText().trim();
-        if (idText.isEmpty()) {
-            // Si el usuario dejó vacío, mantenemos el placeholder
-            return;
-        }
+        if (idText.isEmpty()) return;
         try {
             int id = Integer.parseInt(idText);
             try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-                String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno "
-                        + "FROM InformacionAlumno WHERE ID = ?";
+                String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, id);
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
-                    // Registro encontrado: mostramos datos en negro
                     campoNombre.setText(rs.getString("Nombre"));
                     campoNombre.setForeground(Color.BLACK);
-                    campoApellidos.setText(
-                            rs.getString("ApellidoPaterno") + " " + rs.getString("ApellidoMaterno"));
+                    campoApellidos.setText(rs.getString("ApellidoPaterno") + " " + rs.getString("ApellidoMaterno"));
                     campoApellidos.setForeground(Color.BLACK);
                 } else {
-                    // Sin registro: restauramos placeholder
                     campoNombre.setText("ID inválido");
                     campoNombre.setForeground(Color.GRAY);
                     campoApellidos.setText("ID inválido");
                     campoApellidos.setForeground(Color.GRAY);
                 }
             }
-        } catch (NumberFormatException ex) {
-            // ID inválido: placeholder de nuevo
+        } catch (Exception ex) {
             campoNombre.setText("ID inválido");
             campoNombre.setForeground(Color.GRAY);
             campoApellidos.setText("ID inválido");
             campoApellidos.setForeground(Color.GRAY);
-        } catch (SQLException ex) {
-            System.err.println("Error al cargar datos personales: " + ex.getMessage());
-            // En caso de error DB, también podríamos restaurar placeholder si se desea
         }
     }
 
@@ -208,27 +193,39 @@ public class AgendaCitaFrame extends JFrame {
         String horaFinal = hora + ":" + minuto;
 
         try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+            // Verifica disponibilidad
             String sqlOcupado = "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=?";
-            PreparedStatement checkGlobal = conn.prepareStatement(sqlOcupado);
-            checkGlobal.setString(1, fecha);
-            checkGlobal.setString(2, horaFinal);
-            checkGlobal.setString(3, servicio);
-            ResultSet rsGlobal = checkGlobal.executeQuery();
-            if (rsGlobal.next() && rsGlobal.getInt(1) > 0) {
-                errorLabel.setText("Ese horario ya está ocupado para el servicio seleccionado.");
+            PreparedStatement checkStmt = conn.prepareStatement(sqlOcupado);
+            checkStmt.setString(1, fecha);
+            checkStmt.setString(2, horaFinal);
+            checkStmt.setString(3, servicio);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                int opcion = JOptionPane.showConfirmDialog(this,
+                        "La cita está ocupada. ¿Deseas registrarte en la lista de espera?",
+                        "Horario ocupado",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (opcion == JOptionPane.YES_OPTION) {
+                    ListaEsperaDAO.registrarEnEspera(id, fecha, horaFinal, servicio);
+                    errorLabel.setForeground(Color.ORANGE);
+                    errorLabel.setText("Registrado en lista de espera.");
+                }
                 return;
             }
 
+            // Revisa duplicado
             String sqlDup = "SELECT COUNT(*) FROM CitasMedicas WHERE idPaciente=? AND servicio=?";
-            PreparedStatement checkServ = conn.prepareStatement(sqlDup);
-            checkServ.setString(1, id);
-            checkServ.setString(2, servicio);
-            ResultSet rsServ = checkServ.executeQuery();
-            if (rsServ.next() && rsServ.getInt(1) > 0) {
-                errorLabel.setText("Ya tiene una cita agendada para este servicio.");
+            PreparedStatement dupStmt = conn.prepareStatement(sqlDup);
+            dupStmt.setString(1, id);
+            dupStmt.setString(2, servicio);
+            ResultSet rsDup = dupStmt.executeQuery();
+            if (rsDup.next() && rsDup.getInt(1) > 0) {
+                errorLabel.setText("Ya tienes una cita para este servicio.");
                 return;
             }
 
+            // Inserta nueva cita
             String sqlInsert = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
             PreparedStatement stmt = conn.prepareStatement(sqlInsert);
             stmt.setString(1, id);
@@ -238,11 +235,15 @@ public class AgendaCitaFrame extends JFrame {
             stmt.executeUpdate();
 
             errorLabel.setForeground(Color.GREEN);
-            errorLabel.setText("Cita agendada con éxito.");
-
+            errorLabel.setText("Cita agendada exitosamente.");
         } catch (Exception ex) {
             errorLabel.setForeground(Color.RED);
             errorLabel.setText("Error: " + ex.getMessage());
         }
+    }
+
+
+    public static void main(String[] args) {
+        new AgendaCitaFrame();
     }
 }

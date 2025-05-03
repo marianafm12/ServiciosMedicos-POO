@@ -123,9 +123,11 @@ public class LoginPacientesFrame extends JFrame {
                         stmt.setString(2, password);
                         try (ResultSet rs = stmt.executeQuery()) {
                             if (rs.next()) {
+                                SesionUsuario.iniciarSesion(id);  // <- NUEVO
                                 new MenuPacientesFrame();
                                 dispose();
-                            } else {
+                            }
+                             else {
                                 JOptionPane.showMessageDialog(this,
                                         "Credenciales incorrectas",
                                         "Error", JOptionPane.ERROR_MESSAGE);
