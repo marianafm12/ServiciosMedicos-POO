@@ -1,11 +1,12 @@
 package Inicio;
 
-import GestionCitas.NotificacionDAO; // ← Importación necesaria
+import GestionCitas.NotificacionDAO;
+import GestionCitas.NotificacionCitasFrame;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-
+import java.util.List;
 
 public class MenuPacientesFrame extends JFrame {
 
@@ -24,8 +25,7 @@ public class MenuPacientesFrame extends JFrame {
         setSize(600, 300);
         setLocationRelativeTo(null);
 
-        // Verificar si el paciente tiene notificaciones reales
-        int idPaciente = SesionUsuario.getPacienteActual(); // Clase utilitaria
+        int idPaciente = SesionUsuario.getPacienteActual();
         boolean tieneNotif = NotificacionDAO.tieneNotificacionesNoLeidas(idPaciente);
         if (tieneNotif) {
             hasNewNotification = true;
@@ -35,7 +35,6 @@ public class MenuPacientesFrame extends JFrame {
         setVisible(true);
     }
 
-    /** Carga los iconos de la campana desde el classpath */
     private void loadIcons() {
         URL u1 = getClass().getResource("/icons/bell.png");
         URL u2 = getClass().getResource("/icons/bell_new.png");
@@ -54,7 +53,6 @@ public class MenuPacientesFrame extends JFrame {
         iconNew = new ImageIcon(img2);
     }
 
-    /** Barra superior con título centrado y campana a la derecha */
     private void initToolbar() {
         JPanel toolbar = new JPanel(new GridBagLayout());
         toolbar.setBackground(new Color(245, 245, 245));
@@ -62,7 +60,6 @@ public class MenuPacientesFrame extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // Título
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
@@ -73,7 +70,6 @@ public class MenuPacientesFrame extends JFrame {
         title.setFont(new Font("Arial", Font.BOLD, 16));
         toolbar.add(title, gbc);
 
-        // Botón campana
         gbc.gridx = 1;
         gbc.weightx = 0.0;
         gbc.anchor = GridBagConstraints.EAST;
@@ -85,22 +81,35 @@ public class MenuPacientesFrame extends JFrame {
         notificationButton.setFocusPainted(false);
         notificationButton.setContentAreaFilled(false);
         notificationButton.setBorderPainted(false);
-        notificationButton.addActionListener(e -> {
-            hasNewNotification = false;
-            notificationButton.setIcon(iconDefault);
+        notificationButton.addActionListener(e -> mostrarNotificaciones());
+
+        toolbar.add(notificationButton, gbc);
+        add(toolbar, BorderLayout.NORTH);
+    }
+
+    private void mostrarNotificaciones() {
+        int idPaciente = SesionUsuario.getPacienteActual();
+        List<NotificacionDAO.Notificacion> notificaciones = NotificacionDAO.obtenerNotificaciones(idPaciente);
+
+        if (notificaciones.isEmpty()) {
             JOptionPane.showMessageDialog(
                 this,
                 "No hay nuevas notificaciones.",
                 "Notificaciones",
                 JOptionPane.INFORMATION_MESSAGE
             );
-        });
+            notificationButton.setIcon(iconDefault);
+            return;
+        }
 
-        toolbar.add(notificationButton, gbc);
-        add(toolbar, BorderLayout.NORTH);
+        for (NotificacionDAO.Notificacion notif : notificaciones) {
+            new NotificacionCitasFrame(notif.fecha, notif.hora, notif.servicio, String.valueOf(notif.idPaciente));
+        }
+
+        hasNewNotification = false;
+        notificationButton.setIcon(iconDefault);
     }
 
-    /** Panel central con 4 botones principales */
     private void initCenterButtons() {
         JPanel center = new JPanel(new GridLayout(2, 2, 10, 10));
         center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));

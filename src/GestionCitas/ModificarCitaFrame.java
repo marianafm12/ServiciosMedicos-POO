@@ -96,7 +96,20 @@ public class ModificarCitaFrame extends JFrame {
 
         gbc.gridy++;
         JButton btnCancelar = new JButton("Cancelar Cita");
-        btnCancelar.addActionListener(e -> cancelarCita());
+        btnCancelar.addActionListener(e -> {
+            String seleccion = (String) comboCitas.getSelectedItem();
+            if (seleccion == null) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar una cita para cancelar.");
+                return;
+            }
+
+            try {
+                int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
+                cancelarCita(idCita);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Formato de cita inválido.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
         add(btnCancelar, gbc);
 
         gbc.gridy++;
@@ -145,7 +158,6 @@ public class ModificarCitaFrame extends JFrame {
         String nuevaHora = hora + ":" + minuto;
 
         try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            // Verificar si hay cita existente en ese horario
             String checkSql = "SELECT COUNT(*) FROM CitasMedicas WHERE fecha = ? AND hora = ? AND servicio = ? AND idCita != ?";
             PreparedStatement checkStmt = conn.prepareStatement(checkSql);
             checkStmt.setString(1, nuevaFecha);
@@ -159,7 +171,6 @@ public class ModificarCitaFrame extends JFrame {
                 return;
             }
 
-            // Actualizar cita
             String sql = "UPDATE CitasMedicas SET fecha = ?, hora = ?, servicio = ? WHERE idCita = ? AND idPaciente = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, nuevaFecha);
@@ -169,8 +180,8 @@ public class ModificarCitaFrame extends JFrame {
             stmt.setString(5, idPaciente);
             stmt.executeUpdate();
 
-            // Notificar a la lista de espera si existiera
-            NotificadorListaEspera.notificarDisponibilidad(nuevaFecha, nuevaHora, servicio);
+            ListaEsperaDAO.generarNotificacionParaListaEspera(nuevaFecha, nuevaHora, servicio);
+
 
             errorLabel.setForeground(Color.GREEN);
             errorLabel.setText("Cita modificada correctamente.");
@@ -179,36 +190,66 @@ public class ModificarCitaFrame extends JFrame {
         }
     }
 
-    private void cancelarCita() {
-        String seleccion = (String) comboCitas.getSelectedItem();
-        if (seleccion == null) return;
+    private void cancelarCita(int idCita) {
+        final int MAX_REINTENTOS = 3;
+        int intentos = 0;
+        boolean completado = false;
 
-        int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
+        String fecha = "";
+        String hora = "";
+        String servicio = "";
 
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            String citaSql = "SELECT fecha, hora, servicio FROM CitasMedicas WHERE idCita = ?";
-            PreparedStatement citaStmt = conn.prepareStatement(citaSql);
-            citaStmt.setInt(1, idCita);
-            ResultSet rs = citaStmt.executeQuery();
-            if (!rs.next()) return;
+        while (intentos < MAX_REINTENTOS && !completado) {
+            try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+                String consulta = "SELECT fecha, hora, servicio FROM CitasMedicas WHERE idCita = ?";
+                try (PreparedStatement stmtConsulta = conn.prepareStatement(consulta)) {
+                    stmtConsulta.setInt(1, idCita);
+                    ResultSet rs = stmtConsulta.executeQuery();
+                    if (rs.next()) {
+                        fecha = rs.getString("fecha");
+                        hora = rs.getString("hora");
+                        servicio = rs.getString("servicio");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Cita no encontrada.");
+                        return;
+                    }
+                }
 
-            String fecha = rs.getString("fecha");
-            String hora = rs.getString("hora");
-            String servicio = rs.getString("servicio");
+                String sql = "DELETE FROM CitasMedicas WHERE idCita = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, idCita);
+                    stmt.executeUpdate();
+                }
 
-            String deleteSql = "DELETE FROM CitasMedicas WHERE idCita = ?";
-            PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
-            deleteStmt.setInt(1, idCita);
-            deleteStmt.executeUpdate();
+                ListaEsperaDAO.generarNotificacionParaListaEspera(fecha, hora, servicio);
 
-            NotificadorListaEspera.notificarDisponibilidad(fecha, hora, servicio);
 
-            errorLabel.setForeground(Color.GREEN);
-            errorLabel.setText("Cita cancelada exitosamente.");
-            comboCitas.removeItem(seleccion);
-        } catch (Exception ex) {
-            errorLabel.setForeground(Color.RED);
-            errorLabel.setText("Error: " + ex.getMessage());
+                completado = true;
+                JOptionPane.showMessageDialog(this, "Cita cancelada correctamente.");
+                cargarCitas();
+
+            } catch (SQLException ex) {
+                if (ex.getMessage().contains("database is locked")) {
+                    intentos++;
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Error al cancelar cita: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+            }
+        }
+
+        if (!completado) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo cancelar la cita. Intenta más tarde.",
+                    "Advertencia", JOptionPane.WARNING_MESSAGE);
         }
     }
 

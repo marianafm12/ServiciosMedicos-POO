@@ -26,7 +26,6 @@ public class AgendaCitaFrame extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Título
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -34,7 +33,6 @@ public class AgendaCitaFrame extends JFrame {
         title.setFont(new Font("Arial", Font.BOLD, 18));
         add(title, gbc);
 
-        // Campo Nombre
         gbc.gridwidth = 1;
         gbc.gridy++;
         gbc.gridx = 0;
@@ -45,7 +43,6 @@ public class AgendaCitaFrame extends JFrame {
         campoNombre.setForeground(Color.GRAY);
         add(campoNombre, gbc);
 
-        // Campo Apellidos
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Apellidos:"), gbc);
@@ -55,7 +52,6 @@ public class AgendaCitaFrame extends JFrame {
         campoApellidos.setForeground(Color.GRAY);
         add(campoApellidos, gbc);
 
-        // Campo ID
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("ID:"), gbc);
@@ -69,7 +65,6 @@ public class AgendaCitaFrame extends JFrame {
             }
         });
 
-        // Servicio
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Servicio:"), gbc);
@@ -77,7 +72,6 @@ public class AgendaCitaFrame extends JFrame {
         comboServicio = new JComboBox<>(new String[]{"Consulta", "Enfermería", "Examen Médico"});
         add(comboServicio, gbc);
 
-        // Fecha
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Fecha de la Cita:"), gbc);
@@ -93,7 +87,6 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 1;
         add(fechaPanel, gbc);
 
-        // Hora
         gbc.gridy++;
         gbc.gridx = 0;
         add(new JLabel("Hora de la Cita:"), gbc);
@@ -105,7 +98,6 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 1;
         add(horaPanel, gbc);
 
-        // Error label
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
@@ -113,7 +105,6 @@ public class AgendaCitaFrame extends JFrame {
         errorLabel.setForeground(Color.RED);
         add(errorLabel, gbc);
 
-        // Botones
         gbc.gridy++;
         JButton btnConfirmar = new JButton("Confirmar Cita");
         add(btnConfirmar, gbc);
@@ -127,7 +118,6 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 1;
         add(btnRegresar, gbc);
 
-        // Eventos
         btnConfirmar.addActionListener(e -> validarYConfirmarCita());
         btnMenu.addActionListener(e -> {
             new Inicio.PortadaFrame().setVisible(true);
@@ -139,6 +129,10 @@ public class AgendaCitaFrame extends JFrame {
         });
 
         setVisible(true);
+    }
+
+    private boolean validarSesionActiva(String idCampo) {
+        return idCampo.equals(String.valueOf(Inicio.SesionUsuario.getPacienteActual()));
     }
 
     private void cargarDatosPersonales() {
@@ -161,6 +155,7 @@ public class AgendaCitaFrame extends JFrame {
                     campoNombre.setForeground(Color.GRAY);
                     campoApellidos.setText("ID inválido");
                     campoApellidos.setForeground(Color.GRAY);
+                    System.out.println("[ERROR] ID inválido - no encontrado en base de datos.");
                 }
             }
         } catch (Exception ex) {
@@ -168,11 +163,19 @@ public class AgendaCitaFrame extends JFrame {
             campoNombre.setForeground(Color.GRAY);
             campoApellidos.setText("ID inválido");
             campoApellidos.setForeground(Color.GRAY);
+            System.out.println("[ERROR] ID inválido - excepción al consultar: " + ex.getMessage());
         }
     }
 
     private void validarYConfirmarCita() {
         String id = campoID.getText().trim();
+
+        if (!validarSesionActiva(id)) {
+            errorLabel.setText("Error: El ID no coincide con el usuario en sesión.");
+            System.out.println("[ERROR] ID ingresado no coincide con sesión activa.");
+            return;
+        }
+
         String servicio = (String) comboServicio.getSelectedItem();
         int dia = (int) comboDia.getSelectedItem();
         int mes = comboMes.getSelectedIndex() + 1;
@@ -182,10 +185,12 @@ public class AgendaCitaFrame extends JFrame {
 
         if (!ValidacionesCita.esIdValido(id)) {
             errorLabel.setText("ID inválido (solo números)");
+            System.out.println("[ERROR] ID inválido - caracteres no permitidos.");
             return;
         }
         if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
             errorLabel.setText("Fecha inválida (debe ser futura)");
+            System.out.println("[ERROR] Fecha inválida - no es futura.");
             return;
         }
 
@@ -193,28 +198,35 @@ public class AgendaCitaFrame extends JFrame {
         String horaFinal = hora + ":" + minuto;
 
         try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            // Verifica disponibilidad
             String sqlOcupado = "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=?";
             PreparedStatement checkStmt = conn.prepareStatement(sqlOcupado);
             checkStmt.setString(1, fecha);
             checkStmt.setString(2, horaFinal);
             checkStmt.setString(3, servicio);
             ResultSet rs = checkStmt.executeQuery();
+
             if (rs.next() && rs.getInt(1) > 0) {
+                conn.close();
                 int opcion = JOptionPane.showConfirmDialog(this,
                         "La cita está ocupada. ¿Deseas registrarte en la lista de espera?",
                         "Horario ocupado",
                         JOptionPane.YES_NO_OPTION);
 
                 if (opcion == JOptionPane.YES_OPTION) {
-                    ListaEsperaDAO.registrarEnEspera(id, fecha, horaFinal, servicio);
-                    errorLabel.setForeground(Color.ORANGE);
-                    errorLabel.setText("Registrado en lista de espera.");
+                    try {
+                        ListaEsperaDAO.registrarEnEspera(id, fecha, horaFinal, servicio);
+                        errorLabel.setForeground(Color.ORANGE);
+                        errorLabel.setText("Registrado en lista de espera.");
+                        System.out.println("[INFO] Paciente registrado en lista de espera para " + fecha + " " + horaFinal);
+                    } catch (SQLException ex) {
+                        errorLabel.setForeground(Color.RED);
+                        errorLabel.setText("Error: No se pudo registrar en lista de espera tras varios intentos.");
+                        System.err.println("[ERROR] Registro en lista de espera fallido: " + ex.getMessage());
+                    }
                 }
                 return;
             }
 
-            // Revisa duplicado
             String sqlDup = "SELECT COUNT(*) FROM CitasMedicas WHERE idPaciente=? AND servicio=?";
             PreparedStatement dupStmt = conn.prepareStatement(sqlDup);
             dupStmt.setString(1, id);
@@ -222,10 +234,10 @@ public class AgendaCitaFrame extends JFrame {
             ResultSet rsDup = dupStmt.executeQuery();
             if (rsDup.next() && rsDup.getInt(1) > 0) {
                 errorLabel.setText("Ya tienes una cita para este servicio.");
+                System.out.println("[ERROR] Cita duplicada - paciente ya tiene cita para servicio " + servicio);
                 return;
             }
 
-            // Inserta nueva cita
             String sqlInsert = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
             PreparedStatement stmt = conn.prepareStatement(sqlInsert);
             stmt.setString(1, id);
@@ -236,12 +248,14 @@ public class AgendaCitaFrame extends JFrame {
 
             errorLabel.setForeground(Color.GREEN);
             errorLabel.setText("Cita agendada exitosamente.");
+            System.out.println("[INFO] Cita registrada correctamente para paciente " + id);
+
         } catch (Exception ex) {
             errorLabel.setForeground(Color.RED);
             errorLabel.setText("Error: " + ex.getMessage());
+            System.err.println("[ERROR] Excepción al registrar cita: " + ex.getMessage());
         }
     }
-
 
     public static void main(String[] args) {
         new AgendaCitaFrame();
