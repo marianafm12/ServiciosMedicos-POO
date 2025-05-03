@@ -4,16 +4,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class NotificacionCitasFrame extends JFrame {
     private JTextArea mensajeNotificacion;
     private JButton aceptarCitaButton, rechazarCitaButton;
     private JLabel estadoLabel;
 
-    public NotificacionCitasFrame(String fecha, String hora, String tipoServicio) {
-        setTitle("Notificación de Citas Disponibles");
+    private final String fecha;
+    private final String hora;
+    private final String servicio;
+    private final String idPaciente;
+
+    public NotificacionCitasFrame(String fecha, String hora, String servicio, String idPaciente) {
+        this.fecha = fecha;
+        this.hora = hora;
+        this.servicio = servicio;
+        this.idPaciente = idPaciente;
+
+        setTitle("Notificación de Cita Disponible");
         setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new GridBagLayout());
         setLocationRelativeTo(null);
 
@@ -21,52 +33,46 @@ public class NotificacionCitasFrame extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Mensaje de notificación
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        mensajeNotificacion = new JTextArea("Se ha liberado una cita: \n" +
-                "Fecha: " + fecha + "\n" +
-                "Hora: " + hora + "\n" +
-                "Servicio: " + tipoServicio + "\n" +
-                "¿Desea agendar esta cita?");
+        mensajeNotificacion = new JTextArea("Se ha liberado una cita:\n"
+                + "Fecha: " + fecha + "\n"
+                + "Hora: " + hora + "\n"
+                + "Servicio: " + servicio + "\n\n"
+                + "¿Desea agendar esta cita?");
         mensajeNotificacion.setEditable(false);
+        mensajeNotificacion.setLineWrap(true);
+        mensajeNotificacion.setWrapStyleWord(true);
         add(mensajeNotificacion, gbc);
 
-        // Botón para aceptar la cita
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        aceptarCitaButton = new JButton("Aceptar Cita");
+        aceptarCitaButton = new JButton("Aceptar");
         add(aceptarCitaButton, gbc);
 
-        // Botón para rechazar la cita
         gbc.gridx = 1;
-        rechazarCitaButton = new JButton("Rechazar Cita");
+        rechazarCitaButton = new JButton("Rechazar");
         add(rechazarCitaButton, gbc);
 
-        // Etiqueta de estado
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
         estadoLabel = new JLabel("");
-        estadoLabel.setForeground(Color.RED);
+        estadoLabel.setForeground(Color.BLUE);
         add(estadoLabel, gbc);
 
-        // Acción al aceptar la cita
         aceptarCitaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                estadoLabel.setText("Cita confirmada. Se ha actualizado el sistema.");
-                aceptarCitaButton.setEnabled(false);
-                rechazarCitaButton.setEnabled(false);
+                aceptarCita();
             }
         });
 
-        // Acción al rechazar la cita
         rechazarCitaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                estadoLabel.setText("Cita rechazada. El horario sigue disponible para otros pacientes.");
+                estadoLabel.setText("Has rechazado esta cita.");
                 aceptarCitaButton.setEnabled(false);
                 rechazarCitaButton.setEnabled(false);
             }
@@ -75,7 +81,29 @@ public class NotificacionCitasFrame extends JFrame {
         setVisible(true);
     }
 
+    private void aceptarCita() {
+        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+            // Insertar la cita para el paciente
+            String sql = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, idPaciente);
+            stmt.setString(2, fecha);
+            stmt.setString(3, hora);
+            stmt.setString(4, servicio);
+            stmt.executeUpdate();
+
+            estadoLabel.setForeground(new Color(0, 128, 0));
+            estadoLabel.setText("Cita agendada exitosamente.");
+            aceptarCitaButton.setEnabled(false);
+            rechazarCitaButton.setEnabled(false);
+        } catch (Exception ex) {
+            estadoLabel.setForeground(Color.RED);
+            estadoLabel.setText("Error al agendar: " + ex.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
-        new NotificacionCitasFrame("10/04/2025", "14:00", "Consulta General");
+        // Para pruebas aisladas
+        new NotificacionCitasFrame("2025-05-10", "14:00", "Consulta", "123456");
     }
 }
