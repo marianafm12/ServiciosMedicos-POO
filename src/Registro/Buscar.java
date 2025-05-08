@@ -66,7 +66,7 @@ public class Buscar implements ActionListener {
                     campos[3].setText(rs.getString("ApellidoMaterno"));
                     campos[4].setText(rs.getString("Correo"));
 
-                    // Datos médicos desde Registro
+                    // Datos médicos desde Registros
                     campos[5].setText(String.valueOf(rs.getInt("Edad")));
                     campos[6].setText(String.valueOf(rs.getDouble("Altura")));
                     campos[7].setText(String.valueOf(rs.getDouble("Peso")));

@@ -62,7 +62,7 @@ public class AgregarRegistro implements ActionListener {
                 return;
             }
 
-            // Ejecutar consulta y llenar los campos si hay resultado
+            // Ejecutar consulta y llenar los campos si hay resultados
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     campos[0].setText(String.valueOf(rs.getInt("ID")));
