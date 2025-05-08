@@ -6,7 +6,7 @@ import java.awt.event.*;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
 import Inicio.MenuPacientesFrame;
-import Inicio.PortadaFrame;
+import Justificantes.SeleccionarPacienteFrame;
 
 public class PlantillaJustificanteFrame extends JFrame {
 
@@ -23,6 +23,7 @@ public class PlantillaJustificanteFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        // Panel principal con GridLayout
         JPanel mainPanel = new JPanel(new GridLayout(10, 2, 10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -31,7 +32,7 @@ public class PlantillaJustificanteFrame extends JFrame {
         idField = new JTextField();
         mainPanel.add(idField);
 
-        // Nombre (no editable)
+        // Nombre
         mainPanel.add(new JLabel("Nombre:"));
         nombreField = new JTextField();
         nombreField.setEditable(false);
@@ -47,27 +48,27 @@ public class PlantillaJustificanteFrame extends JFrame {
         cedulaField = new JTextField();
         mainPanel.add(cedulaField);
 
-        // Fecha de inicio
+        // Fecha de inicio de reposo
         mainPanel.add(new JLabel("Fecha de inicio de reposo:"));
-        JPanel inicioFechaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         diaInicioBox = new JComboBox<>(generarDias());
         mesInicioBox = new JComboBox<>(generarMeses());
         anioInicioBox = new JComboBox<>(generarAnios());
-        inicioFechaPanel.add(diaInicioBox);
-        inicioFechaPanel.add(mesInicioBox);
-        inicioFechaPanel.add(anioInicioBox);
-        mainPanel.add(inicioFechaPanel);
+        JPanel panelInicio = new JPanel();
+        panelInicio.add(diaInicioBox);
+        panelInicio.add(mesInicioBox);
+        panelInicio.add(anioInicioBox);
+        mainPanel.add(panelInicio);
 
-        // Fecha de fin
+        // Fecha de fin de reposo
         mainPanel.add(new JLabel("Fecha de final de reposo:"));
-        JPanel finFechaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         diaFinBox = new JComboBox<>(generarDias());
         mesFinBox = new JComboBox<>(generarMeses());
         anioFinBox = new JComboBox<>(generarAnios());
-        finFechaPanel.add(diaFinBox);
-        finFechaPanel.add(mesFinBox);
-        finFechaPanel.add(anioFinBox);
-        mainPanel.add(finFechaPanel);
+        JPanel panelFin = new JPanel();
+        panelFin.add(diaFinBox);
+        panelFin.add(mesFinBox);
+        panelFin.add(anioFinBox);
+        mainPanel.add(panelFin);
 
         // Diagnóstico y observaciones
         mainPanel.add(new JLabel("Diagnóstico y Observaciones:"));
@@ -78,14 +79,15 @@ public class PlantillaJustificanteFrame extends JFrame {
         // Panel de botones
         JPanel buttonPanel = new JPanel();
         guardarButton = new JButton("Guardar Justificante");
-        menuButton = new JButton("Menú Principal");
-        regresarButton = new JButton("Regresar");
+        menuButton    = new JButton("Menú Principal");
+        regresarButton= new JButton("Regresar");
         buttonPanel.add(menuButton);
         buttonPanel.add(regresarButton);
         buttonPanel.add(guardarButton);
 
         // Eventos de botones
         guardarButton.addActionListener(e -> {
+            guardarJustificanteEnBD();
             new CorreosProfesoresFrame(1).setVisible(true);
             dispose();
         });
@@ -96,11 +98,11 @@ public class PlantillaJustificanteFrame extends JFrame {
         });
 
         regresarButton.addActionListener(e -> {
-            new PortadaFrame().setVisible(true);
+            new SeleccionarPacienteFrame().setVisible(true);
             dispose();
         });
 
-        // Listener para buscar nombre automáticamente
+        // Listener para buscar nombre automáticamente al escribir el ID
         idField.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
                 String id = idField.getText().trim();
@@ -112,30 +114,10 @@ public class PlantillaJustificanteFrame extends JFrame {
             }
         });
 
-        // Añadir paneles
+        // Añadir paneles al frame
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
         setVisible(true);
-    }
-
-    private void buscarNombrePorID(String id) {
-        try (Connection conn = ConexionSQLite.conectar()) {
-            String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String nombreCompleto = rs.getString("Nombre") + " " +
-                        rs.getString("ApellidoPaterno") + " " +
-                        rs.getString("ApellidoMaterno");
-                nombreField.setText(nombreCompleto);
-            } else {
-                nombreField.setText("No encontrado");
-            }
-        } catch (SQLException ex) {
-            nombreField.setText("Error al conectar");
-            ex.printStackTrace();
-        }
     }
 
     private String[] generarDias() {
@@ -145,8 +127,10 @@ public class PlantillaJustificanteFrame extends JFrame {
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] {
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        };
     }
 
     private String[] generarAnios() {
@@ -154,6 +138,56 @@ public class PlantillaJustificanteFrame extends JFrame {
         int year = 2025;
         for (int i = 0; i < 10; i++) anios[i] = String.valueOf(year + i);
         return anios;
+    }
+
+    private void buscarNombrePorID(String id) {
+        try (Connection conn = ConexionSQLite.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(
+                "SELECT nombre FROM InformacionAlumno WHERE id = ?"
+            );
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                nombreField.setText(rs.getString("nombre"));
+            } else {
+                nombreField.setText("");
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void guardarJustificanteEnBD() {
+        String id         = idField.getText().trim();
+        String doctor     = doctorField.getText().trim();
+        String cedula     = cedulaField.getText().trim();
+        String diag       = diagnosticoArea.getText().trim();
+
+        String fechaInicio = diaInicioBox.getSelectedItem() + " "
+            + mesInicioBox.getSelectedItem() + " "
+            + anioInicioBox.getSelectedItem();
+        String fechaFin    = diaFinBox.getSelectedItem() + " "
+            + mesFinBox.getSelectedItem() + " "
+            + anioFinBox.getSelectedItem();
+
+        try (Connection conn = ConexionSQLite.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO Justificantes " +
+                "(alumno_id, doctor, cedula, fecha_inicio, fecha_fin, diagnostico) " +
+                "VALUES (?, ?, ?, ?, ?, ?)"
+            );
+            ps.setString(1, id);
+            ps.setString(2, doctor);
+            ps.setString(3, cedula);
+            ps.setString(4, fechaInicio);
+            ps.setString(5, fechaFin);
+            ps.setString(6, diag);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Justificante guardado correctamente.");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al guardar justificante.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {
