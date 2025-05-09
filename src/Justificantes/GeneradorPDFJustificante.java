@@ -9,11 +9,9 @@ import java.time.format.DateTimeFormatter;
 
 public class GeneradorPDFJustificante {
 
-    private static final String MEDICO_FIRMANTE = "Dra. Laura Gómez - Cédula Profesional 1234567";
-
     public static File generar(Justificante j) {
         try {
-            // Carpeta de salida
+            // Carpeta base
             String carpetaBase = System.getProperty("user.home") + File.separator + "JustificantesGenerados";
             File carpeta = new File(carpetaBase);
             if (!carpeta.exists()) carpeta.mkdirs();
@@ -23,7 +21,7 @@ public class GeneradorPDFJustificante {
                     j.getFolio(), j.getNombrePaciente().replaceAll("\\s+", "_"));
             File file = new File(carpeta, nombreArchivo);
 
-            // Crear PDF
+            // Crear documento
             Document doc = new Document();
             PdfWriter.getInstance(doc, new FileOutputStream(file));
             doc.open();
@@ -31,9 +29,11 @@ public class GeneradorPDFJustificante {
             Font titulo = new Font(Font.HELVETICA, 18, Font.BOLD);
             Font subtitulo = new Font(Font.HELVETICA, 14, Font.BOLD);
             Font texto = new Font(Font.HELVETICA, 12);
+            Font negrita = new Font(Font.HELVETICA, 12, Font.BOLD);
 
             doc.add(new Paragraph("Justificante Médico", titulo));
             doc.add(new Paragraph(" "));
+
             doc.add(new Paragraph("Folio: " + j.getFolio(), texto));
             doc.add(new Paragraph("ID del Paciente: " + j.getIdPaciente(), texto));
             doc.add(new Paragraph("Nombre del Paciente: " + j.getNombrePaciente(), texto));
@@ -47,8 +47,17 @@ public class GeneradorPDFJustificante {
             doc.add(new Paragraph("Diagnóstico y Observaciones:", subtitulo));
             doc.add(new Paragraph(j.getDiagnostico(), texto));
 
+            doc.add(new Paragraph(" "));
+
+            // Estado de resolución
+            doc.add(new Paragraph("Estado del Justificante: " + j.getEstado(), negrita));
+            if (j.getFechaResolucion() != null && j.getResueltoPor() != null) {
+                doc.add(new Paragraph("Resuelto por: " + j.getResueltoPor(), texto));
+                doc.add(new Paragraph("Fecha de Resolución: " + j.getFechaResolucion().format(fmt), texto));
+            }
+
             doc.add(new Paragraph("\n\n________________________"));
-            doc.add(new Paragraph(MEDICO_FIRMANTE, texto));
+            doc.add(new Paragraph(j.getResueltoPor() != null ? j.getResueltoPor() : "Médico Responsable", texto));
 
             doc.close();
             return file;

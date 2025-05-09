@@ -18,7 +18,7 @@ public class MenuMedicosFrame extends JFrame {
         loadIcons();
         initToolbar();
         initCenterButtons();
-        setSize(600, 300);
+        setSize(600, 350);
         setLocationRelativeTo(null);
         setVisible(true);
     }
@@ -36,7 +36,6 @@ public class MenuMedicosFrame extends JFrame {
             );
             System.exit(1);
         }
-        // Escalamos a 32×32 píxeles para mejor visibilidad
         Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         Image img2 = new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         iconDefault = new ImageIcon(img1);
@@ -51,7 +50,6 @@ public class MenuMedicosFrame extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // Título centrado
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
@@ -62,7 +60,6 @@ public class MenuMedicosFrame extends JFrame {
         title.setFont(new Font("Arial", Font.BOLD, 16));
         toolbar.add(title, gbc);
 
-        // Botón campana a la derecha
         gbc.gridx = 1;
         gbc.weightx = 0.0;
         gbc.anchor = GridBagConstraints.EAST;
@@ -88,16 +85,15 @@ public class MenuMedicosFrame extends JFrame {
         toolbar.add(notificationButton, gbc);
         add(toolbar, BorderLayout.NORTH);
 
-        // Simular nueva notificación tras 5 segundos
         new Timer(5000, e -> {
             hasNewNotification = true;
             notificationButton.setIcon(iconNew);
         }).start();
     }
 
-    /** Construye el panel central con tus seis botones */
+    /** Construye el panel central con los siete botones */
     private void initCenterButtons() {
-        JPanel center = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel center = new JPanel(new GridLayout(4, 2, 10, 10));
         center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         Dimension btnSize = new Dimension(250, 40);
@@ -105,11 +101,12 @@ public class MenuMedicosFrame extends JFrame {
         JButton gestion       = new JButton("Gestión de Enfermedades");
         JButton registro      = new JButton("Registro de Paciente Nuevo");
         JButton justificantes = new JButton("Justificantes Médicos");
+        JButton emitir        = new JButton("Emitir Justificante Médico"); // NUEVO
         JButton emergencia    = new JButton("Registrar Llamada de Emergencia");
         JButton accidente     = new JButton("Llenar Reporte de Accidente");
 
-        for (JButton b : new JButton[]{consulta, gestion, registro,
-                                       justificantes, emergencia, accidente}) {
+        for (JButton b : new JButton[]{consulta, gestion, registro, justificantes,
+                                       emitir, emergencia, accidente}) {
             b.setPreferredSize(btnSize);
             center.add(b);
         }
@@ -129,6 +126,10 @@ public class MenuMedicosFrame extends JFrame {
         });
         justificantes.addActionListener(e -> {
             new Justificantes.SeleccionarPacienteFrame().setVisible(true);
+            dispose();
+        });
+        emitir.addActionListener(e -> {
+            new Justificantes.EmitirJustificanteDesdeConsultaFrame().setVisible(true);
             dispose();
         });
         emergencia.addActionListener(e -> {

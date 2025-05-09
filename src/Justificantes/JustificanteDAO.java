@@ -12,8 +12,8 @@ import java.util.Optional;
 public class JustificanteDAO {
 
     public static boolean guardarJustificante(Justificante j) {
-        String sql = "INSERT INTO JustificantePaciente (idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, rutaArchivo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO JustificantePaciente (idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, rutaArchivo, estado) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = ConexionSQLite.conectar();
              PreparedStatement pst = conn.prepareStatement(sql)) {
 
@@ -24,6 +24,7 @@ public class JustificanteDAO {
             pst.setString(5, j.getFechaFin().toString());
             pst.setString(6, j.getDiagnostico());
             pst.setString(7, j.getArchivoReceta() != null ? j.getArchivoReceta().getAbsolutePath() : null);
+            pst.setString(8, "Pendiente");
 
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -41,22 +42,32 @@ public class JustificanteDAO {
             ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
-                String idPaciente = rs.getString("idPaciente");
-                String nombrePaciente = rs.getString("nombrePaciente");
-                String motivo = rs.getString("motivo");
-                LocalDate fechaInicio = LocalDate.parse(rs.getString("fechaInicio"));
-                LocalDate fechaFin = LocalDate.parse(rs.getString("fechaFin"));
-                String diagnostico = rs.getString("diagnostico");
-                File receta = rs.getString("rutaArchivo") != null ? new File(rs.getString("rutaArchivo")) : null;
-
-                return Optional.of(new Justificante(folio, idPaciente, nombrePaciente, motivo,
-                                                    fechaInicio, fechaFin, diagnostico, receta));
+                return Optional.of(mapearDesdeResultSet(rs));
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return Optional.empty();
+    }
+
+    public static List<Justificante> obtenerTodos() {
+        List<Justificante> lista = new ArrayList<>();
+        String sql = "SELECT * FROM JustificantePaciente ORDER BY folio DESC";
+
+        try (Connection conn = ConexionSQLite.conectar();
+             PreparedStatement pst = conn.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapearDesdeResultSet(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return lista;
     }
 
     public static boolean actualizarDiagnosticoYFechas(int folio, String diagnostico, LocalDate inicio, LocalDate fin) {
@@ -76,32 +87,39 @@ public class JustificanteDAO {
         }
     }
 
-    public static List<Justificante> obtenerTodos() {
-        List<Justificante> lista = new ArrayList<>();
-        String sql = "SELECT * FROM JustificantePaciente ORDER BY folio DESC";
-
+    public static boolean aprobarJustificante(int folio, String diagnostico, String medicoFirmante, LocalDate fechaInicio, LocalDate fechaFin) {
+        String sql = "UPDATE JustificantePaciente SET estado = 'Aprobado', diagnostico = ?, resueltoPor = ?, fechaResolucion = ?, fechaInicio = ?, fechaFin = ? WHERE folio = ?";
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql);
-             ResultSet rs = pst.executeQuery()) {
+             PreparedStatement pst = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                int folio = rs.getInt("folio");
-                String idPaciente = rs.getString("idPaciente");
-                String nombrePaciente = rs.getString("nombrePaciente");
-                String motivo = rs.getString("motivo");
-                LocalDate fechaInicio = LocalDate.parse(rs.getString("fechaInicio"));
-                LocalDate fechaFin = LocalDate.parse(rs.getString("fechaFin"));
-                String diagnostico = rs.getString("diagnostico");
-                File receta = rs.getString("rutaArchivo") != null ? new File(rs.getString("rutaArchivo")) : null;
-
-                lista.add(new Justificante(folio, idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, receta));
-            }
+            pst.setString(1, diagnostico);
+            pst.setString(2, medicoFirmante);
+            pst.setString(3, LocalDate.now().toString());
+            pst.setString(4, fechaInicio.toString());
+            pst.setString(5, fechaFin.toString());
+            pst.setInt(6, folio);
+            return pst.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
+    }
 
-        return lista;
+    public static boolean rechazarJustificante(int folio, String medicoFirmante) {
+        String sql = "UPDATE JustificantePaciente SET estado = 'Rechazado', resueltoPor = ?, fechaResolucion = ? WHERE folio = ?";
+        try (Connection conn = ConexionSQLite.conectar();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+
+            pst.setString(1, medicoFirmante);
+            pst.setString(2, LocalDate.now().toString());
+            pst.setInt(3, folio);
+            return pst.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean eliminarPorFolio(int folio) {
@@ -116,5 +134,23 @@ public class JustificanteDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private static Justificante mapearDesdeResultSet(ResultSet rs) throws SQLException {
+        int folio = rs.getInt("folio");
+        String idPaciente = rs.getString("idPaciente");
+        String nombrePaciente = rs.getString("nombrePaciente");
+        String motivo = rs.getString("motivo");
+        LocalDate fechaInicio = LocalDate.parse(rs.getString("fechaInicio"));
+        LocalDate fechaFin = LocalDate.parse(rs.getString("fechaFin"));
+        String diagnostico = rs.getString("diagnostico");
+        File receta = rs.getString("rutaArchivo") != null ? new File(rs.getString("rutaArchivo")) : null;
+        String estado = rs.getString("estado");
+        String resueltoPor = rs.getString("resueltoPor");
+        LocalDate fechaResolucion = rs.getString("fechaResolucion") != null ? LocalDate.parse(rs.getString("fechaResolucion")) : null;
+
+        return new Justificante(folio, idPaciente, nombrePaciente, motivo,
+                fechaInicio, fechaFin, diagnostico, receta,
+                estado, resueltoPor, fechaResolucion);
     }
 }

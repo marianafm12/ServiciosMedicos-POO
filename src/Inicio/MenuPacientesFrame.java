@@ -2,6 +2,7 @@ package Inicio;
 
 import GestionCitas.NotificacionDAO;
 import GestionCitas.NotificacionCitasFrame;
+import Justificantes.MisJustificantesPacienteFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +23,7 @@ public class MenuPacientesFrame extends JFrame {
         loadIcons();
         initToolbar();
         initCenterButtons();
-        setSize(600, 300);
+        setSize(650, 400);
         setLocationRelativeTo(null);
 
         int idPaciente = SesionUsuario.getPacienteActual();
@@ -111,18 +112,20 @@ public class MenuPacientesFrame extends JFrame {
     }
 
     private void initCenterButtons() {
-        JPanel center = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel center = new JPanel(new GridLayout(3, 2, 10, 10));
         center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         Dimension btnSize = new Dimension(250, 40);
 
         JButton gestionCitasButton = new JButton("Gestión de Citas");
         JButton historialMedicoButton = new JButton("Historial Médico");
-        JButton justificantesMedicosButton = new JButton("Justificantes Médicos");
+        JButton justificarNuevoButton = new JButton("Solicitar Justificante");
+        JButton verJustificantesButton = new JButton("Mis Justificantes Emitidos"); // Nuevo
         JButton reportarEmergenciaButton = new JButton("Reportar Emergencia");
 
-        for (JButton b : new JButton[] {
+        for (JButton b : new JButton[]{
                 gestionCitasButton, historialMedicoButton,
-                justificantesMedicosButton, reportarEmergenciaButton }) {
+                justificarNuevoButton, verJustificantesButton,
+                reportarEmergenciaButton }) {
             b.setPreferredSize(btnSize);
             center.add(b);
         }
@@ -137,8 +140,14 @@ public class MenuPacientesFrame extends JFrame {
             dispose();
         });
 
-        justificantesMedicosButton.addActionListener(e -> {
+        justificarNuevoButton.addActionListener(e -> {
             new Justificantes.FormularioJustificanteFrame().setVisible(true);
+            dispose();
+        });
+
+        verJustificantesButton.addActionListener(e -> {
+            int idPaciente = SesionUsuario.getPacienteActual();
+            new MisJustificantesPacienteFrame(String.valueOf(idPaciente)).setVisible(true);
             dispose();
         });
 
