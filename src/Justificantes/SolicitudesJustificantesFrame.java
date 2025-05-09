@@ -66,8 +66,8 @@ public class SolicitudesJustificantesFrame extends JFrame {
     private void cargarFolios() {
         String sql = "SELECT folio FROM JustificantePaciente ORDER BY folio DESC";
         try (Connection conn = ConexionSQLite.conectar();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 listModel.addElement(rs.getInt("folio"));
             }

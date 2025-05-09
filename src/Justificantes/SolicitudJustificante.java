@@ -177,7 +177,7 @@ public class SolicitudJustificante extends JFrame {
         int m = mes.getSelectedIndex() + 1;
         int y = Integer.parseInt((String) anio.getSelectedItem());
         return LocalDate.of(y, m, d);
-    }
+    }//f
 
     public static void main(String[] args) {
         new SolicitudJustificante(1);
