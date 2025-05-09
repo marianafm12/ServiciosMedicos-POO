@@ -13,14 +13,20 @@ public class RevisarSolicitudFrame extends JFrame {
     private JComboBox<String> diaInicio, mesInicio, anioInicio;
     private JComboBox<String> diaFin, mesFin, anioFin;
     private JTextArea diagnosticoArea;
-    private JButton abrirArchivoBtn, actualizarBtn, limpiarBtn, regresarBtn, menuBtn;
-    private SolicitudJustificante solicitud;
-    private JFrame parent;
     private JLabel lblMotivo;
+    private File archivoReceta;
+    private int folio;
+    private Justificante justificante;
 
-    public RevisarSolicitudFrame(SolicitudJustificante solicitud, JFrame parent) {
-        this.solicitud = solicitud;
-        this.parent = parent;
+    public RevisarSolicitudFrame(int folio) {
+        this.folio = folio;
+
+        justificante = JustificanteDAO.obtenerPorFolio(folio).orElse(null);
+        if (justificante == null) {
+            JOptionPane.showMessageDialog(this, "Justificante no encontrado.");
+            dispose();
+            return;
+        }
 
         setTitle("Revisión de Solicitud");
         setSize(600, 500);
@@ -28,48 +34,50 @@ public class RevisarSolicitudFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(0, 1));
 
-        // Formato de fechas
+        // Etiqueta dinámica con fechas
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String fechaInicioStr = solicitud.getFechaInicio().format(formatter);
-        String fechaFinStr = solicitud.getFechaFin().format(formatter);
-
-        // Motivo con fechas
-        lblMotivo = new JLabel("Motivo: (" + fechaInicioStr + " - " + fechaFinStr + ")");
+        lblMotivo = new JLabel("Motivo: (" + justificante.getFechaInicio().format(formatter)
+                + " - " + justificante.getFechaFin().format(formatter) + ")");
         add(lblMotivo);
 
-        motivoField = new JTextField(solicitud.getMotivo());
+        motivoField = new JTextField(justificante.getMotivo());
         motivoField.setEditable(false);
         add(motivoField);
 
+        add(new JLabel("Inicio de Reposo:"));
+        JPanel panelInicio = new JPanel();
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
-        add(new JLabel("Inicio de Reposo:"));
-        JPanel inicioPanel = new JPanel();
-        inicioPanel.add(diaInicio); inicioPanel.add(mesInicio); inicioPanel.add(anioInicio);
-        add(inicioPanel);
+        panelInicio.add(diaInicio); panelInicio.add(mesInicio); panelInicio.add(anioInicio);
+        add(panelInicio);
 
+        add(new JLabel("Fin de Reposo:"));
+        JPanel panelFin = new JPanel();
         diaFin = new JComboBox<>(generarDias());
         mesFin = new JComboBox<>(generarMeses());
         anioFin = new JComboBox<>(generarAnios());
-        add(new JLabel("Fin de Reposo:"));
-        JPanel finPanel = new JPanel();
-        finPanel.add(diaFin); finPanel.add(mesFin); finPanel.add(anioFin);
-        add(finPanel);
+        panelFin.add(diaFin); panelFin.add(mesFin); panelFin.add(anioFin);
+        add(panelFin);
 
         diagnosticoArea = new JTextArea(4, 30);
-        diagnosticoArea.setText(solicitud.getDiagnosticoObservaciones() != null ? solicitud.getDiagnosticoObservaciones() : "");
+        diagnosticoArea.setText(justificante.getDiagnostico() != null ? justificante.getDiagnostico() : "");
         add(new JLabel("Diagnóstico y Observaciones:"));
         add(new JScrollPane(diagnosticoArea));
 
-        abrirArchivoBtn = new JButton("Abrir Archivo");
+        // Setear fechas en combos
+        setFechaCombo(justificante.getFechaInicio(), diaInicio, mesInicio, anioInicio);
+        setFechaCombo(justificante.getFechaFin(), diaFin, mesFin, anioFin);
+
+        archivoReceta = justificante.getArchivoReceta();
+
+        JButton abrirArchivoBtn = new JButton("Abrir Archivo");
         abrirArchivoBtn.addActionListener(e -> {
             try {
-                File receta = solicitud.getArchivoReceta();
-                if (receta != null && receta.exists()) {
-                    Desktop.getDesktop().open(receta);
+                if (archivoReceta != null && archivoReceta.exists()) {
+                    Desktop.getDesktop().open(archivoReceta);
                 } else {
-                    JOptionPane.showMessageDialog(this, "No hay archivo cargado.");
+                    JOptionPane.showMessageDialog(this, "No hay archivo disponible.");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -77,21 +85,32 @@ public class RevisarSolicitudFrame extends JFrame {
             }
         });
 
-        actualizarBtn = new JButton("Actualizar campos");
+        JButton actualizarBtn = new JButton("Actualizar campos");
         actualizarBtn.addActionListener(e -> {
-            solicitud.setDiagnosticoObservaciones(diagnosticoArea.getText());
-            solicitud.setFechaInicio(construirFecha(diaInicio, mesInicio, anioInicio));
-            solicitud.setFechaFin(construirFecha(diaFin, mesFin, anioFin));
+            LocalDate nuevaInicio = construirFecha(diaInicio, mesInicio, anioInicio);
+            LocalDate nuevaFin = construirFecha(diaFin, mesFin, anioFin);
 
-            // Actualizar también el label con las nuevas fechas
-            String nuevaInicio = solicitud.getFechaInicio().format(formatter);
-            String nuevaFin = solicitud.getFechaFin().format(formatter);
-            lblMotivo.setText("Motivo: (" + nuevaInicio + " - " + nuevaFin + ")");
+            if (nuevaInicio.isAfter(nuevaFin)) {
+                JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la de fin.");
+                return;
+            }
 
-            JOptionPane.showMessageDialog(this, "Campos actualizados.");
+            String diagnostico = diagnosticoArea.getText();
+
+            boolean exito = JustificanteDAO.actualizarDiagnosticoYFechas(folio, diagnostico, nuevaInicio, nuevaFin);
+
+            if (exito) {
+                justificante.setFechaInicio(nuevaInicio);
+                justificante.setFechaFin(nuevaFin);
+                justificante.setDiagnostico(diagnostico);
+                lblMotivo.setText("Motivo: (" + nuevaInicio.format(formatter) + " - " + nuevaFin.format(formatter) + ")");
+                JOptionPane.showMessageDialog(this, "Campos actualizados correctamente.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Error al actualizar.");
+            }
         });
 
-        limpiarBtn = new JButton("Limpiar Campos");
+        JButton limpiarBtn = new JButton("Limpiar Campos");
         limpiarBtn.addActionListener(e -> diagnosticoArea.setText(""));
 
         JPanel botonesPanel = new JPanel();
@@ -101,24 +120,43 @@ public class RevisarSolicitudFrame extends JFrame {
         add(botonesPanel);
 
         JButton vistaBtn = new JButton("Vista preliminar del Justificante");
-        add(vistaBtn); // Sin acción aún
+        vistaBtn.addActionListener(e -> {
+            File pdf = GeneradorPDFJustificante.generar(justificante);
+            if (pdf != null && pdf.exists()) {
+                try {
+                    Desktop.getDesktop().open(pdf);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error al abrir el PDF.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo generar el PDF.");
+            }
+        });
+        add(vistaBtn);
 
         JPanel navPanel = new JPanel();
-        menuBtn = new JButton("Menú Principal");
+        JButton menuBtn = new JButton("Menú Principal");
         menuBtn.addActionListener(e -> {
             new Inicio.MenuMedicosFrame().setVisible(true);
             dispose();
         });
 
-        regresarBtn = new JButton("Regresar");
+        JButton regresarBtn = new JButton("Regresar");
         regresarBtn.addActionListener(e -> {
-            parent.setVisible(true);
+            new SolicitudesJustificantesFrame().setVisible(true);
             dispose();
         });
 
         navPanel.add(menuBtn);
         navPanel.add(regresarBtn);
         add(navPanel);
+    }
+
+    private void setFechaCombo(LocalDate fecha, JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+        dia.setSelectedItem(String.valueOf(fecha.getDayOfMonth()));
+        mes.setSelectedIndex(fecha.getMonthValue() - 1);
+        anio.setSelectedItem(String.valueOf(fecha.getYear()));
     }
 
     private String[] generarDias() {
@@ -134,7 +172,7 @@ public class RevisarSolicitudFrame extends JFrame {
 
     private String[] generarAnios() {
         String[] a = new String[6];
-        int base = 2023;
+        int base = LocalDate.now().getYear();
         for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
         return a;
     }
@@ -144,5 +182,9 @@ public class RevisarSolicitudFrame extends JFrame {
         int m = mes.getSelectedIndex() + 1;
         int y = Integer.parseInt((String) anio.getSelectedItem());
         return LocalDate.of(y, m, d);
+    }
+
+    public static void main(String[] args) {
+        new RevisarSolicitudFrame(1).setVisible(true); // para pruebas
     }
 }
