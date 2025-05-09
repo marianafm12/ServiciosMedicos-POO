@@ -2,48 +2,43 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class SeleccionarPacienteFrame extends JFrame {
 
     public SeleccionarPacienteFrame() {
         setTitle("Seleccionar Paciente");
         setSize(500, 200);
-        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
 
-        // Panel de botones con GridLayout para tamaño uniforme
-        JPanel panelBotones = new JPanel(new GridLayout(2, 1, 10, 10));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        // Panel principal con margen
+        JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JButton btnSolicitudPaciente = new JButton("Generar a partir de solicitud de un paciente");
-        JButton btnConsulta = new JButton("Generar a partir de una consulta interna");
+        JButton btnSolicitud = new JButton("Generar desde Solicitud");
+        JButton btnConsulta  = new JButton("Generar a partir de una consulta interna");
 
-        // Acción para solicitud de paciente
-        btnSolicitudPaciente.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new SolicitudJustificante().setVisible(true);
-                dispose();
-            }
+        btnSolicitud.setFont(new Font("Arial", Font.BOLD, 14));
+        btnConsulta.setFont(new Font("Arial", Font.BOLD, 14));
+
+        btnSolicitud.addActionListener(e -> {
+            new SolicitudesJustificantesFrame().setVisible(true);
+            dispose();
         });
 
-        // Acción para consulta interna
-        btnConsulta.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new PlantillaJustificanteFrame().setVisible(true);
-                dispose();
-            }
+        btnConsulta.addActionListener(e -> {
+            int folioDePrueba = 1;
+            new PlantillaJustificanteFrame(folioDePrueba).setVisible(true);
+            dispose();
         });
 
-        panelBotones.add(btnSolicitudPaciente);
-        panelBotones.add(btnConsulta);
+        panel.add(btnSolicitud);
+        panel.add(btnConsulta);
 
-        add(panelBotones, BorderLayout.CENTER);
-        setVisible(true);
+        add(panel);
     }
 
     public static void main(String[] args) {
-        new SeleccionarPacienteFrame();
+        SwingUtilities.invokeLater(() -> new SeleccionarPacienteFrame().setVisible(true));
     }
 }
