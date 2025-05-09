@@ -53,7 +53,7 @@ public class CorreosProfesoresFrame extends JFrame {
                 new MenuPacientesFrame().setVisible(true);
                 dispose();
             }
-        });
+        });//f
     }
 
     private void actualizarCampos(int n) {

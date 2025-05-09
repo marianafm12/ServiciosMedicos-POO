@@ -42,3 +42,4 @@ public class SeleccionarPacienteFrame extends JFrame {
         SwingUtilities.invokeLater(() -> new SeleccionarPacienteFrame().setVisible(true));
     }
 }
+//f

@@ -51,3 +51,4 @@ public class SolicitudesJustificantesFrame extends JFrame {
         SwingUtilities.invokeLater(() -> new SolicitudesJustificantesFrame().setVisible(true));
     }
 }
+//f

@@ -15,7 +15,7 @@ public class PlantillaJustificanteFrame extends JFrame {
     private final JTextArea diagnosticoArea;
     private final JButton guardarBtn, menuBtn, regresarBtn;
 
-    public PlantillaJustificanteFrame(int folio) {
+    public PlantillaJustificanteFrame(int folio) {//f
         super("Plantilla para Justificante Médico");
         this.folio = folio;
 
