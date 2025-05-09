@@ -13,10 +13,11 @@ public class RevisarSolicitudFrame extends JFrame {
     private JComboBox<String> diaInicio, mesInicio, anioInicio;
     private JComboBox<String> diaFin, mesFin, anioFin;
     private JTextArea diagnosticoArea;
-    private JLabel lblMotivo;
+    private JLabel lblMotivo, lblEstado;
     private File archivoReceta;
     private int folio;
     private Justificante justificante;
+    private final String medicoFirmante = "Dra. Laura Gómez";
 
     public RevisarSolicitudFrame(int folio) {
         this.folio = folio;
@@ -29,13 +30,16 @@ public class RevisarSolicitudFrame extends JFrame {
         }
 
         setTitle("Revisión de Solicitud");
-        setSize(600, 500);
+        setSize(650, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(0, 1));
 
-        // Etiqueta dinámica con fechas
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        lblEstado = new JLabel("Estado: " + justificante.getEstado());
+        add(lblEstado);
+
         lblMotivo = new JLabel("Motivo: (" + justificante.getFechaInicio().format(formatter)
                 + " - " + justificante.getFechaFin().format(formatter) + ")");
         add(lblMotivo);
@@ -65,7 +69,6 @@ public class RevisarSolicitudFrame extends JFrame {
         add(new JLabel("Diagnóstico y Observaciones:"));
         add(new JScrollPane(diagnosticoArea));
 
-        // Setear fechas en combos
         setFechaCombo(justificante.getFechaInicio(), diaInicio, mesInicio, anioInicio);
         setFechaCombo(justificante.getFechaFin(), diaFin, mesFin, anioFin);
 
@@ -85,28 +88,38 @@ public class RevisarSolicitudFrame extends JFrame {
             }
         });
 
-        JButton actualizarBtn = new JButton("Actualizar campos");
-        actualizarBtn.addActionListener(e -> {
-            LocalDate nuevaInicio = construirFecha(diaInicio, mesInicio, anioInicio);
-            LocalDate nuevaFin = construirFecha(diaFin, mesFin, anioFin);
+        JButton btnAprobar = new JButton("✅ Aprobar");
+        btnAprobar.addActionListener(e -> {
+            LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
+            LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
 
-            if (nuevaInicio.isAfter(nuevaFin)) {
-                JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la de fin.");
+            if (inicio.isAfter(fin)) {
+                JOptionPane.showMessageDialog(this, "Fecha de inicio posterior a la de fin.");
                 return;
             }
 
-            String diagnostico = diagnosticoArea.getText();
+            String diag = diagnosticoArea.getText();
+            boolean ok = JustificanteDAO.aprobarJustificante(folio, diag, medicoFirmante, inicio, fin);
+            if (ok) {
+                JOptionPane.showMessageDialog(this, "Justificante aprobado.");
+                dispose();
+                new SolicitudesJustificantesFrame().setVisible(true);
+            }
+        });
 
-            boolean exito = JustificanteDAO.actualizarDiagnosticoYFechas(folio, diagnostico, nuevaInicio, nuevaFin);
+        JButton btnRechazar = new JButton("❌ Rechazar");
+        btnRechazar.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "¿Seguro que deseas rechazar esta solicitud?",
+                    "Confirmar rechazo", JOptionPane.YES_NO_OPTION);
 
-            if (exito) {
-                justificante.setFechaInicio(nuevaInicio);
-                justificante.setFechaFin(nuevaFin);
-                justificante.setDiagnostico(diagnostico);
-                lblMotivo.setText("Motivo: (" + nuevaInicio.format(formatter) + " - " + nuevaFin.format(formatter) + ")");
-                JOptionPane.showMessageDialog(this, "Campos actualizados correctamente.");
-            } else {
-                JOptionPane.showMessageDialog(this, "Error al actualizar.");
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean ok = JustificanteDAO.rechazarJustificante(folio, medicoFirmante);
+                if (ok) {
+                    JOptionPane.showMessageDialog(this, "Justificante rechazado.");
+                    dispose();
+                    new SolicitudesJustificantesFrame().setVisible(true);
+                }
             }
         });
 
@@ -115,7 +128,8 @@ public class RevisarSolicitudFrame extends JFrame {
 
         JPanel botonesPanel = new JPanel();
         botonesPanel.add(abrirArchivoBtn);
-        botonesPanel.add(actualizarBtn);
+        botonesPanel.add(btnAprobar);
+        botonesPanel.add(btnRechazar);
         botonesPanel.add(limpiarBtn);
         add(botonesPanel);
 
@@ -151,6 +165,20 @@ public class RevisarSolicitudFrame extends JFrame {
         navPanel.add(menuBtn);
         navPanel.add(regresarBtn);
         add(navPanel);
+
+        // Deshabilitar si ya fue resuelto
+        if (!justificante.getEstado().equalsIgnoreCase("Pendiente")) {
+            diagnosticoArea.setEditable(false);
+            diaInicio.setEnabled(false);
+            mesInicio.setEnabled(false);
+            anioInicio.setEnabled(false);
+            diaFin.setEnabled(false);
+            mesFin.setEnabled(false);
+            anioFin.setEnabled(false);
+            btnAprobar.setEnabled(false);
+            btnRechazar.setEnabled(false);
+            limpiarBtn.setEnabled(false);
+        }
     }
 
     private void setFechaCombo(LocalDate fecha, JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
@@ -185,6 +213,6 @@ public class RevisarSolicitudFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        new RevisarSolicitudFrame(1).setVisible(true); // para pruebas
+        new RevisarSolicitudFrame(1).setVisible(true);
     }
 }
