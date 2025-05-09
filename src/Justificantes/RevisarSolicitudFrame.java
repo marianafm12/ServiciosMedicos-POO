@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class RevisarSolicitudFrame extends JFrame {
     private JTextField motivoField;
@@ -15,19 +16,29 @@ public class RevisarSolicitudFrame extends JFrame {
     private JButton abrirArchivoBtn, actualizarBtn, limpiarBtn, regresarBtn, menuBtn;
     private SolicitudJustificante solicitud;
     private JFrame parent;
+    private JLabel lblMotivo;
 
     public RevisarSolicitudFrame(SolicitudJustificante solicitud, JFrame parent) {
         this.solicitud = solicitud;
         this.parent = parent;
+
         setTitle("Revisión de Solicitud");
         setSize(600, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(0, 1));
 
+        // Formato de fechas
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String fechaInicioStr = solicitud.getFechaInicio().format(formatter);
+        String fechaFinStr = solicitud.getFechaFin().format(formatter);
+
+        // Motivo con fechas
+        lblMotivo = new JLabel("Motivo: (" + fechaInicioStr + " - " + fechaFinStr + ")");
+        add(lblMotivo);
+
         motivoField = new JTextField(solicitud.getMotivo());
         motivoField.setEditable(false);
-        add(new JLabel("Motivo:"));
         add(motivoField);
 
         diaInicio = new JComboBox<>(generarDias());
@@ -71,6 +82,12 @@ public class RevisarSolicitudFrame extends JFrame {
             solicitud.setDiagnosticoObservaciones(diagnosticoArea.getText());
             solicitud.setFechaInicio(construirFecha(diaInicio, mesInicio, anioInicio));
             solicitud.setFechaFin(construirFecha(diaFin, mesFin, anioFin));
+
+            // Actualizar también el label con las nuevas fechas
+            String nuevaInicio = solicitud.getFechaInicio().format(formatter);
+            String nuevaFin = solicitud.getFechaFin().format(formatter);
+            lblMotivo.setText("Motivo: (" + nuevaInicio + " - " + nuevaFin + ")");
+
             JOptionPane.showMessageDialog(this, "Campos actualizados.");
         });
 
