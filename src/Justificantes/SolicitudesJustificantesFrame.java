@@ -1,82 +1,148 @@
 package Justificantes;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.*;
-import BaseDeDatos.ConexionSQLite;
-import Justificantes.SolicitudJustificante;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class SolicitudesJustificantesFrame extends JFrame {
-    private final DefaultListModel<Integer> listModel = new DefaultListModel<>();
-    private final JList<Integer> folioList = new JList<>(listModel);
-    private final JButton revisarBtn = new JButton("Revisar");
-    private final JButton menuButton = new JButton("Menú Principal");
-    private final JButton regresarButton = new JButton("Regresar");
+    private JTable tabla;
+    private DefaultTableModel modelo;
+    private JTextField buscador;
+    private TableRowSorter<DefaultTableModel> sorter;
 
     public SolicitudesJustificantesFrame() {
-        setTitle("Justificante por Solicitud");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setTitle("Solicitudes de Justificantes");
+        setSize(850, 450);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10,10));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        cargarFolios();
-
-        JScrollPane scroll = new JScrollPane(folioList);
-        folioList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        revisarBtn.setEnabled(false);
-        folioList.addListSelectionListener(e ->
-            revisarBtn.setEnabled(!folioList.isSelectionEmpty())
-        );
-
-        JPanel topPanel = new JPanel();
-        topPanel.add(menuButton);
-        topPanel.add(regresarButton);
-
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.add(revisarBtn);
-
+        // Top panel con búsqueda
+        JPanel topPanel = new JPanel(new BorderLayout());
+        buscador = new JTextField();
+        buscador.setToolTipText("Buscar por ID o Nombre...");
+        topPanel.add(new JLabel(" Buscar: "), BorderLayout.WEST);
+        topPanel.add(buscador, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
-        add(scroll, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
 
-        revisarBtn.addActionListener(e -> {
-            Integer folioSeleccionado = folioList.getSelectedValue();
-            if (folioSeleccionado != null) {
-                new SolicitudJustificante(folioSeleccionado).setVisible(true);
-                dispose();
+        // Tabla
+        modelo = new DefaultTableModel(new String[]{
+            "Folio", "ID", "Nombre", "Motivo", "Inicio", "Fin"
+        }, 0);
+        tabla = new JTable(modelo);
+        sorter = new TableRowSorter<>(modelo);
+        tabla.setRowSorter(sorter);
+        JScrollPane scroll = new JScrollPane(tabla);
+        add(scroll, BorderLayout.CENTER);
+
+        cargarDatos();
+
+        // Filtro en vivo
+        buscador.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
+            }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
             }
         });
 
-        menuButton.addActionListener(e -> {
+        // Botones
+        JButton btnVer = new JButton("Ver Seleccionado");
+        btnVer.addActionListener(e -> abrirSeleccionado());
+
+        JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.addActionListener(e -> eliminarSeleccionado());
+
+        JButton btnMenu = new JButton("Menú Principal");
+        btnMenu.addActionListener(e -> {
             new Inicio.MenuMedicosFrame().setVisible(true);
             dispose();
         });
 
-        regresarButton.addActionListener(e -> {
-            new SeleccionarPacienteFrame().setVisible(true);
-            dispose();
-        });
+        JPanel botones = new JPanel();
+        botones.add(btnVer);
+        botones.add(btnEliminar);
+        botones.add(btnMenu);
+        add(botones, BorderLayout.SOUTH);
 
-        setVisible(true);
+        // Doble clic
+        tabla.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    abrirSeleccionado();
+                }
+            }
+        });
     }
 
-    private void cargarFolios() {
-        String sql = "SELECT folio FROM JustificantePaciente ORDER BY folio DESC";
-        try (Connection conn = ConexionSQLite.conectar();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                listModel.addElement(rs.getInt("folio"));
+    private void filtrar() {
+        String texto = buscador.getText().trim();
+        if (texto.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + texto, 1, 2)); // Filtra columnas ID y Nombre
+        }
+    }
+
+    private void cargarDatos() {
+        List<Justificante> lista = JustificanteDAO.obtenerTodos();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        for (Justificante j : lista) {
+            modelo.addRow(new Object[]{
+                j.getFolio(),
+                j.getIdPaciente(),
+                j.getNombrePaciente(),
+                j.getMotivo(),
+                j.getFechaInicio().format(fmt),
+                j.getFechaFin().format(fmt)
+            });
+        }
+    }
+
+    private void abrirSeleccionado() {
+        int fila = tabla.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this, "Selecciona un registro.");
+            return;
+        }
+
+        int folio = (int) tabla.getValueAt(fila, 0);
+        new RevisarSolicitudFrame(folio).setVisible(true);
+        dispose();
+    }
+
+    private void eliminarSeleccionado() {
+        int fila = tabla.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this, "Selecciona un registro para eliminar.");
+            return;
+        }
+
+        int folio = (int) tabla.getValueAt(fila, 0);
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "¿Seguro que deseas eliminar el justificante folio " + folio + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean eliminado = JustificanteDAO.eliminarPorFolio(folio);
+            if (eliminado) {
+                ((DefaultTableModel) tabla.getModel()).removeRow(fila);
+                JOptionPane.showMessageDialog(this, "Justificante eliminado correctamente.");
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar el justificante.");
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(SolicitudesJustificantesFrame::new);
+        new SolicitudesJustificantesFrame().setVisible(true);
     }
 }
