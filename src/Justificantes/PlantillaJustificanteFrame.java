@@ -6,191 +6,180 @@ import java.awt.event.*;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
 import Inicio.MenuPacientesFrame;
-import Justificantes.SeleccionarPacienteFrame;
 
 public class PlantillaJustificanteFrame extends JFrame {
+    private final int folio;
+    private final JTextField idField, nombreField, doctorField, cedulaField;
+    private final JComboBox<String> diaIni, mesIni, anioIni;
+    private final JComboBox<String> diaFin, mesFin, anioFin;
+    private final JTextArea diagnosticoArea;
+    private final JButton guardarBtn, menuBtn, regresarBtn;
 
-    private JTextField idField, nombreField, doctorField, cedulaField;
-    private JComboBox<String> diaInicioBox, mesInicioBox, anioInicioBox;
-    private JComboBox<String> diaFinBox, mesFinBox, anioFinBox;
-    private JTextArea diagnosticoArea;
-    private JButton guardarButton, menuButton, regresarButton;
+    public PlantillaJustificanteFrame(int folio) {//f
+        super("Plantilla para Justificante Médico");
+        this.folio = folio;
 
-    public PlantillaJustificanteFrame() {
-        setTitle("Plantilla para Justificante Médico");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(700, 500);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10,10));
 
-        // Panel principal con GridLayout
-        JPanel mainPanel = new JPanel(new GridLayout(10, 2, 10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel main = new JPanel(new GridLayout(10,2,8,8));
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
 
-        // ID
-        mainPanel.add(new JLabel("ID:"));
-        idField = new JTextField();
-        mainPanel.add(idField);
+        main.add(new JLabel("ID:"));
+        idField = new JTextField(); main.add(idField);
 
-        // Nombre
-        mainPanel.add(new JLabel("Nombre:"));
-        nombreField = new JTextField();
-        nombreField.setEditable(false);
-        mainPanel.add(nombreField);
+        main.add(new JLabel("Nombre:"));
+        nombreField = new JTextField(); nombreField.setEditable(false);
+        main.add(nombreField);
 
-        // Doctor/a
-        mainPanel.add(new JLabel("Doctor/a:"));
-        doctorField = new JTextField();
-        mainPanel.add(doctorField);
+        main.add(new JLabel("Doctor/a:"));
+        doctorField = new JTextField(); main.add(doctorField);
 
-        // Cédula Profesional
-        mainPanel.add(new JLabel("Cédula Profesional:"));
-        cedulaField = new JTextField();
-        mainPanel.add(cedulaField);
+        main.add(new JLabel("Cédula Profesional:"));
+        cedulaField = new JTextField(); main.add(cedulaField);
 
-        // Fecha de inicio de reposo
-        mainPanel.add(new JLabel("Fecha de inicio de reposo:"));
-        diaInicioBox = new JComboBox<>(generarDias());
-        mesInicioBox = new JComboBox<>(generarMeses());
-        anioInicioBox = new JComboBox<>(generarAnios());
-        JPanel panelInicio = new JPanel();
-        panelInicio.add(diaInicioBox);
-        panelInicio.add(mesInicioBox);
-        panelInicio.add(anioInicioBox);
-        mainPanel.add(panelInicio);
+        main.add(new JLabel("Fecha de inicio de reposo:"));
+        diaIni  = new JComboBox<>(generarDias());
+        mesIni  = new JComboBox<>(generarMeses());
+        anioIni = new JComboBox<>(generarAnios(2025,2035));
+        JPanel pI = new JPanel(); pI.add(diaIni); pI.add(mesIni); pI.add(anioIni);
+        main.add(pI);
 
-        // Fecha de fin de reposo
-        mainPanel.add(new JLabel("Fecha de final de reposo:"));
-        diaFinBox = new JComboBox<>(generarDias());
-        mesFinBox = new JComboBox<>(generarMeses());
-        anioFinBox = new JComboBox<>(generarAnios());
-        JPanel panelFin = new JPanel();
-        panelFin.add(diaFinBox);
-        panelFin.add(mesFinBox);
-        panelFin.add(anioFinBox);
-        mainPanel.add(panelFin);
+        main.add(new JLabel("Fecha de final de reposo:"));
+        diaFin  = new JComboBox<>(generarDias());
+        mesFin  = new JComboBox<>(generarMeses());
+        anioFin = new JComboBox<>(generarAnios(2025,2035));
+        JPanel pF = new JPanel(); pF.add(diaFin); pF.add(mesFin); pF.add(anioFin);
+        main.add(pF);
 
-        // Diagnóstico y observaciones
-        mainPanel.add(new JLabel("Diagnóstico y Observaciones:"));
-        diagnosticoArea = new JTextArea(3, 20);
-        JScrollPane scrollPane = new JScrollPane(diagnosticoArea);
-        mainPanel.add(scrollPane);
+        main.add(new JLabel("Diagnóstico y Observaciones:"));
+        diagnosticoArea = new JTextArea(3,20);
+        main.add(new JScrollPane(diagnosticoArea));
 
-        // Panel de botones
-        JPanel buttonPanel = new JPanel();
-        guardarButton = new JButton("Guardar Justificante");
-        menuButton    = new JButton("Menú Principal");
-        regresarButton= new JButton("Regresar");
-        buttonPanel.add(menuButton);
-        buttonPanel.add(regresarButton);
-        buttonPanel.add(guardarButton);
+        guardarBtn  = new JButton("Guardar Justificante");
+        menuBtn     = new JButton("Menú Principal");
+        regresarBtn = new JButton("Regresar");
+        JPanel bot  = new JPanel();
+        bot.add(menuBtn); bot.add(regresarBtn); bot.add(guardarBtn);
 
-        // Eventos de botones
-        guardarButton.addActionListener(e -> {
-            guardarJustificanteEnBD();
-            new CorreosProfesoresFrame(1).setVisible(true);
-            dispose();
+        add(main, BorderLayout.CENTER);
+        add(bot,   BorderLayout.SOUTH);
+
+        // Cargar datos previos
+        cargarDatos();
+
+        idField.addKeyListener(new KeyAdapter(){
+            public void keyReleased(KeyEvent e) {
+                String id = idField.getText().trim();
+                if (!id.isEmpty()) buscarNombre(id);
+                else nombreField.setText("");
+            }
         });
 
-        menuButton.addActionListener(e -> {
+        guardarBtn.addActionListener(e -> {
+            if (actualizarJustificante()) {
+                new CorreosProfesoresFrame(folio).setVisible(true);
+                dispose();
+            }
+        });
+        menuBtn.addActionListener(e -> {
             new MenuPacientesFrame().setVisible(true);
             dispose();
         });
-
-        regresarButton.addActionListener(e -> {
+        regresarBtn.addActionListener(e -> {
             new SeleccionarPacienteFrame().setVisible(true);
             dispose();
         });
+    }
 
-        // Listener para buscar nombre automáticamente al escribir el ID
-        idField.addKeyListener(new KeyAdapter() {
-            public void keyReleased(KeyEvent e) {
-                String id = idField.getText().trim();
-                if (!id.isEmpty()) {
-                    buscarNombrePorID(id);
-                } else {
-                    nombreField.setText("");
+    private void cargarDatos() {
+        String sql = "SELECT alumno_id, doctor, cedula, fecha_inicio, fecha_fin, diagnostico "
+                   + "FROM JustificantePaciente WHERE folio = ?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, folio);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int alumnoId = rs.getInt("alumno_id");
+                    idField.setText(String.valueOf(alumnoId));
+                    buscarNombre(String.valueOf(alumnoId));
+                    doctorField.setText(rs.getString("doctor"));
+                    cedulaField.setText(rs.getString("cedula"));
+                    setComboDate(diaIni, mesIni, anioIni, rs.getString("fecha_inicio"));
+                    setComboDate(diaFin, mesFin, anioFin, rs.getString("fecha_fin"));
+                    diagnosticoArea.setText(rs.getString("diagnostico"));
                 }
-            }
-        });
-
-        // Añadir paneles al frame
-        add(mainPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
-        setVisible(true);
-    }
-
-    private String[] generarDias() {
-        String[] dias = new String[31];
-        for (int i = 1; i <= 31; i++) dias[i - 1] = String.valueOf(i);
-        return dias;
-    }
-
-    private String[] generarMeses() {
-        return new String[] {
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        };
-    }
-
-    private String[] generarAnios() {
-        String[] anios = new String[10];
-        int year = 2025;
-        for (int i = 0; i < 10; i++) anios[i] = String.valueOf(year + i);
-        return anios;
-    }
-
-    private void buscarNombrePorID(String id) {
-        try (Connection conn = ConexionSQLite.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement(
-                "SELECT nombre FROM InformacionAlumno WHERE id = ?"
-            );
-            ps.setString(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                nombreField.setText(rs.getString("nombre"));
-            } else {
-                nombreField.setText("");
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
     }
 
-    private void guardarJustificanteEnBD() {
-        String id         = idField.getText().trim();
-        String doctor     = doctorField.getText().trim();
-        String cedula     = cedulaField.getText().trim();
-        String diag       = diagnosticoArea.getText().trim();
+    private boolean actualizarJustificante() {
+        String sql = "UPDATE JustificantePaciente SET doctor=?, cedula=?, "
+                   + "fecha_inicio=?, fecha_fin=?, diagnostico=? WHERE folio=?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
 
-        String fechaInicio = diaInicioBox.getSelectedItem() + " "
-            + mesInicioBox.getSelectedItem() + " "
-            + anioInicioBox.getSelectedItem();
-        String fechaFin    = diaFinBox.getSelectedItem() + " "
-            + mesFinBox.getSelectedItem() + " "
-            + anioFinBox.getSelectedItem();
+            ps.setString(1, doctorField.getText().trim());
+            ps.setString(2, cedulaField.getText().trim());
+            String inicio = diaIni.getSelectedItem() + " " + mesIni.getSelectedItem() + " " + anioIni.getSelectedItem();
+            String fin    = diaFin.getSelectedItem() + " " + mesFin.getSelectedItem() + " " + anioFin.getSelectedItem();
+            ps.setString(3, inicio);
+            ps.setString(4, fin);
+            ps.setString(5, diagnosticoArea.getText().trim());
+            ps.setInt(6, folio);
 
-        try (Connection conn = ConexionSQLite.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO Justificantes " +
-                "(alumno_id, doctor, cedula, fecha_inicio, fecha_fin, diagnostico) " +
-                "VALUES (?, ?, ?, ?, ?, ?)"
-            );
-            ps.setString(1, id);
-            ps.setString(2, doctor);
-            ps.setString(3, cedula);
-            ps.setString(4, fechaInicio);
-            ps.setString(5, fechaFin);
-            ps.setString(6, diag);
-            ps.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Justificante guardado correctamente.");
+            return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error al guardar justificante.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
 
+    private void buscarNombre(String id) {
+        String sql = "SELECT nombre, apellidoPaterno, apellidoMaterno FROM InformacionAlumno WHERE id = ?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    nombreField.setText(
+                        rs.getString("nombre") + " " +
+                        rs.getString("apellidoPaterno") + " " +
+                        rs.getString("apellidoMaterno")
+                    );
+                }
+            }
+        } catch (SQLException ex) { ex.printStackTrace(); }
+    }
+
+    // Helpers de fecha…
+    private String[] generarDias() {
+        String[] d = new String[31];
+        for (int i=1;i<=31;i++) d[i-1]=String.valueOf(i);
+        return d;
+    }
+    private String[] generarMeses() {
+        return new String[]{"Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                            "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"};
+    }
+    private String[] generarAnios(int desde,int hasta) {
+        String[] a = new String[hasta - desde + 1];
+        for (int i=0; i<a.length; i++) a[i] = String.valueOf(desde + i);
+        return a;
+    }
+    private void setComboDate(JComboBox<String> d, JComboBox<String> m, JComboBox<String> y, String txt) {
+        String[] p = txt.split(" ");
+        d.setSelectedItem(p[0]);
+        m.setSelectedItem(p[1]);
+        y.setSelectedItem(p[2]);
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new PlantillaJustificanteFrame());
+        SwingUtilities.invokeLater(() -> new PlantillaJustificanteFrame(1).setVisible(true));
     }
 }

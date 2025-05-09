@@ -2,103 +2,95 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.awt.event.*;
+import java.sql.*;
+import BaseDeDatos.ConexionSQLite;  // o BaseDeDatos
+import Inicio.MenuPacientesFrame;
 
 public class CorreosProfesoresFrame extends JFrame {
-    private JComboBox<Integer> cantidadProfesoresBox;
-    private JPanel correosPanel;
-    private JButton enviarBtn;
-    private int idJustificante;
+    private final JComboBox<Integer> countBox = new JComboBox<>();
+    private final JPanel correosPanel = new JPanel();
+    private final JButton enviarBtn = new JButton("Enviar Justificante");
+    private final JButton menuBtn  = new JButton("Menú Principal");
+    private final JButton backBtn  = new JButton("Regresar");
+    private final int folio;
 
-    public CorreosProfesoresFrame(int idJustificante) {
-        this.idJustificante = idJustificante;
-
-        setTitle("Agregar Correos de Profesores");
-        setSize(500, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public CorreosProfesoresFrame(int folio) {
+        super("Agregar Correos de Profesores");
+        this.folio = folio;
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(500,400);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10,10));
 
-        JPanel topPanel = new JPanel();
-        topPanel.add(new JLabel("Cantidad de profesores:"));
-        cantidadProfesoresBox = new JComboBox<>();
-        for (int i = 1; i <= 12; i++) {
-            cantidadProfesoresBox.addItem(i);
-        }
-        topPanel.add(cantidadProfesoresBox);
+        // Top
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        top.add(new JLabel("Cantidad de profesores:"));
+        for(int i=1;i<=12;i++) countBox.addItem(i);
+        top.add(countBox);
 
-        correosPanel = new JPanel();
-        correosPanel.setLayout(new GridLayout(12, 1));
-        actualizarCamposCorreos(1);
+        // Center
+        correosPanel.setLayout(new BoxLayout(correosPanel, BoxLayout.Y_AXIS));
+        actualizarCampos(3);
 
-        cantidadProfesoresBox.addActionListener(e -> {
-            int cantidad = (int) cantidadProfesoresBox.getSelectedItem();
-            actualizarCamposCorreos(cantidad);
-        });
+        countBox.addActionListener(e -> actualizarCampos((int)countBox.getSelectedItem()));
 
-        enviarBtn = new JButton("Enviar Justificante");
+        // Bottom
+        JPanel bot = new JPanel();
+        bot.add(menuBtn);
+        bot.add(backBtn);
+        bot.add(enviarBtn);
+
+        add(top, BorderLayout.NORTH);
+        add(new JScrollPane(correosPanel), BorderLayout.CENTER);
+        add(bot, BorderLayout.SOUTH);
+
+        menuBtn .addActionListener(e -> { new MenuPacientesFrame().setVisible(true); dispose(); });
+        backBtn .addActionListener(e -> { new FormularioJustificanteFrame().setVisible(true); dispose(); });
         enviarBtn.addActionListener(e -> {
-            if (guardarCorreosEnBD()) {
-                JOptionPane.showMessageDialog(this, "Justificante enviado a los profesores.", "Éxito",
-                        JOptionPane.INFORMATION_MESSAGE);
+            if(guardarCorreos()) {
+                JOptionPane.showMessageDialog(this, "Correos registrados para folio " + folio);
+                new MenuPacientesFrame().setVisible(true);
                 dispose();
             }
-        });
-
-        add(topPanel, BorderLayout.NORTH);
-        add(new JScrollPane(correosPanel), BorderLayout.CENTER);
-        add(enviarBtn, BorderLayout.SOUTH);
-        setVisible(true);
+        });//f
     }
 
-    private void actualizarCamposCorreos(int cantidad) {
+    private void actualizarCampos(int n) {
         correosPanel.removeAll();
-        correosPanel.setLayout(new GridLayout(cantidad, 1));
-        for (int i = 0; i < cantidad; i++) {
-            correosPanel.add(new JTextField("Correo profesor " + (i + 1) + ": "));
+        for(int i=1;i<=n;i++){
+            correosPanel.add(new JLabel("Correo profesor " + i + ":"));
+            correosPanel.add(new JTextField(30));
+            correosPanel.add(Box.createRigidArea(new Dimension(0,10)));
         }
         correosPanel.revalidate();
         correosPanel.repaint();
     }
 
-    private boolean guardarCorreosEnBD() {
-        Component[] componentes = correosPanel.getComponents();
-        try {
-            Connection conn = BaseDeDatos.ConexionSQLite.conectar();
-            String sql = "INSERT INTO correos_profesores (id_justificante, correo) VALUES (?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-
-            for (Component comp : componentes) {
-                if (comp instanceof JTextField) {
-                    String correo = ((JTextField) comp).getText().trim();
-                    if (!correo.isEmpty()) {
-                        if (!correo.endsWith("@udlap.mx")) {
-                            JOptionPane.showMessageDialog(this,
-                                    "El correo \"" + correo + "\" no es válido.\nDebe terminar en @udlap.mx.",
-                                    "Correo inválido", JOptionPane.ERROR_MESSAGE);
-                            return false;
-                        }
-                        pstmt.setInt(1, idJustificante);
-                        pstmt.setString(2, correo);
-                        pstmt.addBatch();
+    private boolean guardarCorreos() {
+        String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?,?)";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            for(Component comp: correosPanel.getComponents()) {
+                if(comp instanceof JTextField) {
+                    String mail = ((JTextField)comp).getText().trim();
+                    if(!mail.isEmpty()) {
+                        ps.setInt(1, folio);
+                        ps.setString(2, mail);
+                        ps.addBatch();
                     }
                 }
             }
-
-            pstmt.executeBatch();
+            ps.executeBatch();
             return true;
-        } catch (SQLException ex) {
+        } catch(SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al guardar correos:\n" + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al guardar correos.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
 
-    // Para pruebas
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CorreosProfesoresFrame(1));
+        SwingUtilities.invokeLater(() -> new CorreosProfesoresFrame(0).setVisible(true));
     }
 }
