@@ -5,50 +5,78 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
-import Inicio.MenuPacientesFrame;
+import Justificantes.SolicitudJustificante;
 
 public class SolicitudesJustificantesFrame extends JFrame {
-    private final DefaultListModel<Integer> model = new DefaultListModel<>();
-    private final JList<Integer> list = new JList<>(model);
+    private final DefaultListModel<Integer> listModel = new DefaultListModel<>();
+    private final JList<Integer> folioList = new JList<>(listModel);
     private final JButton revisarBtn = new JButton("Revisar");
+    private final JButton menuButton = new JButton("Menú Principal");
+    private final JButton regresarButton = new JButton("Regresar");
 
     public SolicitudesJustificantesFrame() {
-        super("Justificante por Solicitud");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setTitle("Justificante por Solicitud");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 300);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10,10));
 
-        // Cargar folios
-        try (Connection c = ConexionSQLite.conectar();
-             Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT folio FROM JustificantePaciente ORDER BY folio DESC")) {
-            while(rs.next()) model.addElement(rs.getInt("folio"));
-        } catch(SQLException e){ e.printStackTrace(); }
+        cargarFolios();
 
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scroll = new JScrollPane(folioList);
+        folioList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
         revisarBtn.setEnabled(false);
-        list.addListSelectionListener(e -> revisarBtn.setEnabled(!list.isSelectionEmpty()));
-
-        JPanel top = new JPanel();
-        JButton menu = new JButton("Menú Principal"), back = new JButton("Regresar");
-        menu.addActionListener(e -> { new MenuPacientesFrame().setVisible(true); dispose(); });
-        back.addActionListener(e -> { new SeleccionarPacienteFrame().setVisible(true); dispose(); });
-        top.add(menu); top.add(back);
-
-        JPanel bot = new JPanel();
-        bot.add(revisarBtn);
-        revisarBtn.addActionListener(e ->
-            JOptionPane.showMessageDialog(this, "Función de revisión pendiente.")
+        folioList.addListSelectionListener(e ->
+            revisarBtn.setEnabled(!folioList.isSelectionEmpty())
         );
 
-        add(top, BorderLayout.NORTH);
-        add(new JScrollPane(list), BorderLayout.CENTER);
-        add(bot, BorderLayout.SOUTH);
+        JPanel topPanel = new JPanel();
+        topPanel.add(menuButton);
+        topPanel.add(regresarButton);
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(revisarBtn);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(scroll, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        revisarBtn.addActionListener(e -> {
+            Integer folioSeleccionado = folioList.getSelectedValue();
+            if (folioSeleccionado != null) {
+                new SolicitudJustificante(folioSeleccionado).setVisible(true);
+                dispose();
+            }
+        });
+
+        menuButton.addActionListener(e -> {
+            new Inicio.MenuMedicosFrame().setVisible(true);
+            dispose();
+        });
+
+        regresarButton.addActionListener(e -> {
+            new SeleccionarPacienteFrame().setVisible(true);
+            dispose();
+        });
+
+        setVisible(true);
+    }
+
+    private void cargarFolios() {
+        String sql = "SELECT folio FROM JustificantePaciente ORDER BY folio DESC";
+        try (Connection conn = ConexionSQLite.conectar();
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                listModel.addElement(rs.getInt("folio"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new SolicitudesJustificantesFrame().setVisible(true));
+        SwingUtilities.invokeLater(SolicitudesJustificantesFrame::new);
     }
 }
-//f
