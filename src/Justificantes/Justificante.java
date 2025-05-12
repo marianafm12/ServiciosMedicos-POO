@@ -67,4 +67,8 @@ public class Justificante {
     public void setEstado(String estado) { this.estado = estado; }
     public void setResueltoPor(String resueltoPor) { this.resueltoPor = resueltoPor; }
     public void setFechaResolucion(LocalDate fechaResolucion) { this.fechaResolucion = fechaResolucion; }
+
+    public Justificante() {
+    // Constructor por defecto necesario para pruebas
+}
 }
