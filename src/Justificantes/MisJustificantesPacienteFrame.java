@@ -8,6 +8,7 @@ import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import Inicio.MenuPacientesFrame; // Asegúrate de que esta clase existe
 
 public class MisJustificantesPacienteFrame extends JFrame {
     private JTable tabla;
@@ -38,8 +39,8 @@ public class MisJustificantesPacienteFrame extends JFrame {
 
         JButton btnRegresar = new JButton("Regresar");
         btnRegresar.addActionListener(e -> {
-            // Aquí iría el menú paciente
-            dispose();
+            dispose(); // Cierra esta ventana
+            new MenuPacientesFrame().setVisible(true); // Abre el menú principal del paciente
         });
 
         JPanel panelBotones = new JPanel();
