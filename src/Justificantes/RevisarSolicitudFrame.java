@@ -53,7 +53,9 @@ public class RevisarSolicitudFrame extends JFrame {
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
-        panelInicio.add(diaInicio); panelInicio.add(mesInicio); panelInicio.add(anioInicio);
+        panelInicio.add(diaInicio);
+        panelInicio.add(mesInicio);
+        panelInicio.add(anioInicio);
         add(panelInicio);
 
         add(new JLabel("Fin de Reposo:"));
@@ -61,7 +63,9 @@ public class RevisarSolicitudFrame extends JFrame {
         diaFin = new JComboBox<>(generarDias());
         mesFin = new JComboBox<>(generarMeses());
         anioFin = new JComboBox<>(generarAnios());
-        panelFin.add(diaFin); panelFin.add(mesFin); panelFin.add(anioFin);
+        panelFin.add(diaFin);
+        panelFin.add(mesFin);
+        panelFin.add(anioFin);
         add(panelFin);
 
         diagnosticoArea = new JTextArea(4, 30);
@@ -189,19 +193,21 @@ public class RevisarSolicitudFrame extends JFrame {
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
         return d;
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     }
 
     private String[] generarAnios() {
         String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 

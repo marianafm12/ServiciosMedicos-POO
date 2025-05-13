@@ -39,7 +39,9 @@ public class SolicitudJustificante extends JFrame {
         anioInicio = new JComboBox<>(generarAnios());
         add(new JLabel("Inicio de Reposo:"));
         JPanel inicioPanel = new JPanel();
-        inicioPanel.add(diaInicio); inicioPanel.add(mesInicio); inicioPanel.add(anioInicio);
+        inicioPanel.add(diaInicio);
+        inicioPanel.add(mesInicio);
+        inicioPanel.add(anioInicio);
         add(inicioPanel);
 
         diaFin = new JComboBox<>(generarDias());
@@ -47,7 +49,9 @@ public class SolicitudJustificante extends JFrame {
         anioFin = new JComboBox<>(generarAnios());
         add(new JLabel("Fin de Reposo:"));
         JPanel finPanel = new JPanel();
-        finPanel.add(diaFin); finPanel.add(mesFin); finPanel.add(anioFin);
+        finPanel.add(diaFin);
+        finPanel.add(mesFin);
+        finPanel.add(anioFin);
         add(finPanel);
 
         diagnosticoArea = new JTextArea(4, 30);
@@ -156,19 +160,21 @@ public class SolicitudJustificante extends JFrame {
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
         return d;
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     }
 
     private String[] generarAnios() {
         String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 
@@ -177,7 +183,7 @@ public class SolicitudJustificante extends JFrame {
         int m = mes.getSelectedIndex() + 1;
         int y = Integer.parseInt((String) anio.getSelectedItem());
         return LocalDate.of(y, m, d);
-    }//f
+    }// f
 
     public static void main(String[] args) {
         new SolicitudJustificante(1);
