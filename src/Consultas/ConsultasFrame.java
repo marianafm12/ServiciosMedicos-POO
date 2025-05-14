@@ -46,7 +46,7 @@ class PatientForm extends JFrame {
         this.idMedico = idMedico;
 
         setTitle("Formulario del Paciente - Dr. " + medicoNombre);
-        setSize(500, 900);
+        setSize(700, 1200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new GridBagLayout());

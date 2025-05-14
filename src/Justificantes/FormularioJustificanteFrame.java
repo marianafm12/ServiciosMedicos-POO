@@ -74,8 +74,9 @@ public class FormularioJustificanteFrame extends JFrame {
             dispose();
         });
 
-        JButton regresarBtn = new JButton("Regresar");
-        regresarBtn.addActionListener(e -> {
+        regresarButton.addActionListener(e -> {
+            int idPaciente = 1; // Reemplaza con el ID del paciente actual
+            new Inicio.MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 

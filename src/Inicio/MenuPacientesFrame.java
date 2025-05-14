@@ -10,6 +10,10 @@ import java.net.URL;
 import java.util.List;
 
 public class MenuPacientesFrame extends JFrame {
+    private int idPaciente; // Variable para almacenar el ID del paciente
+
+    public MenuPacientesFrame(int idPaciente) {
+        this.idPaciente = idPaciente; // Guardar el ID del paciente
 
     private boolean hasNewNotification = false;
     private JButton notificationButton;
@@ -41,11 +45,10 @@ public class MenuPacientesFrame extends JFrame {
         URL u2 = getClass().getResource("/icons/bell_new.png");
         if (u1 == null || u2 == null) {
             JOptionPane.showMessageDialog(
-                null,
-                "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
-                "Recursos no encontrados",
-                JOptionPane.ERROR_MESSAGE
-            );
+                    null,
+                    "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
+                    "Recursos no encontrados",
+                    JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
         Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
@@ -94,11 +97,10 @@ public class MenuPacientesFrame extends JFrame {
 
         if (notificaciones.isEmpty()) {
             JOptionPane.showMessageDialog(
-                this,
-                "No hay nuevas notificaciones.",
-                "Notificaciones",
-                JOptionPane.INFORMATION_MESSAGE
-            );
+                    this,
+                    "No hay nuevas notificaciones.",
+                    "Notificaciones",
+                    JOptionPane.INFORMATION_MESSAGE);
             notificationButton.setIcon(iconDefault);
             return;
         }
@@ -122,7 +124,7 @@ public class MenuPacientesFrame extends JFrame {
         JButton verJustificantesButton = new JButton("Mis Justificantes Emitidos"); // Nuevo
         JButton reportarEmergenciaButton = new JButton("Reportar Emergencia");
 
-        for (JButton b : new JButton[]{
+        for (JButton b : new JButton[] {
                 gestionCitasButton, historialMedicoButton,
                 justificarNuevoButton, verJustificantesButton,
                 reportarEmergenciaButton }) {
@@ -136,7 +138,7 @@ public class MenuPacientesFrame extends JFrame {
         });
 
         historialMedicoButton.addActionListener(e -> {
-            new GestionEnfermedades.HistorialMedicoFrame().setVisible(true);
+            new GestionEnfermedades.VerDatosPaciente(idPaciente).setVisible(true); // Usar el ID del paciente
             dispose();
         });
 
@@ -160,6 +162,6 @@ public class MenuPacientesFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MenuPacientesFrame::new);
+        new MenuPacientesFrame(0); // Llamar al constructor con un ID de paciente
     }
 }
