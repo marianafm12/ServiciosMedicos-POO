@@ -10,6 +10,7 @@ import Justificantes.SeleccionarPacienteFrame;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.net.URL;
 
 /**
  * Ventana principal para el médico, con barra superior y botones de acción en
@@ -176,9 +177,11 @@ public class MenuMedicosFrame extends JFrame {
         });
 
         add(center, BorderLayout.CENTER);
+        add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(MenuMedicosFrame::new);
         SwingUtilities.invokeLater(MenuMedicosFrame::new);
     }
 }
