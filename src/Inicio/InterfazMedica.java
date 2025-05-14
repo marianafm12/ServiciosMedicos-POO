@@ -46,11 +46,18 @@ public class InterfazMedica extends JFrame {
         JPanel panelButtons = new JPanel(new GridLayout(5, 1));
         panelButtons.setBackground(panelMenu.getBackground());
         String[] textos = { "Btn 1", "Btn 2", "Btn 3", "Btn 4" };
+        // Verde UDLAP según tu encabezado HTML
+        Color verdeUDLAP = Color.decode("#006400");
+
         for (int i = 0; i < textos.length; i++) {
             JButton b = new JButton(textos[i]);
             b.setFocusPainted(false);
-            b.setBackground(new Color(220, 230, 245));
-            b.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 200, 200)));
+            b.setOpaque(true);
+            b.setContentAreaFilled(true);
+            b.setBackground(verdeUDLAP); // Aquí aplicamos el verde UDLAP
+            b.setForeground(Color.WHITE); // Texto en blanco
+            b.setBorder(BorderFactory.createMatteBorder(
+                    0, 0, 1, 0, new Color(200, 200, 200)));
             final int idx = i + 1;
             b.addActionListener(e -> contentLabel.setText("Contenido de Btn " + idx));
             panelButtons.add(b);

@@ -16,7 +16,8 @@ public class GeneradorPDFJustificante {
             // Carpeta de salida
             String carpetaBase = System.getProperty("user.home") + File.separator + "JustificantesGenerados";
             File carpeta = new File(carpetaBase);
-            if (!carpeta.exists()) carpeta.mkdirs();
+            if (!carpeta.exists())
+                carpeta.mkdirs();
 
             // Nombre del archivo
             String nombreArchivo = String.format("Justificante_Folio%d_%s.pdf",
@@ -39,7 +40,7 @@ public class GeneradorPDFJustificante {
 
             // LOGOTIPO
             try {
-                String pathLogo = "src/Justificantes/udlap_logo.png"; 
+                String pathLogo = "src/icons/udlap_logo.png";
                 Image logo = Image.getInstance(pathLogo);
                 logo.scaleToFit(150, 60);
                 logo.setAlignment(Image.ALIGN_CENTER);
