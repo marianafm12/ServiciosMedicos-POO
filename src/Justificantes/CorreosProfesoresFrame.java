@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import BaseDeDatos.ConexionSQLite;  // o BaseDeDatos
+import BaseDeDatos.ConexionSQLite;  
 import Inicio.MenuPacientesFrame;
 
 public class CorreosProfesoresFrame extends JFrame {
@@ -53,7 +53,7 @@ public class CorreosProfesoresFrame extends JFrame {
                 new MenuPacientesFrame().setVisible(true);
                 dispose();
             }
-        });//f
+        });
     }
 
     private void actualizarCampos(int n) {
