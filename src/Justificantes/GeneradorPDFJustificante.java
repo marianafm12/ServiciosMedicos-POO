@@ -2,7 +2,7 @@ package Justificantes;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfWriter;
-import com.lowagie.text.pdf.Image;
+import com.lowagie.text.Image;
 
 import java.awt.Color;
 import java.io.File;
@@ -39,7 +39,7 @@ public class GeneradorPDFJustificante {
 
             // LOGOTIPO
             try {
-                String pathLogo = "src/Justificantes/udlap_logo.png"; // Ajusta si lo mueves
+                String pathLogo = "src/Justificantes/udlap_logo.png"; 
                 Image logo = Image.getInstance(pathLogo);
                 logo.scaleToFit(150, 60);
                 logo.setAlignment(Image.ALIGN_CENTER);

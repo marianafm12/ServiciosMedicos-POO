@@ -17,7 +17,7 @@ public class Justificante {
     private String resueltoPor; // nombre médico
     private LocalDate fechaResolucion;
 
-    // Constructor para insertar
+    
     public Justificante(String idPaciente, String nombrePaciente, String motivo,
                         LocalDate fechaInicio, LocalDate fechaFin,
                         String diagnostico, File archivoReceta) {
@@ -31,7 +31,7 @@ public class Justificante {
         this.estado = "Pendiente";
     }
 
-    // Constructor completo
+    
     public Justificante(int folio, String idPaciente, String nombrePaciente, String motivo,
                         LocalDate fechaInicio, LocalDate fechaFin,
                         String diagnostico, File archivoReceta,
@@ -43,7 +43,7 @@ public class Justificante {
         this.fechaResolucion = fechaResolucion;
     }
 
-    // Getters y setters...
+    
 
     public int getFolio() { return folio; }
     public void setFolio(int folio) { this.folio = folio; }
@@ -69,6 +69,6 @@ public class Justificante {
     public void setFechaResolucion(LocalDate fechaResolucion) { this.fechaResolucion = fechaResolucion; }
 
     public Justificante() {
-    // Constructor por defecto necesario para pruebas
+    
 }
 }

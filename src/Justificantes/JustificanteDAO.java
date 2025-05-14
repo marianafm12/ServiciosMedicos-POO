@@ -13,9 +13,9 @@ public class JustificanteDAO {
 
     public static boolean guardarJustificante(Justificante j) {
         String sql = "INSERT INTO JustificantePaciente (idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, rutaArchivo, estado) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+            PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setString(1, j.getIdPaciente());
             pst.setString(2, j.getNombrePaciente());

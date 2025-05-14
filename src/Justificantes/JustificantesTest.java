@@ -35,7 +35,7 @@ public class JustificantesTest {
         ejemplo.setDiagnostico("Nuevo diagnóstico");
         assertEquals("Nuevo diagnóstico", ejemplo.getDiagnostico());
     }
-
+//ffff
     @Test
     public void testGetEstado() {
         assertEquals("Aprobado", ejemplo.getEstado());

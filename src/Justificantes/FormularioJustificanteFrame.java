@@ -72,7 +72,7 @@ public class FormularioJustificanteFrame extends JFrame {
 
         JButton regresarBtn = new JButton("Regresar");
         regresarBtn.addActionListener(e -> {
-            dispose(); // o volver a otro Frame anterior
+            dispose(); 
         });
 
         // Panel de botones
@@ -82,7 +82,7 @@ public class FormularioJustificanteFrame extends JFrame {
         panelBotones.add(menuBtn);
         panelBotones.add(regresarBtn);
 
-        add(new JLabel()); // Espacio vacío
+        add(new JLabel()); 
         add(panelBotones);
     }
 
@@ -110,7 +110,7 @@ private void guardarJustificante() {
         motivo,
         inicio,
         fin,
-        "", // Diagnóstico vacío en esta etapa
+        "", 
         archivoPDF
     );
 
@@ -118,7 +118,7 @@ private void guardarJustificante() {
     if (exito) {
         JOptionPane.showMessageDialog(this, "Justificante guardado exitosamente.");
         dispose();
-        new SeleccionarPacienteFrame().setVisible(true); // o el siguiente paso del flujo
+        new SeleccionarPacienteFrame().setVisible(true); 
     } else {
         JOptionPane.showMessageDialog(this, "Error al guardar justificante.");
     }
