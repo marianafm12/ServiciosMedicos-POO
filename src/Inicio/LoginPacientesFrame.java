@@ -123,7 +123,7 @@ public class LoginPacientesFrame extends JFrame {
                         stmt.setString(2, password);
                         try (ResultSet rs = stmt.executeQuery()) {
                             if (rs.next()) {
-                                new MenuPacientesFrame();
+                                new MenuPacientesFrame(id).setVisible(true); // Pasar el ID al menú
                                 dispose();
                             } else {
                                 JOptionPane.showMessageDialog(this,
@@ -150,5 +150,9 @@ public class LoginPacientesFrame extends JFrame {
         });
 
         setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new LoginPacientesFrame();
     }
 }

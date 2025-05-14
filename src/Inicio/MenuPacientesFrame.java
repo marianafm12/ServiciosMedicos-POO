@@ -4,8 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MenuPacientesFrame extends JFrame {
+    private int idPaciente; // Variable para almacenar el ID del paciente
 
-    public MenuPacientesFrame() {
+    public MenuPacientesFrame(int idPaciente) {
+        this.idPaciente = idPaciente; // Guardar el ID del paciente
+
         setTitle("Menú Principal");
         setSize(600, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -62,7 +65,7 @@ public class MenuPacientesFrame extends JFrame {
 
         // Evento para botón "Historial Médico"
         historialMedicoButton.addActionListener(e -> {
-            new GestionEnfermedades.HistorialMedicoFrame().setVisible(true);
+            new GestionEnfermedades.VerDatosPaciente(idPaciente).setVisible(true); // Usar el ID del paciente
             dispose();
         });
 
@@ -81,6 +84,6 @@ public class MenuPacientesFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        new MenuPacientesFrame();
+        new MenuPacientesFrame(0); // Llamar al constructor con un ID de paciente
     }
 }
