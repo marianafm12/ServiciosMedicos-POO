@@ -69,7 +69,8 @@ public class InicioFrame extends JFrame {
 
         // Evento para botón "Regresar"
         regresarButton.addActionListener(e -> {
-            new Inicio.MenuPacientesFrame().setVisible(true);
+            int idPaciente = 1; // Reemplaza con el ID del paciente actual o pásalo como parámetro al crear esta clase
+            new Inicio.MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 

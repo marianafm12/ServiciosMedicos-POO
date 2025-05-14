@@ -1,5 +1,8 @@
 package Inicio;
 
+import GestionEnfermedades.EditarDatosPaciente;
+import GestionEnfermedades.VerDatosPaciente;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -33,58 +36,51 @@ public class MenuMedicosFrame extends JFrame {
         consultaButton.setPreferredSize(buttonSize);
         add(consultaButton, gbc);
 
-        // Botón: Gestión de Enfermedades
+        // Botón: Editar Datos del Paciente
         gbc.gridy = 1;
         gbc.gridx = 1;
-        JButton gestionEnfermedadesButton = new JButton("Gestión de Enfermedades");
-        gestionEnfermedadesButton.setPreferredSize(buttonSize);
-        add(gestionEnfermedadesButton, gbc);
+        JButton editarDatosButton = new JButton("Editar Datos del Paciente");
+        editarDatosButton.setPreferredSize(buttonSize);
+        add(editarDatosButton, gbc);
 
-        // Botón: Registro de nuevo paciente
+        // Botón: Justificante Médico
         gbc.gridy = 2;
         gbc.gridx = 0;
-        JButton pacienteNuevoButton = new JButton("Registro de Paciente Nuevo");
-        pacienteNuevoButton.setPreferredSize(buttonSize);
-        add(pacienteNuevoButton, gbc);
-
-        // Botón: Justificante médico
-        gbc.gridy = 2;
-        gbc.gridx = 1;
         JButton justificantesMedicosButton = new JButton("Justificantes Médicos");
         justificantesMedicosButton.setPreferredSize(buttonSize);
         add(justificantesMedicosButton, gbc);
 
         // Botón: Llamada de Emergencia Nueva
-        gbc.gridy = 3;
-        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridx = 1;
         JButton llamadaEmergenciaNueva = new JButton("Registrar Llamada de Emergencia");
         llamadaEmergenciaNueva.setPreferredSize(buttonSize);
         add(llamadaEmergenciaNueva, gbc);
 
-        // Botón: Formulario Reporte de accidente
+        // Botón: Formulario Reporte de Accidente
         gbc.gridy = 3;
-        gbc.gridx = 1;
+        gbc.gridx = 0;
         JButton reporteAccidente = new JButton("Llenar Reporte de accidente");
         reporteAccidente.setPreferredSize(buttonSize);
         add(reporteAccidente, gbc);
 
-        // Evento para botón "Consulta nueva"
+        // Evento para botón "Consulta Nueva"
         consultaButton.addActionListener(e -> {
             Consultas.ConsultasFrame.launchApp();
             dispose();
         });
 
-        // Evento para botón "Gestión de Enfermedades"
-        gestionEnfermedadesButton.addActionListener(e -> {
-            new GestionEnfermedades.GestionEnfermedadesFrame().setVisible(true);
-            dispose();
-        });
-
-        // Evento para botón "Registro de Paciente Nuevo"
-        pacienteNuevoButton.addActionListener(e -> {
-            // Cambiar IDUsuario
-            new Registro.AgendaDirecciones().setVisible(true);
-            dispose();
+        // Evento para botón "Editar Datos del Paciente"
+        editarDatosButton.addActionListener(e -> {
+            String idPacienteStr = JOptionPane.showInputDialog(this, "Ingrese el ID del Paciente:");
+            if (idPacienteStr != null && !idPacienteStr.isEmpty()) {
+                try {
+                    int idPaciente = Integer.parseInt(idPacienteStr);
+                    new EditarDatosPaciente(idPaciente).setVisible(true); // Usa el nuevo constructor
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "ID inválido. Debe ser un número.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         });
 
         // Evento para botón "Justificante Médico"
@@ -99,7 +95,7 @@ public class MenuMedicosFrame extends JFrame {
             dispose();
         });
 
-        // Evento botón "Reporte de Accidente"
+        // Evento para botón "Reporte de Accidente"
         reporteAccidente.addActionListener(e -> {
             new Emergencias.AccidenteFrame().setVisible(true);
             dispose();
