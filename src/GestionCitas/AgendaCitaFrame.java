@@ -207,10 +207,16 @@ public class AgendaCitaFrame extends JFrame {
 
             if (rs.next() && rs.getInt(1) > 0) {
                 conn.close();
-                int opcion = JOptionPane.showConfirmDialog(this,
+                Object[] opciones = {"Sí", "No"};
+                int opcion = JOptionPane.showOptionDialog(this,
                         "La cita está ocupada. ¿Deseas registrarte en la lista de espera?",
                         "Horario ocupado",
-                        JOptionPane.YES_NO_OPTION);
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        opciones,
+                        opciones[0]);
+
 
                 if (opcion == JOptionPane.YES_OPTION) {
                     try {
