@@ -5,36 +5,62 @@ import GestionEnfermedades.VerDatosPaciente;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 public class MenuMedicosFrame extends JFrame {
 
+    private boolean hasNewNotification = false;
+    private JButton notificationButton;
+    private ImageIcon iconDefault;
+    private ImageIcon iconNew;
+
     public MenuMedicosFrame() {
-        setTitle("Menú Principal");
-        setSize(600, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridBagLayout());
+        super("Menú Principal");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        loadIcons();
+        initToolbar();
+        initCenterButtons();
+        setSize(600, 350);
         setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    /** Carga los iconos de la campana desde el classpath */
+    private void loadIcons() {
+        URL u1 = getClass().getResource("/icons/bell.png");
+        URL u2 = getClass().getResource("/icons/bell_new.png");
+        if (u1 == null || u2 == null) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
+                    "Recursos no encontrados",
+                    JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+        Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        Image img2 = new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        iconDefault = new ImageIcon(img1);
+        iconNew = new ImageIcon(img2);
+    }
+
+    /** Crea la barra superior con título centrado y campana a la derecha */
+    private void initToolbar() {
+        JPanel toolbar = new JPanel(new GridBagLayout());
+        toolbar.setBackground(new Color(245, 245, 245));
+        toolbar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        Dimension buttonSize = new Dimension(250, 40);
 
-        // Título
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        JLabel titleLabel = new JLabel("Bienvenido al Sistema de Servicios Médicos UDLAP", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(titleLabel, gbc);
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Botón: Consulta Nueva
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 1;
-        JButton consultaButton = new JButton("Consulta Nueva");
-        consultaButton.setPreferredSize(buttonSize);
-        add(consultaButton, gbc);
+        JLabel title = new JLabel("Bienvenido al Sistema de Servicios Médicos UDLAP", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        toolbar.add(title, gbc);
 
         // Botón: Editar Datos del Paciente
         gbc.gridy = 1;
@@ -78,19 +104,20 @@ public class MenuMedicosFrame extends JFrame {
                     int idPaciente = Integer.parseInt(idPacienteStr);
                     new EditarDatosPaciente(idPaciente).setVisible(true); // Usa el nuevo constructor
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "ID inválido. Debe ser un número.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "ID inválido. Debe ser un número.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
-
-        // Evento para botón "Justificante Médico"
-        justificantesMedicosButton.addActionListener(e -> {
+        justificantes.addActionListener(e -> {
             new Justificantes.SeleccionarPacienteFrame().setVisible(true);
             dispose();
         });
-
-        // Evento para botón "Nueva Llamada de Emergencia"
-        llamadaEmergenciaNueva.addActionListener(e -> {
+        emitir.addActionListener(e -> {
+            new Justificantes.EmitirJustificanteDesdeConsultaFrame().setVisible(true);
+            dispose();
+        });
+        emergencia.addActionListener(e -> {
             new Emergencias.LlamadaEmergencia().setVisible(true);
             dispose();
         });
@@ -101,10 +128,10 @@ public class MenuMedicosFrame extends JFrame {
             dispose();
         });
 
-        setVisible(true);
+        add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
-        new MenuMedicosFrame();
+        SwingUtilities.invokeLater(MenuMedicosFrame::new);
     }
 }

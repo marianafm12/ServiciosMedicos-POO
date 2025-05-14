@@ -2,184 +2,184 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.LocalDate;
+import java.awt.event.*;
+import java.sql.*;
+import BaseDeDatos.ConexionSQLite;
+import Inicio.MenuPacientesFrame;
 
 public class PlantillaJustificanteFrame extends JFrame {
-    private JTextField centroMedicoField, doctorField, cedulaField, pacienteField, dniField, horaField, firmaField;
-    private JTextArea diagnosticoArea;
-    private JComboBox<String> diaBox, mesBox, anioBox;
-    private JButton guardarBtn;
-    private JLabel errorLabel;
+    private final int folio;
+    private final JTextField idField, nombreField, doctorField, cedulaField;
+    private final JComboBox<String> diaIni, mesIni, anioIni;
+    private final JComboBox<String> diaFin, mesFin, anioFin;
+    private final JTextArea diagnosticoArea;
+    private final JButton guardarBtn, menuBtn, regresarBtn;
 
-    public PlantillaJustificanteFrame() {
-        setTitle("Plantilla para Justificante Médico");
-        setLayout(new GridLayout(12, 2));
-        setSize(500, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public PlantillaJustificanteFrame(int folio) {//f
+        super("Plantilla para Justificante Médico");
+        this.folio = folio;
+
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(700, 500);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10,10));
 
-        centroMedicoField = new JTextField();
-        doctorField = new JTextField();
-        cedulaField = new JTextField();
-        pacienteField = new JTextField();
-        dniField = new JTextField();
-        horaField = new JTextField();
-        firmaField = new JTextField();
-        diagnosticoArea = new JTextArea(5, 20);
+        JPanel main = new JPanel(new GridLayout(10,2,8,8));
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
 
-        String[] dias = new String[31];
-        for (int i = 1; i <= 31; i++)
-            dias[i - 1] = String.valueOf(i);
+        main.add(new JLabel("ID:"));
+        idField = new JTextField(); main.add(idField);
 
-        String[] meses = {
-                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        };
+        main.add(new JLabel("Nombre:"));
+        nombreField = new JTextField(); nombreField.setEditable(false);
+        main.add(nombreField);
 
-        String[] anios = new String[100];
-        int actualYear = java.time.Year.now().getValue();
-        for (int i = 0; i < 100; i++)
-            anios[i] = String.valueOf(actualYear - i);
+        main.add(new JLabel("Doctor/a:"));
+        doctorField = new JTextField(); main.add(doctorField);
 
-        diaBox = new JComboBox<>(dias);
-        mesBox = new JComboBox<>(meses);
-        anioBox = new JComboBox<>(anios);
+        main.add(new JLabel("Cédula Profesional:"));
+        cedulaField = new JTextField(); main.add(cedulaField);
 
-        guardarBtn = new JButton("Guardar Justificante");
-        errorLabel = new JLabel("");
-        errorLabel.setForeground(Color.RED);
+        main.add(new JLabel("Fecha de inicio de reposo:"));
+        diaIni  = new JComboBox<>(generarDias());
+        mesIni  = new JComboBox<>(generarMeses());
+        anioIni = new JComboBox<>(generarAnios(2025,2035));
+        JPanel pI = new JPanel(); pI.add(diaIni); pI.add(mesIni); pI.add(anioIni);
+        main.add(pI);
 
-        add(new JLabel("Centro Médico:"));
-        add(centroMedicoField);
+        main.add(new JLabel("Fecha de final de reposo:"));
+        diaFin  = new JComboBox<>(generarDias());
+        mesFin  = new JComboBox<>(generarMeses());
+        anioFin = new JComboBox<>(generarAnios(2025,2035));
+        JPanel pF = new JPanel(); pF.add(diaFin); pF.add(mesFin); pF.add(anioFin);
+        main.add(pF);
 
-        add(new JLabel("Doctor/a:"));
-        add(doctorField);
+        main.add(new JLabel("Diagnóstico y Observaciones:"));
+        diagnosticoArea = new JTextArea(3,20);
+        main.add(new JScrollPane(diagnosticoArea));
 
-        add(new JLabel("Cédula Profesional:"));
-        add(cedulaField);
+        guardarBtn  = new JButton("Guardar Justificante");
+        menuBtn     = new JButton("Menú Principal");
+        regresarBtn = new JButton("Regresar");
+        JPanel bot  = new JPanel();
+        bot.add(menuBtn); bot.add(regresarBtn); bot.add(guardarBtn);
 
-        add(new JLabel("Paciente:"));
-        add(pacienteField);
+        add(main, BorderLayout.CENTER);
+        add(bot,   BorderLayout.SOUTH);
 
-        add(new JLabel("ID:"));
-        add(dniField);
+        // Cargar datos previos
+        cargarDatos();
 
-        add(new JLabel("Fecha de Atención:"));
-        JPanel fechaPanel = new JPanel();
-        fechaPanel.add(diaBox);
-        fechaPanel.add(mesBox);
-        fechaPanel.add(anioBox);
-        add(fechaPanel);
-
-        add(new JLabel("Hora de Atención:"));
-        add(horaField);
-
-        add(new JLabel("Diagnóstico y Observaciones:"));
-        add(new JScrollPane(diagnosticoArea));
-
-        add(new JLabel("Firma del médico:"));
-        add(firmaField);
-
-        add(errorLabel);
-        add(guardarBtn);
-
-        getRootPane().setDefaultButton(guardarBtn);
+        idField.addKeyListener(new KeyAdapter(){
+            public void keyReleased(KeyEvent e) {
+                String id = idField.getText().trim();
+                if (!id.isEmpty()) buscarNombre(id);
+                else nombreField.setText("");
+            }
+        });
 
         guardarBtn.addActionListener(e -> {
-            if (centroMedicoField.getText().trim().isEmpty() ||
-                    doctorField.getText().trim().isEmpty() ||
-                    cedulaField.getText().trim().isEmpty() ||
-                    pacienteField.getText().trim().isEmpty() ||
-                    dniField.getText().trim().isEmpty() ||
-                    horaField.getText().trim().isEmpty() ||
-                    diagnosticoArea.getText().trim().isEmpty() ||
-                    firmaField.getText().trim().isEmpty()) {
-
-                errorLabel.setText("Falta información por llenar.");
-                return;
+            if (actualizarJustificante()) {
+                new CorreosProfesoresFrame(folio).setVisible(true);
+                dispose();
             }
+        });
+        menuBtn.addActionListener(e -> {
+            new MenuPacientesFrame().setVisible(true);
+            dispose();
+        });
+        regresarBtn.addActionListener(e -> {
+            new SeleccionarPacienteFrame().setVisible(true);
+            dispose();
+        });
+    }
 
-            int dia = Integer.parseInt((String) diaBox.getSelectedItem());
-            int mes = mesBox.getSelectedIndex() + 1;
-            int anio = Integer.parseInt((String) anioBox.getSelectedItem());
-            LocalDate fecha = LocalDate.of(anio, mes, dia);
-
-            try {
-                Connection conn = BaseDeDatos.ConexionSQLite.conectar();
-
-                // Crear tabla si no existe
-                String crearTablaSQL = "CREATE TABLE IF NOT EXISTS PlantillaJustificanteMedicoCompleta (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "centro_medico TEXT NOT NULL, " +
-                        "doctor TEXT NOT NULL, " +
-                        "cedula_profesional TEXT NOT NULL, " +
-                        "paciente TEXT NOT NULL, " +
-                        "fecha_atencion DATE NOT NULL, " +
-                        "hora_atencion TEXT NOT NULL, " +
-                        "diagnostico_observaciones TEXT, " +
-                        "firma_medico TEXT)";
-                Statement stmt = conn.createStatement();
-                stmt.execute(crearTablaSQL);
-
-                String sql = "INSERT INTO PlantillaJustificanteMedicoCompleta " +
-                        "(centro_medico, doctor, cedula_profesional, paciente, fecha_atencion, hora_atencion, diagnostico_observaciones, firma_medico) "
-                        +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                pstmt.setString(1, centroMedicoField.getText().trim());
-                pstmt.setString(2, doctorField.getText().trim());
-                pstmt.setString(3, cedulaField.getText().trim());
-                pstmt.setString(4, pacienteField.getText().trim());
-                pstmt.setString(5, fecha.toString());
-                pstmt.setString(6, horaField.getText().trim());
-                pstmt.setString(7, diagnosticoArea.getText().trim());
-                pstmt.setString(8, firmaField.getText().trim());
-
-                int filas = pstmt.executeUpdate();
-                if (filas > 0) {
-                    JOptionPane.showMessageDialog(this, "Justificante guardado correctamente.", "Éxito",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "❌ No se pudo guardar el justificante.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+    private void cargarDatos() {
+        String sql = "SELECT alumno_id, doctor, cedula, fecha_inicio, fecha_fin, diagnostico "
+                   + "FROM JustificantePaciente WHERE folio = ?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, folio);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int alumnoId = rs.getInt("alumno_id");
+                    idField.setText(String.valueOf(alumnoId));
+                    buscarNombre(String.valueOf(alumnoId));
+                    doctorField.setText(rs.getString("doctor"));
+                    cedulaField.setText(rs.getString("cedula"));
+                    setComboDate(diaIni, mesIni, anioIni, rs.getString("fecha_inicio"));
+                    setComboDate(diaFin, mesFin, anioFin, rs.getString("fecha_fin"));
+                    diagnosticoArea.setText(rs.getString("diagnostico"));
                 }
-
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar en base de datos:\n" + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
             }
-        });
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        JButton menuPrincipalButton = new JButton("Menú Principal");
-        JButton regresarButton = new JButton("Regresar");
-        bottomPanel.add(menuPrincipalButton);
-        bottomPanel.add(regresarButton);
+    private boolean actualizarJustificante() {
+        String sql = "UPDATE JustificantePaciente SET doctor=?, cedula=?, "
+                   + "fecha_inicio=?, fecha_fin=?, diagnostico=? WHERE folio=?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
 
-        menuPrincipalButton.addActionListener(e -> {
-            new Inicio.PortadaFrame().setVisible(true);
-            dispose();
-        });
+            ps.setString(1, doctorField.getText().trim());
+            ps.setString(2, cedulaField.getText().trim());
+            String inicio = diaIni.getSelectedItem() + " " + mesIni.getSelectedItem() + " " + anioIni.getSelectedItem();
+            String fin    = diaFin.getSelectedItem() + " " + mesFin.getSelectedItem() + " " + anioFin.getSelectedItem();
+            ps.setString(3, inicio);
+            ps.setString(4, fin);
+            ps.setString(5, diagnosticoArea.getText().trim());
+            ps.setInt(6, folio);
 
-        regresarButton.addActionListener(e -> {
-            new Inicio.MenuMedicosFrame().setVisible(true);
-            dispose();
-        });
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al guardar justificante.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
 
-        add(bottomPanel);
+    private void buscarNombre(String id) {
+        String sql = "SELECT nombre, apellidoPaterno, apellidoMaterno FROM InformacionAlumno WHERE id = ?";
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    nombreField.setText(
+                        rs.getString("nombre") + " " +
+                        rs.getString("apellidoPaterno") + " " +
+                        rs.getString("apellidoMaterno")
+                    );
+                }
+            }
+        } catch (SQLException ex) { ex.printStackTrace(); }
+    }
 
-        setVisible(true);
+    // Helpers de fecha…
+    private String[] generarDias() {
+        String[] d = new String[31];
+        for (int i=1;i<=31;i++) d[i-1]=String.valueOf(i);
+        return d;
+    }
+    private String[] generarMeses() {
+        return new String[]{"Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                            "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"};
+    }
+    private String[] generarAnios(int desde,int hasta) {
+        String[] a = new String[hasta - desde + 1];
+        for (int i=0; i<a.length; i++) a[i] = String.valueOf(desde + i);
+        return a;
+    }
+    private void setComboDate(JComboBox<String> d, JComboBox<String> m, JComboBox<String> y, String txt) {
+        String[] p = txt.split(" ");
+        d.setSelectedItem(p[0]);
+        m.setSelectedItem(p[1]);
+        y.setSelectedItem(p[2]);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(PlantillaJustificanteFrame::new);
+        SwingUtilities.invokeLater(() -> new PlantillaJustificanteFrame(1).setVisible(true));
     }
 }

@@ -33,35 +33,46 @@ public class Buscar implements ActionListener {
         try (Connection conexion = BaseDeDatos.ConexionSQLite.conectar()) {
             PreparedStatement stmt;
 
+            // Búsqueda por ID
             if (!idText.isEmpty() && idText.matches("\\d+")) {
-                // Búsqueda por ID
-                sql = "SELECT r.ID, a.Nombre, a.ApellidoPaterno, a.ApellidoMaterno, r.Edad, r.Altura, r.Peso, r.EnfermedadesPreexistentes, r.Medicacion, r.Alergias FROM Registro r JOIN InformacionAlumno a ON r.ID = a.ID WHERE r.ID = ? ";
+                sql = "SELECT a.ID, a.Nombre, a.ApellidoPaterno, a.ApellidoMaterno, a.Correo, " +
+                        "r.Edad, r.Altura, r.Peso, r.EnfermedadesPreexistentes, r.Medicacion, r.Alergias " +
+                        "FROM InformacionAlumno a " +
+                        "JOIN Registro r ON a.ID = r.ID " +
+                        "WHERE a.ID = ?";
                 stmt = conexion.prepareStatement(sql);
                 stmt.setInt(1, Integer.parseInt(idText));
 
+            // Búsqueda por nombre completo
             } else {
-                // Búsqueda por Nombre + Apellidos
-                sql = "SELECT r.ID, a.Nombre, a.ApellidoPaterno, a.ApellidoMaterno, r.Edad, r.Altura, r.Peso, r.EnfermedadesPreexistentes, r.Medicacion, r.Alergias FROM Registro r JOIN InformacionAlumno a ON r.ID = a.ID WHERE a.Nombre = ? AND a.ApellidoPaterno = ? AND a.ApellidoMaterno = ?";
+                sql = "SELECT a.ID, a.Nombre, a.ApellidoPaterno, a.ApellidoMaterno, a.Correo, " +
+                        "r.Edad, r.Altura, r.Peso, r.EnfermedadesPreexistentes, r.Medicacion, r.Alergias " +
+                        "FROM InformacionAlumno a " +
+                        "JOIN Registro r ON a.ID = r.ID " +
+                        "WHERE a.Nombre = ? AND a.ApellidoPaterno = ? AND a.ApellidoMaterno = ?";
                 stmt = conexion.prepareStatement(sql);
                 stmt.setString(1, nombre);
                 stmt.setString(2, apPat);
                 stmt.setString(3, apMat);
             }
 
+            // Ejecutar consulta
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    // Rellenar campos[0..3] con datos de InformacionAlumno
+                    // Datos personales desde InformacionAlumno
                     campos[0].setText(String.valueOf(rs.getInt("ID")));
                     campos[1].setText(rs.getString("Nombre"));
                     campos[2].setText(rs.getString("ApellidoPaterno"));
                     campos[3].setText(rs.getString("ApellidoMaterno"));
-                    // Rellenar campos[4..9] con datos de Registro
-                    campos[4].setText(String.valueOf(rs.getInt("Edad")));
-                    campos[5].setText(String.valueOf(rs.getDouble("Altura")));
-                    campos[6].setText(String.valueOf(rs.getDouble("Peso")));
-                    campos[7].setText(rs.getString("EnfermedadesPreexistentes"));
-                    campos[8].setText(rs.getString("Medicacion"));
-                    campos[9].setText(rs.getString("Alergias"));
+                    campos[4].setText(rs.getString("Correo"));
+
+                    // Datos médicos desde Registros
+                    campos[5].setText(String.valueOf(rs.getInt("Edad")));
+                    campos[6].setText(String.valueOf(rs.getDouble("Altura")));
+                    campos[7].setText(String.valueOf(rs.getDouble("Peso")));
+                    campos[8].setText(rs.getString("EnfermedadesPreexistentes"));
+                    campos[9].setText(rs.getString("Medicacion"));
+                    campos[10].setText(rs.getString("Alergias"));
 
                     JOptionPane.showMessageDialog(
                             null,

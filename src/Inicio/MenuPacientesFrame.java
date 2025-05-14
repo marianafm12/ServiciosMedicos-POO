@@ -1,7 +1,13 @@
 package Inicio;
 
+import GestionCitas.NotificacionDAO;
+import GestionCitas.NotificacionCitasFrame;
+import Justificantes.MisJustificantesPacienteFrame;
+
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
+import java.util.List;
 
 public class MenuPacientesFrame extends JFrame {
     private int idPaciente; // Variable para almacenar el ID del paciente
@@ -9,78 +15,150 @@ public class MenuPacientesFrame extends JFrame {
     public MenuPacientesFrame(int idPaciente) {
         this.idPaciente = idPaciente; // Guardar el ID del paciente
 
-        setTitle("Menú Principal");
-        setSize(600, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridBagLayout());
+    private boolean hasNewNotification = false;
+    private JButton notificationButton;
+    private ImageIcon iconDefault;
+    private ImageIcon iconNew;
+
+    public MenuPacientesFrame() {
+        super("Menú Principal");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        loadIcons();
+        initToolbar();
+        initCenterButtons();
+        setSize(650, 400);
         setLocationRelativeTo(null);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        int idPaciente = SesionUsuario.getPacienteActual();
+        boolean tieneNotif = NotificacionDAO.tieneNotificacionesNoLeidas(idPaciente);
+        if (tieneNotif) {
+            hasNewNotification = true;
+            notificationButton.setIcon(iconNew);
+        }
 
-        // Título
+        setVisible(true);
+    }
+
+    private void loadIcons() {
+        URL u1 = getClass().getResource("/icons/bell.png");
+        URL u2 = getClass().getResource("/icons/bell_new.png");
+        if (u1 == null || u2 == null) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
+                    "Recursos no encontrados",
+                    JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+        Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        Image img2 = new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+        iconDefault = new ImageIcon(img1);
+        iconNew = new ImageIcon(img2);
+    }
+
+    private void initToolbar() {
+        JPanel toolbar = new JPanel(new GridBagLayout());
+        toolbar.setBackground(new Color(245, 245, 245));
+        toolbar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        JLabel titleLabel = new JLabel("Bienvenido al Sistema de Servicios Médicos UDLAP", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(titleLabel, gbc);
-        Dimension buttonSize = new Dimension(250, 40);
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Botón: Gestión de Citas
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 1;
+        JLabel title = new JLabel("Bienvenido al Sistema de Servicios Médicos UDLAP", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        toolbar.add(title, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.0;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+
+        notificationButton = new JButton(iconDefault);
+        notificationButton.setToolTipText("Notificaciones");
+        notificationButton.setPreferredSize(new Dimension(40, 40));
+        notificationButton.setFocusPainted(false);
+        notificationButton.setContentAreaFilled(false);
+        notificationButton.setBorderPainted(false);
+        notificationButton.addActionListener(e -> mostrarNotificaciones());
+
+        toolbar.add(notificationButton, gbc);
+        add(toolbar, BorderLayout.NORTH);
+    }
+
+    private void mostrarNotificaciones() {
+        int idPaciente = SesionUsuario.getPacienteActual();
+        List<NotificacionDAO.Notificacion> notificaciones = NotificacionDAO.obtenerNotificaciones(idPaciente);
+
+        if (notificaciones.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No hay nuevas notificaciones.",
+                    "Notificaciones",
+                    JOptionPane.INFORMATION_MESSAGE);
+            notificationButton.setIcon(iconDefault);
+            return;
+        }
+
+        for (NotificacionDAO.Notificacion notif : notificaciones) {
+            new NotificacionCitasFrame(notif.fecha, notif.hora, notif.servicio, String.valueOf(notif.idPaciente));
+        }
+
+        hasNewNotification = false;
+        notificationButton.setIcon(iconDefault);
+    }
+
+    private void initCenterButtons() {
+        JPanel center = new JPanel(new GridLayout(3, 2, 10, 10));
+        center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        Dimension btnSize = new Dimension(250, 40);
+
         JButton gestionCitasButton = new JButton("Gestión de Citas");
-        gestionCitasButton.setPreferredSize(buttonSize);
-        add(gestionCitasButton, gbc);
-
-        // Botón: Historial Médico
-        gbc.gridy = 1;
-        gbc.gridx = 1;
         JButton historialMedicoButton = new JButton("Historial Médico");
-        historialMedicoButton.setPreferredSize(buttonSize);
-        add(historialMedicoButton, gbc);
-
-        // Botón: Justificante Médico
-        gbc.gridy = 2;
-        gbc.gridx = 0;
-        JButton justificantesMedicosButton = new JButton("Justificantes Médicos");
-        justificantesMedicosButton.setPreferredSize(buttonSize);
-        add(justificantesMedicosButton, gbc);
-
-        // Botón: Personal Médico
-        gbc.gridy = 2;
-        gbc.gridx = 1;
+        JButton justificarNuevoButton = new JButton("Solicitar Justificante");
+        JButton verJustificantesButton = new JButton("Mis Justificantes Emitidos"); // Nuevo
         JButton reportarEmergenciaButton = new JButton("Reportar Emergencia");
-        reportarEmergenciaButton.setPreferredSize(buttonSize);
-        add(reportarEmergenciaButton, gbc);
 
-        // Evento para botón "Gestión de Citas"
+        for (JButton b : new JButton[] {
+                gestionCitasButton, historialMedicoButton,
+                justificarNuevoButton, verJustificantesButton,
+                reportarEmergenciaButton }) {
+            b.setPreferredSize(btnSize);
+            center.add(b);
+        }
+
         gestionCitasButton.addActionListener(e -> {
             new GestionCitas.InicioFrame().setVisible(true);
             dispose();
         });
 
-        // Evento para botón "Historial Médico"
         historialMedicoButton.addActionListener(e -> {
             new GestionEnfermedades.VerDatosPaciente(idPaciente).setVisible(true); // Usar el ID del paciente
             dispose();
         });
 
-        // Evento para botón "Justificante Médico"
-        justificantesMedicosButton.addActionListener(e -> {
+        justificarNuevoButton.addActionListener(e -> {
             new Justificantes.FormularioJustificanteFrame().setVisible(true);
             dispose();
         });
 
-        // Evento para botón "Reportar Emergencia"
+        verJustificantesButton.addActionListener(e -> {
+            int idPaciente = SesionUsuario.getPacienteActual();
+            new MisJustificantesPacienteFrame(String.valueOf(idPaciente)).setVisible(true);
+            dispose();
+        });
+
         reportarEmergenciaButton.addActionListener(e -> {
             new Emergencias.MenuEmergenciaFrame().setVisible(true);
             dispose();
         });
-        setVisible(true);
+
+        add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {

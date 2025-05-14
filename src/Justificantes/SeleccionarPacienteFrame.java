@@ -4,42 +4,42 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SeleccionarPacienteFrame extends JFrame {
-    private JTextField pacienteField;
-    private JButton validarBtn;
 
     public SeleccionarPacienteFrame() {
         setTitle("Seleccionar Paciente");
-        setSize(350, 150);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(500, 200);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new GridLayout(2, 2));
 
-        JLabel pacienteLabel = new JLabel("ID o Nombre del Paciente:");
-        pacienteField = new JTextField();
-        validarBtn = new JButton("Validar");
+        // Panel principal con margen
+        JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Valida con enter
-        getRootPane().setDefaultButton(validarBtn);
+        JButton btnSolicitud = new JButton("Generar desde Solicitud");
+        JButton btnConsulta  = new JButton("Generar a partir de una consulta interna");
 
-        validarBtn.addActionListener(e -> {
-            String paciente = pacienteField.getText();
-            if (!paciente.isEmpty()) {
-                new PlantillaJustificanteFrame();
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Ingrese un ID o nombre válido", "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
+        btnSolicitud.setFont(new Font("Arial", Font.BOLD, 14));
+        btnConsulta.setFont(new Font("Arial", Font.BOLD, 14));
+
+        btnSolicitud.addActionListener(e -> {
+            new SolicitudesJustificantesFrame().setVisible(true);
+            dispose();
         });
 
-        add(pacienteLabel);
-        add(pacienteField);
-        add(new JLabel());
-        add(validarBtn);
-        setVisible(true);
+        btnConsulta.addActionListener(e -> {
+            int folioDePrueba = 1;
+            new PlantillaJustificanteFrame(folioDePrueba).setVisible(true);
+            dispose();
+        });
+
+        panel.add(btnSolicitud);
+        panel.add(btnConsulta);
+
+        add(panel);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(SeleccionarPacienteFrame::new);
+        SwingUtilities.invokeLater(() -> new SeleccionarPacienteFrame().setVisible(true));
     }
 }
+//f

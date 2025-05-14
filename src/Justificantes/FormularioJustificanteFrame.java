@@ -2,96 +2,75 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
+//import java.awt.event.*;
 import java.io.File;
-import java.sql.*;
+import java.time.LocalDate;
 
 public class FormularioJustificanteFrame extends JFrame {
-    private JTextField motivoField, diasField;
-    private JButton subirArchivoBtn, siguienteBtn;
-    private File justificanteFile;
+    private JTextField idField, nombreField, motivoField;
+    private JComboBox<String> diaInicio, mesInicio, anioInicio;
+    private JComboBox<String> diaFin, mesFin, anioFin;
+    private File archivoPDF = null;
 
     public FormularioJustificanteFrame() {
         setTitle("Solicitud de Justificante Médico");
-        setSize(500, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 400);
         setLocationRelativeTo(null);
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(0, 2, 5, 5));
 
-        JLabel motivoLabel = new JLabel("Motivo:");
-        JLabel diasLabel = new JLabel("Días de Ausencia:");
-        motivoField = new JTextField(20);
-        diasField = new JTextField(20);
-        subirArchivoBtn = new JButton("Subir Justificante (PDF)");
-        siguienteBtn = new JButton("Siguiente");
+        // Campos
+        add(new JLabel("ID:"));
+        idField = new JTextField();
+        add(idField);
 
-        subirArchivoBtn.addActionListener(e -> {
+        add(new JLabel("Nombre:"));
+        nombreField = new JTextField();
+        add(nombreField);
+
+        add(new JLabel("Motivo:"));
+        motivoField = new JTextField();
+        add(motivoField);
+
+        add(new JLabel("Inicio de Reposo:"));
+        JPanel panelInicio = new JPanel();
+        diaInicio = new JComboBox<>(generarDias());
+        mesInicio = new JComboBox<>(generarMeses());
+        anioInicio = new JComboBox<>(generarAnios());
+        panelInicio.add(diaInicio);
+        panelInicio.add(mesInicio);
+        panelInicio.add(anioInicio);
+        add(panelInicio);
+
+        add(new JLabel("Fin de Reposo:"));
+        JPanel panelFin = new JPanel();
+        diaFin = new JComboBox<>(generarDias());
+        mesFin = new JComboBox<>(generarMeses());
+        anioFin = new JComboBox<>(generarAnios());
+        panelFin.add(diaFin);
+        panelFin.add(mesFin);
+        panelFin.add(anioFin);
+        add(panelFin);
+
+        // Botón para cargar archivo
+        JButton subirPDF = new JButton("Subir receta (PDF)");
+        subirPDF.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
-            int result = fileChooser.showOpenDialog(this);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                justificanteFile = fileChooser.getSelectedFile();
-                JOptionPane.showMessageDialog(this, "Archivo seleccionado: " + justificanteFile.getName());
+            int resultado = fileChooser.showOpenDialog(this);
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                archivoPDF = fileChooser.getSelectedFile();
+                JOptionPane.showMessageDialog(this, "Archivo cargado: " + archivoPDF.getName());
             }
         });
 
-        siguienteBtn.addActionListener(e -> {
-            String motivo = motivoField.getText();
-            String diasStr = diasField.getText();
+        // Botón siguiente para guardar
+        JButton siguienteBtn = new JButton("Siguiente");
+        siguienteBtn.addActionListener(e -> guardarJustificante());
 
-            if (motivo.isEmpty() || diasStr.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor completa todos los campos.");
-                return;
-            }
-
-            try {
-                int diasAusencia = Integer.parseInt(diasStr);
-
-                Connection conn = BaseDeDatos.ConexionSQLite.conectar();
-
-                // Crear tabla si no existe
-                String crearTabla = "CREATE TABLE IF NOT EXISTS SolicitudJustificantes (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "motivo TEXT NOT NULL, " +
-                        "dias_ausencia INTEGER NOT NULL)";
-                Statement stmt = conn.createStatement();
-                stmt.execute(crearTabla);
-
-                // Insertar datos
-                String sql = "INSERT INTO SolicitudJustificantes (motivo, dias_ausencia) VALUES (?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                pstmt.setString(1, motivo);
-                pstmt.setInt(2, diasAusencia);
-
-                int filas = pstmt.executeUpdate();
-                if (filas > 0) {
-                    ResultSet rs = pstmt.getGeneratedKeys();
-                    if (rs.next()) {
-                        int id = rs.getInt(1);
-                        JOptionPane.showMessageDialog(this,
-                                "Justificante registrado exitosamente.\nID generado: " + id,
-                                "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                        dispose();
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo guardar el justificante.");
-                }
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "El campo de días debe ser un número entero.");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar en la base de datos:\n" + ex.getMessage());
-                ex.printStackTrace();
-            }
-        });
-
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton menuPrincipalButton = new JButton("Menú Principal");
-        JButton regresarButton = new JButton("Regresar");
-        bottomPanel.add(menuPrincipalButton);
-        bottomPanel.add(regresarButton);
-
-        menuPrincipalButton.addActionListener(e -> {
-            new Inicio.PortadaFrame().setVisible(true);
+        // Botones navegación
+        JButton menuBtn = new JButton("Menú Principal");
+        menuBtn.addActionListener(e -> {
+            new Inicio.MenuMedicosFrame().setVisible(true);
             dispose();
         });
 
@@ -101,45 +80,82 @@ public class FormularioJustificanteFrame extends JFrame {
             dispose();
         });
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(10, 5, 5, 5);
-        JLabel titleLabel = new JLabel("Solicitud Justificantes Médicos UDLAP", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        add(titleLabel, gbc);
+        // Panel de botones
+        JPanel panelBotones = new JPanel();
+        panelBotones.add(subirPDF);
+        panelBotones.add(siguienteBtn);
+        panelBotones.add(menuBtn);
+        panelBotones.add(regresarBtn);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        add(motivoLabel, gbc);
+        add(new JLabel());
+        add(panelBotones);
+    }
 
-        gbc.gridx = 1;
-        add(motivoField, gbc);
+    private void guardarJustificante() {
+        String id = idField.getText().trim();
+        String nombre = nombreField.getText().trim();
+        String motivo = motivoField.getText().trim();
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        add(diasLabel, gbc);
+        if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Completa todos los campos obligatorios.");
+            return;
+        }
 
-        gbc.gridx = 1;
-        add(diasField, gbc);
+        LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
+        LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
 
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        add(subirArchivoBtn, gbc);
+        if (inicio.isAfter(fin)) {
+            JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la fecha de fin.");
+            return;
+        }
 
-        gbc.gridx = 1;
-        add(siguienteBtn, gbc);
+        Justificante nuevo = new Justificante(
+                id,
+                nombre,
+                motivo,
+                inicio,
+                fin,
+                "",
+                archivoPDF);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        add(bottomPanel, gbc);
+        boolean exito = JustificanteDAO.guardarJustificante(nuevo);
+        if (exito) {
+            JOptionPane.showMessageDialog(this, "Justificante guardado exitosamente.");
+            dispose();
+            new SeleccionarPacienteFrame().setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Error al guardar justificante.");
+        }
+    }
 
-        setVisible(true);
+    private String[] generarDias() {
+        String[] d = new String[31];
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
+        return d;
+    }
+
+    private String[] generarMeses() {
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+    }
+
+    private String[] generarAnios() {
+        String[] a = new String[6];
+        int base = LocalDate.now().getYear();
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
+        return a;
+    }
+
+    private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+        int d = Integer.parseInt((String) dia.getSelectedItem());
+        int m = mes.getSelectedIndex() + 1;
+        int y = Integer.parseInt((String) anio.getSelectedItem());
+        return LocalDate.of(y, m, d);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(FormularioJustificanteFrame::new);
+        new FormularioJustificanteFrame().setVisible(true);
     }
 }

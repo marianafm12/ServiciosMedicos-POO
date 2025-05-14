@@ -9,13 +9,15 @@ public class ValidacionesCita {
     }
 
     public static boolean esIdValido(String id) {
-        // Posteriormente agregar la condición para que cheque el ID ej. ID>100000
-        return id.matches("^[0-9]+$");
+        return id.matches("^[0-9]+$") && Integer.parseInt(id) >= 100000;
     }
+    
 
     public static boolean esFechaValida(int dia, int mes, int año) {
         LocalDate fechaActual = LocalDate.now();
         LocalDate fechaCita = LocalDate.of(año, mes, dia);
         return fechaCita.isAfter(fechaActual);
     }
+
+    
 }
