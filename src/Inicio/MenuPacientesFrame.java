@@ -14,6 +14,7 @@ public class MenuPacientesFrame extends JFrame {
 
     public MenuPacientesFrame(int idPaciente) {
         this.idPaciente = idPaciente; // Guardar el ID del paciente
+    }
 
     private boolean hasNewNotification = false;
     private JButton notificationButton;
