@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDate;
 
 public class FormularioJustificanteFrame extends JFrame {
     private JTextField idField, nombreField, motivoField;
@@ -16,6 +17,8 @@ public class FormularioJustificanteFrame extends JFrame {
 
     public FormularioJustificanteFrame() {
         setTitle("Solicitud de Justificante Médico");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
         setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
