@@ -1,20 +1,37 @@
 package Inicio;
 
+import Consultas.ConsultasFrame;
+import Emergencias.AccidenteFrame;
+import Emergencias.LlamadaEmergencia;
 import GestionEnfermedades.EditarDatosPaciente;
-import GestionEnfermedades.VerDatosPaciente;
+import Justificantes.EmitirJustificanteDesdeConsultaFrame;
+import Justificantes.SeleccionarPacienteFrame;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.net.URL;
 
+/**
+ * Ventana principal para el médico, con barra superior y botones de acción en
+ * el centro.
+ */
 public class MenuMedicosFrame extends JFrame {
 
     private boolean hasNewNotification = false;
     private JButton notificationButton;
     private ImageIcon iconDefault;
     private ImageIcon iconNew;
+    private JPanel center; // panel central
 
     public MenuMedicosFrame() {
+        super("Menú Principal");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        loadIcons();
+        initToolbar();
+        initCenterButtons();
+        setSize(600, 350);
         super("Menú Principal");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -32,7 +49,7 @@ public class MenuMedicosFrame extends JFrame {
         URL u2 = getClass().getResource("/icons/bell_new.png");
         if (u1 == null || u2 == null) {
             JOptionPane.showMessageDialog(
-                    null,
+                    this,
                     "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
                     "Recursos no encontrados",
                     JOptionPane.ERROR_MESSAGE);
@@ -44,94 +61,134 @@ public class MenuMedicosFrame extends JFrame {
         iconNew = new ImageIcon(img2);
     }
 
-    /** Crea la barra superior con título centrado y campana a la derecha */
+    /**
+     * Crea la barra superior con título centrado y campana de notificaciones a la
+     * derecha
+     */
     private void initToolbar() {
         JPanel toolbar = new JPanel(new GridBagLayout());
         toolbar.setBackground(new Color(245, 245, 245));
         toolbar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         GridBagConstraints gbc = new GridBagConstraints();
-
+        // Título (usa todo el espacio disponible)
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
-        gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel title = new JLabel("Bienvenido al Sistema de Servicios Médicos UDLAP", SwingConstants.CENTER);
+        JLabel title = new JLabel(
+                "Bienvenido al Sistema de Servicios Médicos UDLAP",
+                SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 16));
         toolbar.add(title, gbc);
 
-        // Botón: Editar Datos del Paciente
-        gbc.gridy = 1;
+        // Botón de notificaciones
         gbc.gridx = 1;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        notificationButton = new JButton(iconDefault);
+        notificationButton.setBorderPainted(false);
+        notificationButton.setContentAreaFilled(false);
+        notificationButton.addActionListener(e -> toggleNotification());
+        toolbar.add(notificationButton, gbc);
+
+        add(toolbar, BorderLayout.NORTH);
+    }
+
+    /** Alterna el icono de la campana según haya notificaciones nuevas */
+    private void toggleNotification() {
+        hasNewNotification = !hasNewNotification;
+        notificationButton.setIcon(hasNewNotification ? iconNew : iconDefault);
+        // Aquí podrías, por ejemplo, abrir una ventana de notificaciones...
+    }
+
+    /** Crea el panel central con todos los botones y sus listeners */
+    private void initCenterButtons() {
+        center = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
+        Dimension buttonSize = new Dimension(200, 40);
+
+        // 1) Consulta Nueva
+        JButton consultaButton = new JButton("Consulta Nueva");
+        consultaButton.setPreferredSize(buttonSize);
+        center.add(consultaButton, gbc);
+
+        // 2) Editar Datos del Paciente
+        gbc.gridy++;
         JButton editarDatosButton = new JButton("Editar Datos del Paciente");
         editarDatosButton.setPreferredSize(buttonSize);
-        add(editarDatosButton, gbc);
+        center.add(editarDatosButton, gbc);
 
-        // Botón: Justificante Médico
-        gbc.gridy = 2;
-        gbc.gridx = 0;
-        JButton justificantesMedicosButton = new JButton("Justificantes Médicos");
-        justificantesMedicosButton.setPreferredSize(buttonSize);
-        add(justificantesMedicosButton, gbc);
+        // 3) Justificantes Médicos
+        gbc.gridy++;
+        JButton justificantesButton = new JButton("Justificantes Médicos");
+        justificantesButton.setPreferredSize(buttonSize);
+        center.add(justificantesButton, gbc);
 
-        // Botón: Llamada de Emergencia Nueva
-        gbc.gridy = 2;
-        gbc.gridx = 1;
-        JButton llamadaEmergenciaNueva = new JButton("Registrar Llamada de Emergencia");
-        llamadaEmergenciaNueva.setPreferredSize(buttonSize);
-        add(llamadaEmergenciaNueva, gbc);
+        // 4) Llamada de Emergencia
+        gbc.gridy++;
+        JButton emergenciaButton = new JButton("Registrar Llamada de Emergencia");
+        emergenciaButton.setPreferredSize(buttonSize);
+        center.add(emergenciaButton, gbc);
 
-        // Botón: Formulario Reporte de Accidente
-        gbc.gridy = 3;
-        gbc.gridx = 0;
-        JButton reporteAccidente = new JButton("Llenar Reporte de accidente");
-        reporteAccidente.setPreferredSize(buttonSize);
-        add(reporteAccidente, gbc);
+        // 5) Reporte de Accidente
+        gbc.gridy++;
+        JButton reporteAccidenteButton = new JButton("Llenar Reporte de Accidente");
+        reporteAccidenteButton.setPreferredSize(buttonSize);
+        center.add(reporteAccidenteButton, gbc);
 
-        // Evento para botón "Consulta Nueva"
+        // --- Listeners de cada botón ---
         consultaButton.addActionListener(e -> {
-            Consultas.ConsultasFrame.launchApp();
+            ConsultasFrame.launchApp();
             dispose();
         });
 
-        // Evento para botón "Editar Datos del Paciente"
         editarDatosButton.addActionListener(e -> {
-            String idPacienteStr = JOptionPane.showInputDialog(this, "Ingrese el ID del Paciente:");
+            String idPacienteStr = JOptionPane.showInputDialog(
+                    this,
+                    "Ingrese el ID del Paciente:");
             if (idPacienteStr != null && !idPacienteStr.isEmpty()) {
                 try {
                     int idPaciente = Integer.parseInt(idPacienteStr);
-                    new EditarDatosPaciente(idPaciente).setVisible(true); // Usa el nuevo constructor
+                    new EditarDatosPaciente(idPaciente).setVisible(true);
+                    dispose();
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "ID inválido. Debe ser un número.", "Error",
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "ID inválido. Debe ser un número.",
+                            "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
-        justificantes.addActionListener(e -> {
-            new Justificantes.SeleccionarPacienteFrame().setVisible(true);
-            dispose();
-        });
-        emitir.addActionListener(e -> {
-            new Justificantes.EmitirJustificanteDesdeConsultaFrame().setVisible(true);
-            dispose();
-        });
-        emergencia.addActionListener(e -> {
-            new Emergencias.LlamadaEmergencia().setVisible(true);
+
+        justificantesButton.addActionListener(e -> {
+            new SeleccionarPacienteFrame().setVisible(true);
             dispose();
         });
 
-        // Evento para botón "Reporte de Accidente"
-        reporteAccidente.addActionListener(e -> {
-            new Emergencias.AccidenteFrame().setVisible(true);
+        emergenciaButton.addActionListener(e -> {
+            new LlamadaEmergencia().setVisible(true);
+            dispose();
+        });
+
+        reporteAccidenteButton.addActionListener(e -> {
+            new AccidenteFrame().setVisible(true);
             dispose();
         });
 
         add(center, BorderLayout.CENTER);
+        add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(MenuMedicosFrame::new);
         SwingUtilities.invokeLater(MenuMedicosFrame::new);
     }
 }
