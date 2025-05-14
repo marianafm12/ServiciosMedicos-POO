@@ -3,7 +3,7 @@ package Justificantes;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,8 +24,8 @@ public class MisJustificantesPacienteFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        modelo = new DefaultTableModel(new String[]{
-            "Folio", "Motivo", "Inicio", "Fin", "Estado", "Médico"
+        modelo = new DefaultTableModel(new String[] {
+                "Folio", "Motivo", "Inicio", "Fin", "Estado", "Médico"
         }, 0);
 
         tabla = new JTable(modelo);
@@ -57,13 +57,13 @@ public class MisJustificantesPacienteFrame extends JFrame {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (Justificante j : lista) {
-            modelo.addRow(new Object[]{
-                j.getFolio(),
-                j.getMotivo(),
-                j.getFechaInicio().format(fmt),
-                j.getFechaFin().format(fmt),
-                j.getEstado(),
-                j.getResueltoPor() != null ? j.getResueltoPor() : "-"
+            modelo.addRow(new Object[] {
+                    j.getFolio(),
+                    j.getMotivo(),
+                    j.getFechaInicio().format(fmt),
+                    j.getFechaFin().format(fmt),
+                    j.getEstado(),
+                    j.getResueltoPor() != null ? j.getResueltoPor() : "-"
             });
         }
     }

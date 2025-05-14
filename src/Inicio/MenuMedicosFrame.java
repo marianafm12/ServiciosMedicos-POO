@@ -29,17 +29,16 @@ public class MenuMedicosFrame extends JFrame {
         URL u2 = getClass().getResource("/icons/bell_new.png");
         if (u1 == null || u2 == null) {
             JOptionPane.showMessageDialog(
-                null,
-                "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
-                "Recursos no encontrados",
-                JOptionPane.ERROR_MESSAGE
-            );
+                    null,
+                    "No se encontraron /icons/bell.png o /icons/bell_new.png en el classpath.",
+                    "Recursos no encontrados",
+                    JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
         Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         Image img2 = new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
         iconDefault = new ImageIcon(img1);
-        iconNew     = new ImageIcon(img2);
+        iconNew = new ImageIcon(img2);
     }
 
     /** Crea la barra superior con título centrado y campana a la derecha */
@@ -75,11 +74,10 @@ public class MenuMedicosFrame extends JFrame {
             hasNewNotification = false;
             notificationButton.setIcon(iconDefault);
             JOptionPane.showMessageDialog(
-                this,
-                "No hay nuevas notificaciones.",
-                "Notificaciones",
-                JOptionPane.INFORMATION_MESSAGE
-            );
+                    this,
+                    "No hay nuevas notificaciones.",
+                    "Notificaciones",
+                    JOptionPane.INFORMATION_MESSAGE);
         });
 
         toolbar.add(notificationButton, gbc);
@@ -97,16 +95,15 @@ public class MenuMedicosFrame extends JFrame {
         center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         Dimension btnSize = new Dimension(250, 40);
-        JButton consulta      = new JButton("Consulta Nueva");
-        JButton gestion       = new JButton("Gestión de Enfermedades");
-        JButton registro      = new JButton("Registro de Paciente Nuevo");
+        JButton consulta = new JButton("Consulta Nueva");
+        JButton gestion = new JButton("Gestión de Enfermedades");
+        JButton registro = new JButton("Registro de Paciente Nuevo");
         JButton justificantes = new JButton("Justificantes Médicos");
-        JButton emitir        = new JButton("Emitir Justificante Médico"); // NUEVO
-        JButton emergencia    = new JButton("Registrar Llamada de Emergencia");
-        JButton accidente     = new JButton("Llenar Reporte de Accidente");
+        JButton emitir = new JButton("Emitir Justificante Médico"); // NUEVO
+        JButton emergencia = new JButton("Registrar Llamada de Emergencia");
+        JButton accidente = new JButton("Llenar Reporte de Accidente");
 
-        for (JButton b : new JButton[]{consulta, gestion, registro, justificantes,
-                                       emitir, emergencia, accidente}) {
+        for (JButton b : new JButton[] { consulta, gestion, registro, justificantes, emitir, emergencia, accidente }) {
             b.setPreferredSize(btnSize);
             center.add(b);
         }

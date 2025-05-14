@@ -1,7 +1,7 @@
 package Justificantes;
 
 import org.junit.jupiter.api.*;
-import java.io.File;
+//import java.io.File;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,13 +29,13 @@ public class JustificantesTest {
         assertTrue(ejemplo.getFechaInicio().isBefore(ejemplo.getFechaFin()));
     }
 
-
     @Test
     public void testSetDiagnostico() {
         ejemplo.setDiagnostico("Nuevo diagnóstico");
         assertEquals("Nuevo diagnóstico", ejemplo.getDiagnostico());
     }
-//ffff
+
+    // ffff
     @Test
     public void testGetEstado() {
         assertEquals("Aprobado", ejemplo.getEstado());

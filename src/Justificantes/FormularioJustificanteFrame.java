@@ -2,7 +2,7 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 import java.io.File;
 import java.time.LocalDate;
 
@@ -37,7 +37,9 @@ public class FormularioJustificanteFrame extends JFrame {
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
-        panelInicio.add(diaInicio); panelInicio.add(mesInicio); panelInicio.add(anioInicio);
+        panelInicio.add(diaInicio);
+        panelInicio.add(mesInicio);
+        panelInicio.add(anioInicio);
         add(panelInicio);
 
         add(new JLabel("Fin de Reposo:"));
@@ -45,7 +47,9 @@ public class FormularioJustificanteFrame extends JFrame {
         diaFin = new JComboBox<>(generarDias());
         mesFin = new JComboBox<>(generarMeses());
         anioFin = new JComboBox<>(generarAnios());
-        panelFin.add(diaFin); panelFin.add(mesFin); panelFin.add(anioFin);
+        panelFin.add(diaFin);
+        panelFin.add(mesFin);
+        panelFin.add(anioFin);
         add(panelFin);
 
         // Botón para cargar archivo
@@ -72,7 +76,7 @@ public class FormularioJustificanteFrame extends JFrame {
 
         JButton regresarBtn = new JButton("Regresar");
         regresarBtn.addActionListener(e -> {
-            dispose(); 
+            dispose();
         });
 
         // Panel de botones
@@ -82,64 +86,64 @@ public class FormularioJustificanteFrame extends JFrame {
         panelBotones.add(menuBtn);
         panelBotones.add(regresarBtn);
 
-        add(new JLabel()); 
+        add(new JLabel());
         add(panelBotones);
     }
 
-private void guardarJustificante() {
-    String id = idField.getText().trim();
-    String nombre = nombreField.getText().trim();
-    String motivo = motivoField.getText().trim();
+    private void guardarJustificante() {
+        String id = idField.getText().trim();
+        String nombre = nombreField.getText().trim();
+        String motivo = motivoField.getText().trim();
 
-    if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Completa todos los campos obligatorios.");
-        return;
+        if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Completa todos los campos obligatorios.");
+            return;
+        }
+
+        LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
+        LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
+
+        if (inicio.isAfter(fin)) {
+            JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la fecha de fin.");
+            return;
+        }
+
+        Justificante nuevo = new Justificante(
+                id,
+                nombre,
+                motivo,
+                inicio,
+                fin,
+                "",
+                archivoPDF);
+
+        boolean exito = JustificanteDAO.guardarJustificante(nuevo);
+        if (exito) {
+            JOptionPane.showMessageDialog(this, "Justificante guardado exitosamente.");
+            dispose();
+            new SeleccionarPacienteFrame().setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Error al guardar justificante.");
+        }
     }
-
-    LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
-    LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
-
-    if (inicio.isAfter(fin)) {
-        JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la fecha de fin.");
-        return;
-    }
-
-    Justificante nuevo = new Justificante(
-        id,
-        nombre,
-        motivo,
-        inicio,
-        fin,
-        "", 
-        archivoPDF
-    );
-
-    boolean exito = JustificanteDAO.guardarJustificante(nuevo);
-    if (exito) {
-        JOptionPane.showMessageDialog(this, "Justificante guardado exitosamente.");
-        dispose();
-        new SeleccionarPacienteFrame().setVisible(true); 
-    } else {
-        JOptionPane.showMessageDialog(this, "Error al guardar justificante.");
-    }
-}
-
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
         return d;
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     }
 
     private String[] generarAnios() {
         String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 

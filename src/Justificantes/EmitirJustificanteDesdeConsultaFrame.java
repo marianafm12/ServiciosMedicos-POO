@@ -2,7 +2,7 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 import java.io.File;
 import java.time.LocalDate;
 
@@ -25,16 +25,21 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         nombreField = new JTextField();
         motivoField = new JTextField();
 
-        add(new JLabel("ID del Paciente:")); add(idField);
-        add(new JLabel("Nombre del Paciente:")); add(nombreField);
-        add(new JLabel("Motivo:")); add(motivoField);
+        add(new JLabel("ID del Paciente:"));
+        add(idField);
+        add(new JLabel("Nombre del Paciente:"));
+        add(nombreField);
+        add(new JLabel("Motivo:"));
+        add(motivoField);
 
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
         add(new JLabel("Inicio de Reposo:"));
         JPanel panelInicio = new JPanel();
-        panelInicio.add(diaInicio); panelInicio.add(mesInicio); panelInicio.add(anioInicio);
+        panelInicio.add(diaInicio);
+        panelInicio.add(mesInicio);
+        panelInicio.add(anioInicio);
         add(panelInicio);
 
         diaFin = new JComboBox<>(generarDias());
@@ -42,7 +47,9 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         anioFin = new JComboBox<>(generarAnios());
         add(new JLabel("Fin de Reposo:"));
         JPanel panelFin = new JPanel();
-        panelFin.add(diaFin); panelFin.add(mesFin); panelFin.add(anioFin);
+        panelFin.add(diaFin);
+        panelFin.add(mesFin);
+        panelFin.add(anioFin);
         add(panelFin);
 
         diagnosticoArea = new JTextArea(4, 30);
@@ -105,19 +112,21 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
         return d;
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     }
 
     private String[] generarAnios() {
         String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 
@@ -132,4 +141,3 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         new EmitirJustificanteDesdeConsultaFrame().setVisible(true);
     }
 }
-
