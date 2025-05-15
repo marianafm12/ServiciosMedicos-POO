@@ -2,6 +2,8 @@ package Inicio;
 
 import Utilidades.BarraVentanaUDLAP;
 import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
+import Utilidades.PanelProvider;
 import BaseDeDatos.ConexionSQLite;
 import Registro.*;
 
@@ -11,10 +13,11 @@ import java.awt.event.*;
 import java.sql.*;
 
 public class InterfazMedica extends JFrame {
-    private JPanel contentPanel; // Panel central dinámico (CardLayout)
+    private JPanel contentPanel;
     private final boolean esMedico;
     private final int userId;
     private String nombreUsuario;
+    private PanelManager panelManager;
 
     public InterfazMedica(boolean esMedico, int userId) {
         this.esMedico = esMedico;
@@ -39,7 +42,7 @@ public class InterfazMedica extends JFrame {
         contenedorBarras.add(barraVentana);
 
         // Panel superior blanco con saludo, título, campana y cerrar sesión
-        JPanel topPanel = crearTopPanel(); // Extraemos el código existente a un método aparte
+        JPanel topPanel = crearTopPanel();
         contenedorBarras.add(topPanel);
 
         // Añadimos el contenedor completo a la parte NORTH del marco
@@ -54,11 +57,27 @@ public class InterfazMedica extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
 
         // Menú lateral izquierdo
+        JPanel menuPanel = crearMenuPanel();
+        mainPanel.add(menuPanel, BorderLayout.WEST);
+
+        // Panel central de contenido (CardLayout)
+        contentPanel = new JPanel(new CardLayout());
+        contentPanel.setBackground(Color.WHITE);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+
+        // Inicializar PanelManager y registrar paneles
+        panelManager = new PanelManager(contentPanel);
+        registrarPaneles();
+
+        // Mostrar panel inicial
+        panelManager.showPanel("panel0");
+    }
+
+    private JPanel crearMenuPanel() {
         JPanel menuPanel = new JPanel();
         menuPanel.setBackground(ColoresUDLAP.BLANCO);
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(15, 8, 8, 8));
-        mainPanel.add(menuPanel, BorderLayout.WEST);
 
         // Definición de botones del menú
         String[] items = esMedico
@@ -90,7 +109,7 @@ public class InterfazMedica extends JFrame {
             boton.setPreferredSize(new Dimension(260, 80));
             boton.setMinimumSize(new Dimension(260, 80));
             final int idx = i;
-            boton.addActionListener(e -> mostrarPanel("panel" + idx));
+            boton.addActionListener(e -> manejarClickBoton(idx));
             menuPanel.add(boton);
             menuPanel.add(Box.createRigidArea(new Dimension(0, 13)));
         }
@@ -103,36 +122,65 @@ public class InterfazMedica extends JFrame {
         btnEmergencia.setMaximumSize(new Dimension(260, 56));
         btnEmergencia.setPreferredSize(new Dimension(260, 56));
         btnEmergencia.setMinimumSize(new Dimension(260, 56));
+        btnEmergencia.addActionListener(e -> panelManager.showPanel("emergencia"));
         menuPanel.add(btnEmergencia);
 
         menuPanel.add(Box.createVerticalGlue());
 
-        // Panel central de contenido (CardLayout)
-        contentPanel = new JPanel(new CardLayout());
-        contentPanel.setBackground(Color.WHITE);
-        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        return menuPanel;
+    }
 
-        // Paneles de ejemplo (estos pueden ser reemplazados por tus paneles reales)
-        for (int i = 0; i < items.length; i++) {
-            JPanel panel = new JPanel();
-            panel.setBackground(Color.WHITE);
-            JLabel lbl = new JLabel("Panel de ejemplo " + (i + 1), SwingConstants.CENTER);
-            lbl.setFont(new Font("Arial", Font.BOLD, 26));
-            panel.add(lbl);
-            contentPanel.add(panel, "panel" + i);
+    private void manejarClickBoton(int indiceBoton) {
+        if (indiceBoton == 0 && esMedico) {
+            panelManager.showPanel("formularioRegistro");
+        } else {
+            panelManager.showPanel("panel" + indiceBoton);
+        }
+    }
+
+    private void registrarPaneles() {
+        // Registrar paneles básicos
+        for (int i = 0; i < (esMedico ? 6 : 5); i++) {
+            final int idx = i;
+            panelManager.registerPanel(new PanelProvider() {
+                @Override
+                public JPanel getPanel() {
+                    JPanel panel = new JPanel();
+                    panel.setBackground(Color.WHITE);
+                    JLabel lbl = new JLabel("Panel " + (idx + 1), SwingConstants.CENTER);
+                    lbl.setFont(new Font("Arial", Font.BOLD, 26));
+                    panel.add(lbl);
+                    return panel;
+                }
+
+                @Override
+                public String getPanelName() {
+                    return "panel" + idx;
+                }
+            });
         }
 
-        // Panel emergencias
-        JPanel panelEmergencia = new JPanel();
-        panelEmergencia.setBackground(Color.WHITE);
-        JLabel lblEmg = new JLabel("Panel de Emergencias", SwingConstants.CENTER);
-        lblEmg.setFont(new Font("Arial", Font.BOLD, 26));
-        panelEmergencia.add(lblEmg);
-        btnEmergencia.addActionListener(e -> mostrarPanelEmergencia());
-        contentPanel.add(panelEmergencia, "emergencia");
+        // Registrar panel de emergencia
+        panelManager.registerPanel(new PanelProvider() {
 
-        // Mostrar panel inicial
-        mostrarPanel("panel0");
+            @Override
+            public JPanel getPanel() {
+                JPanel panel = new JPanel();
+                panel.setBackground(Color.WHITE);
+                JLabel lbl = new JLabel("Panel de Emergencias", SwingConstants.CENTER);
+                lbl.setFont(new Font("Arial", Font.BOLD, 26));
+                panel.add(lbl);
+                return panel;
+            }
+
+            @Override
+            public String getPanelName() {
+                return "emergencia";
+            }
+        });
+
+        // Registrar panel de formulario de registro
+        panelManager.registerPanel(new PanelRegistroPaciente());
     }
 
     // Nuevo método auxiliar para crear el panel superior
