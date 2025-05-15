@@ -1,11 +1,9 @@
 package Inicio;
 
-import Utilidades.BarraVentanaUDLAP;
-import Utilidades.ColoresUDLAP;
-import Utilidades.PanelManager;
-import Utilidades.PanelProvider;
+import Utilidades.*;
 import BaseDeDatos.ConexionSQLite;
 import Consultas.PanelConsultaNueva;
+import Emergencias.PanelLlamadaEmergencia;
 import Registro.*;
 
 import javax.swing.*;
@@ -136,6 +134,24 @@ public class InterfazMedica extends JFrame {
             panelManager.showPanel("formularioRegistro");
         } else if (indiceBoton == 1 && esMedico) {
             panelManager.showPanel("consultaNueva");
+        } else if (indiceBoton == 2 && esMedico) {
+            panelManager.showPanel("editarDatosPaciente");
+        } else if (indiceBoton == 3 && esMedico) {
+            panelManager.showPanel("justificantesMedicos");
+        } else if (indiceBoton == 4 && esMedico) {
+            panelManager.showPanel("llamadaEmergencia");
+        } else if (indiceBoton == 5 && esMedico) {
+            panelManager.showPanel("reporteAccidente");
+        } else if (indiceBoton == 0 && !esMedico) {
+            panelManager.showPanel("gestionCitas");
+        } else if (indiceBoton == 1 && !esMedico) {
+            panelManager.showPanel("historialMedico");
+        } else if (indiceBoton == 2 && !esMedico) {
+            panelManager.showPanel("solicitarJustificante");
+        } else if (indiceBoton == 3 && !esMedico) {
+            panelManager.showPanel("misJustificantes");
+        } else if (indiceBoton == 4 && !esMedico) {
+            panelManager.showPanel("reportarEmergencia");
         } else {
             panelManager.showPanel("panel" + indiceBoton);
         }
@@ -186,6 +202,8 @@ public class InterfazMedica extends JFrame {
         panelManager.registerPanel(new PanelRegistroPaciente());
         // Registrar panel de consulta nueva
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+        // Registrar panel de llamada de emergencia
+        panelManager.registerPanel(new PanelLlamadaEmergencia());
 
 
     }
