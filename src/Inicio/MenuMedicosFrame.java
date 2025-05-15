@@ -4,12 +4,12 @@ import Consultas.ConsultasFrame;
 import Emergencias.AccidenteFrame;
 import Emergencias.LlamadaEmergencia;
 import GestionEnfermedades.EditarDatosPaciente;
-import Justificantes.EmitirJustificanteDesdeConsultaFrame;
 import Justificantes.SeleccionarPacienteFrame;
+import Registro.AgregarRegistro;
+import Registro.FormularioFrame;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.URL;
 import java.net.URL;
 
 /**
@@ -31,7 +31,7 @@ public class MenuMedicosFrame extends JFrame {
         loadIcons();
         initToolbar();
         initCenterButtons();
-        setSize(600, 350);
+        setSize(900, 700); // ¡Aumenta el tamaño para mejor visualización!
         setLocationRelativeTo(null);
         setVisible(true);
     }
@@ -100,45 +100,57 @@ public class MenuMedicosFrame extends JFrame {
     private void initCenterButtons() {
         center = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(14, 10, 14, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
+
+        Dimension buttonSize = new Dimension(260, 48);
+
+        // 1) Registrar paciente nuevo
         gbc.gridy = 0;
+        JButton registroButton = new JButton("Registrar Paciente Nuevo");
+        registroButton.setPreferredSize(buttonSize);
+        center.add(registroButton, gbc);
 
-        Dimension buttonSize = new Dimension(200, 40);
-
-        // 1) Consulta Nueva
+        // 2) Consulta Nueva
+        gbc.gridy++;
         JButton consultaButton = new JButton("Consulta Nueva");
         consultaButton.setPreferredSize(buttonSize);
         center.add(consultaButton, gbc);
 
-        // 2) Editar Datos del Paciente
+        // 3) Editar Datos del Paciente
         gbc.gridy++;
         JButton editarDatosButton = new JButton("Editar Datos del Paciente");
         editarDatosButton.setPreferredSize(buttonSize);
         center.add(editarDatosButton, gbc);
 
-        // 3) Justificantes Médicos
+        // 4) Justificantes Médicos
         gbc.gridy++;
         JButton justificantesButton = new JButton("Justificantes Médicos");
         justificantesButton.setPreferredSize(buttonSize);
         center.add(justificantesButton, gbc);
 
-        // 4) Llamada de Emergencia
+        // 5) Llamada de Emergencia
         gbc.gridy++;
         JButton emergenciaButton = new JButton("Registrar Llamada de Emergencia");
         emergenciaButton.setPreferredSize(buttonSize);
         center.add(emergenciaButton, gbc);
 
-        // 5) Reporte de Accidente
+        // 6) Reporte de Accidente
         gbc.gridy++;
         JButton reporteAccidenteButton = new JButton("Llenar Reporte de Accidente");
         reporteAccidenteButton.setPreferredSize(buttonSize);
         center.add(reporteAccidenteButton, gbc);
 
         // --- Listeners de cada botón ---
+        registroButton.addActionListener(e -> {
+            // Abre el formulario de registro de paciente nuevo
+            new Registro.AgendaDirecciones().setVisible(true);
+            dispose();
+        });
+
         consultaButton.addActionListener(e -> {
-            ConsultasFrame.launchApp();
+            new Consultas.ConsultasFrame().setVisible(true);
             dispose();
         });
 
@@ -150,7 +162,7 @@ public class MenuMedicosFrame extends JFrame {
                 try {
                     int idPaciente = Integer.parseInt(idPacienteStr);
                     new EditarDatosPaciente(idPaciente).setVisible(true);
-                    dispose();
+                    // dispose();
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(
                             this,
@@ -163,25 +175,23 @@ public class MenuMedicosFrame extends JFrame {
 
         justificantesButton.addActionListener(e -> {
             new SeleccionarPacienteFrame().setVisible(true);
-            dispose();
+            // dispose();
         });
 
         emergenciaButton.addActionListener(e -> {
             new LlamadaEmergencia().setVisible(true);
-            dispose();
+            // dispose();
         });
 
         reporteAccidenteButton.addActionListener(e -> {
             new AccidenteFrame().setVisible(true);
-            dispose();
+            // dispose();
         });
 
-        add(center, BorderLayout.CENTER);
         add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MenuMedicosFrame::new);
         SwingUtilities.invokeLater(MenuMedicosFrame::new);
     }
 }
