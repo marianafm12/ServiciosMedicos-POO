@@ -2,7 +2,7 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-//import java.awt.event.*;
+import Inicio.SesionUsuario;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
 import Inicio.MenuPacientesFrame;
@@ -47,7 +47,7 @@ public class CorreosProfesoresFrame extends JFrame {
         add(bot, BorderLayout.SOUTH);
 
         menuBtn.addActionListener(e -> {
-            new MenuPacientesFrame().setVisible(true);
+            new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
             dispose();
         });
         backBtn.addActionListener(e -> {
@@ -57,7 +57,7 @@ public class CorreosProfesoresFrame extends JFrame {
         enviarBtn.addActionListener(e -> {
             if (guardarCorreos()) {
                 JOptionPane.showMessageDialog(this, "Correos registrados para folio " + folio);
-                new MenuPacientesFrame().setVisible(true);
+                new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
                 dispose();
             }
         });

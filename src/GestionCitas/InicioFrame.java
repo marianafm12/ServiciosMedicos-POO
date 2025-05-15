@@ -3,12 +3,18 @@ package GestionCitas;
 import javax.swing.*;
 import java.awt.*;
 
+import Inicio.SesionUsuario;
+/*import GestionCitas.AgendaCitaFrame;
+import GestionCitas.ModificarCitaFrame;*/
+import Inicio.PortadaFrame;
+import Inicio.MenuPacientesFrame;
+
 public class InicioFrame extends JFrame {
 
     public InicioFrame() {
-        setTitle("Gestión de Citas-Menú Principal");
+        super("Gestión de Citas – Menú Principal");
         setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
         setLocationRelativeTo(null);
 
@@ -35,21 +41,21 @@ public class InicioFrame extends JFrame {
         JButton modificarCitaButton = new JButton("Modificar Cita");
         add(modificarCitaButton, gbc);
 
-        // Acción para abrir el formulario de agendar cita
-
+        // Listener para Agendar Cita
         agendarCitaButton.addActionListener(e -> {
-            new AgendaCitaFrame();
+            int id = SesionUsuario.getPacienteActual();
+            new AgendaCitaFrame(id).setVisible(true);
             dispose();
         });
 
-        // Acción para abrir el formulario de modificar cita
+        // Listener para Modificar Cita (usa el constructor sin parámetros)
         modificarCitaButton.addActionListener(e -> {
-            new ModificarCitaFrame();
+            new ModificarCitaFrame().setVisible(true);
             dispose();
         });
 
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        // Panel inferior con botones Menú Principal / Regresar
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton menuPrincipalButton = new JButton("Menú Principal");
         JButton regresarButton = new JButton("Regresar");
         bottomPanel.add(menuPrincipalButton);
@@ -58,19 +64,18 @@ public class InicioFrame extends JFrame {
         gbc.gridy = 9;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
         add(bottomPanel, gbc);
 
-        // Evento para botón "Menú Principal"
+        // Listener para Menú Principal
         menuPrincipalButton.addActionListener(e -> {
-            new Inicio.PortadaFrame().setVisible(true);
+            new PortadaFrame().setVisible(true);
             dispose();
         });
 
-        // Evento para botón "Regresar"
+        // Listener para Regresar (vuelve al menú de pacientes)
         regresarButton.addActionListener(e -> {
-            int idPaciente = 1; // Reemplaza con el ID del paciente actual o pásalo como parámetro al crear esta clase
-            new Inicio.MenuPacientesFrame(idPaciente).setVisible(true);
+            int idPaciente = SesionUsuario.getPacienteActual();
+            new MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 
@@ -78,6 +83,6 @@ public class InicioFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        new InicioFrame();
+        SwingUtilities.invokeLater(InicioFrame::new);
     }
 }
