@@ -143,11 +143,13 @@ public class MenuMedicosFrame extends JFrame {
         center.add(reporteAccidenteButton, gbc);
 
         // --- Listeners de cada botón ---
-        registroButton.addActionListener(e -> {
-            // Abre el formulario de registro de paciente nuevo
-            new Registro.AgendaDirecciones().setVisible(true);
-            dispose();
-        });
+        /*
+         * registroButton.addActionListener(e -> {
+         * // Abre el formulario de registro de paciente nuevo
+         * new Registro.AgendaDirecciones().setVisible(true);
+         * dispose();
+         * });
+         */
 
         consultaButton.addActionListener(e -> {
             new Consultas.ConsultasFrame().setVisible(true);
