@@ -187,6 +187,7 @@ public class InterfazMedica extends JFrame {
         // Registrar panel de consulta nueva
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
 
+
     }
 
     // Nuevo método auxiliar para crear el panel superior
