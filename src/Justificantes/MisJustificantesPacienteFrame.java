@@ -3,12 +3,12 @@ package Justificantes;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-//import java.awt.event.*;
+import Inicio.SesionUsuario;
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-import Inicio.MenuPacientesFrame; // Asegúrate de que esta clase existe
+import Inicio.MenuPacientesFrame;
 
 public class MisJustificantesPacienteFrame extends JFrame {
     private JTable tabla;
@@ -40,7 +40,8 @@ public class MisJustificantesPacienteFrame extends JFrame {
         JButton btnRegresar = new JButton("Regresar");
         btnRegresar.addActionListener(e -> {
             dispose(); // Cierra esta ventana
-            new MenuPacientesFrame().setVisible(true); // Abre el menú principal del paciente
+            new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true); // Abre el menú principal del
+                                                                                        // paciente
         });
 
         JPanel panelBotones = new JPanel();

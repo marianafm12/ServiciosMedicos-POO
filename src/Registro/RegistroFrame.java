@@ -1,4 +1,4 @@
-package GestionCitas;
+package Registro;
 
 import javax.swing.*;
 import java.awt.*;
