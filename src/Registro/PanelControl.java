@@ -2,21 +2,36 @@ package Registro;
 
 import javax.swing.*;
 import java.awt.*;
+import Utilidades.ColoresUDLAP;
 
 public class PanelControl extends JPanel {
     public PanelControl(JTextField[] campos) {
-        setLayout(new GridLayout(1, 3, 5, 5));
+        setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        setBackground(ColoresUDLAP.BLANCO);
+        setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        JButton botonAgregar = new JButton("Agregar");
+        JButton botonAgregar = crearBoton("Agregar", ColoresUDLAP.VERDE_SOLIDO);
         botonAgregar.addActionListener(new AgregarRegistro(campos));
         add(botonAgregar);
 
-        JButton botonBuscar = new JButton("Buscar");
+        JButton botonBuscar = crearBoton("Buscar", ColoresUDLAP.NARANJA_BARRA);
         botonBuscar.addActionListener(new Buscar(campos));
         add(botonBuscar);
 
-        JButton botonLimpiar = new JButton("Limpiar");
+        JButton botonLimpiar = crearBoton("Limpiar", ColoresUDLAP.ROJO_SOLIDO);
         botonLimpiar.addActionListener(new LimpiarCampos(campos));
         add(botonLimpiar);
+    }
+
+    private JButton crearBoton(String texto, Color colorFondo) {
+        JButton boton = new JButton(texto);
+        boton.setFont(new Font("Arial", Font.BOLD, 14));
+        boton.setBackground(colorFondo);
+        boton.setForeground(Color.WHITE);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setOpaque(true);
+        boton.setPreferredSize(new Dimension(120, 35));
+        return boton;
     }
 }
