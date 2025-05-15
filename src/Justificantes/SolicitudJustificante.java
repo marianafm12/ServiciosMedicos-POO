@@ -2,12 +2,12 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-//import java.awt.event.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
-//import java.util.HashMap;
+import java.util.HashMap;
 
 import BaseDeDatos.ConexionSQLite;
 import Inicio.MenuMedicosFrame;
@@ -77,7 +77,7 @@ public class SolicitudJustificante extends JFrame {
             LocalDate nuevaFin = construirFecha(diaFin, mesFin, anioFin);
             String diagnostico = diagnosticoArea.getText();
 
-            try (Connection conn = ConexionSQLite.conectar()) {
+            try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
                 String sql = "UPDATE JustificantePaciente SET fechaInicio = ?, fechaFin = ?, diagnostico = ? WHERE folio = ?";
                 PreparedStatement pst = conn.prepareStatement(sql);
                 pst.setString(1, nuevaInicio.toString());
@@ -126,7 +126,7 @@ public class SolicitudJustificante extends JFrame {
     }
 
     private void cargarDatosDesdeBD(int folio) {
-        try (Connection conn = ConexionSQLite.conectar()) {
+        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
             String sql = "SELECT * FROM JustificantePaciente WHERE folio = ?";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, folio);
