@@ -5,16 +5,11 @@ import Inicio.MenuPacientesFrame;
 
 import javax.swing.*;
 import java.awt.*;
-//import java.awt.event.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDate;
 
 public class FormularioJustificanteFrame extends JFrame {
-    private JTextField idField, nombreField, motivoField;
-    private JComboBox<String> diaInicio, mesInicio, anioInicio;
-    private JComboBox<String> diaFin, mesFin, anioFin;
-    private File archivoPDF = null;
     private JTextField idField, nombreField, motivoField;
     private JComboBox<String> diaInicio, mesInicio, anioInicio;
     private JComboBox<String> diaFin, mesFin, anioFin;
@@ -83,60 +78,6 @@ public class FormularioJustificanteFrame extends JFrame {
         JButton menuBtn = new JButton("Menú Principal");
         menuBtn.addActionListener(e -> {
             new MenuMedicosFrame().setVisible(true);
-        setLayout(new GridLayout(0, 2, 5, 5));
-
-        // Campos
-        add(new JLabel("ID:"));
-        idField = new JTextField();
-        add(idField);
-
-        add(new JLabel("Nombre:"));
-        nombreField = new JTextField();
-        add(nombreField);
-
-        add(new JLabel("Motivo:"));
-        motivoField = new JTextField();
-        add(motivoField);
-
-        add(new JLabel("Inicio de Reposo:"));
-        JPanel panelInicio = new JPanel();
-        diaInicio = new JComboBox<>(generarDias());
-        mesInicio = new JComboBox<>(generarMeses());
-        anioInicio = new JComboBox<>(generarAnios());
-        panelInicio.add(diaInicio);
-        panelInicio.add(mesInicio);
-        panelInicio.add(anioInicio);
-        add(panelInicio);
-
-        add(new JLabel("Fin de Reposo:"));
-        JPanel panelFin = new JPanel();
-        diaFin = new JComboBox<>(generarDias());
-        mesFin = new JComboBox<>(generarMeses());
-        anioFin = new JComboBox<>(generarAnios());
-        panelFin.add(diaFin);
-        panelFin.add(mesFin);
-        panelFin.add(anioFin);
-        add(panelFin);
-
-        // Botón para cargar archivo
-        JButton subirPDF = new JButton("Subir receta (PDF)");
-        subirPDF.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            int resultado = fileChooser.showOpenDialog(this);
-            if (resultado == JFileChooser.APPROVE_OPTION) {
-                archivoPDF = fileChooser.getSelectedFile();
-                JOptionPane.showMessageDialog(this, "Archivo cargado: " + archivoPDF.getName());
-            }
-        });
-
-        // Botón siguiente para guardar
-        JButton siguienteBtn = new JButton("Siguiente");
-        siguienteBtn.addActionListener(e -> guardarJustificante());
-
-        // Botones navegación
-        JButton menuBtn = new JButton("Menú Principal");
-        menuBtn.addActionListener(e -> {
-            new Inicio.MenuMedicosFrame().setVisible(true);
             dispose();
         });
 
@@ -242,6 +183,6 @@ public class FormularioJustificanteFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        new FormularioJustificanteFrame().setVisible(true);
+        SwingUtilities.invokeLater(FormularioJustificanteFrame::new);
     }
 }
