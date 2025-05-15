@@ -22,6 +22,7 @@ env:
     Inicio
     Justificantes
     Registro
+    dev
   # Rama origen (main o dev) que disparó el workflow
   SOURCE_REF: ${{ github.ref_name }}
 
