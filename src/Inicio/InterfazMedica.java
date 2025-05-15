@@ -29,7 +29,7 @@ public class InterfazMedica extends JFrame {
         // 3) Panel menú (izquierda), ocupa toda la altura bajo la barra
         JPanel panelMenu = new JPanel(new BorderLayout());
         panelMenu.setPreferredSize(new Dimension(120, 0));
-        panelMenu.setBackground(new Color(240, 240, 245));
+        panelMenu.setBackground(Color.WHITE);
 
         // 3.1) Encabezado del menú: “Hola, usuario” arriba y “Menú”
         JPanel menuHeader = new JPanel(new GridLayout(2, 1));
