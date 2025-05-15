@@ -10,7 +10,7 @@ import Justificantes.SeleccionarPacienteFrame;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-//import java.net.URL;
+import java.net.URL;
 
 /**
  * Ventana principal para el médico, con barra superior y botones de acción en
