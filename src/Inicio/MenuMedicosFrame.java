@@ -1,6 +1,6 @@
 package Inicio;
 
-import Consultas.ConsultasFrame;
+//import Consultas.ConsultasFrame;
 import Emergencias.AccidenteFrame;
 import Emergencias.LlamadaEmergencia;
 import GestionEnfermedades.EditarDatosPaciente;
@@ -152,7 +152,7 @@ public class MenuMedicosFrame extends JFrame {
          */
 
         consultaButton.addActionListener(e -> {
-            new Consultas.ConsultasFrame().setVisible(true);
+            // new Consultas.ConsultasFrame().setVisible(true);
             dispose();
         });
 
