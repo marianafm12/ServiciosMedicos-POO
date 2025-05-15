@@ -49,7 +49,7 @@ public class FrameRegistro extends JPanel {
 
         // Espacio adicional al final
         gbc.gridy = etiquetas.length;
-        gbc.weighty = 1.0;
+        gbc.weighty = 0.2;
         add(Box.createGlue(), gbc);
     }
 
