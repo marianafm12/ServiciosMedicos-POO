@@ -32,13 +32,6 @@ public class MenuMedicosFrame extends JFrame {
         initToolbar();
         initCenterButtons();
         setSize(600, 350);
-        super("Menú Principal");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-        loadIcons();
-        initToolbar();
-        initCenterButtons();
-        setSize(600, 350);
         setLocationRelativeTo(null);
         setVisible(true);
     }
