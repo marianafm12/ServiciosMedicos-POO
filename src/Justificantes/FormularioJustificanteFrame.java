@@ -14,10 +14,6 @@ public class FormularioJustificanteFrame extends JFrame {
     private JComboBox<String> diaInicio, mesInicio, anioInicio;
     private JComboBox<String> diaFin, mesFin, anioFin;
     private File archivoPDF = null;
-    private JTextField idField, nombreField, motivoField;
-    private JComboBox<String> diaInicio, mesInicio, anioInicio;
-    private JComboBox<String> diaFin, mesFin, anioFin;
-    private File archivoPDF = null;
 
     public FormularioJustificanteFrame() {
         setTitle("Solicitud de Justificante Médico");
