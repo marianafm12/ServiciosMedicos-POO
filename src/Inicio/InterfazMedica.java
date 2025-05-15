@@ -5,6 +5,7 @@ import Utilidades.ColoresUDLAP;
 import Utilidades.PanelManager;
 import Utilidades.PanelProvider;
 import BaseDeDatos.ConexionSQLite;
+import Consultas.PanelConsultaNueva;
 import Registro.*;
 
 import javax.swing.*;
@@ -133,6 +134,8 @@ public class InterfazMedica extends JFrame {
     private void manejarClickBoton(int indiceBoton) {
         if (indiceBoton == 0 && esMedico) {
             panelManager.showPanel("formularioRegistro");
+        } else if (indiceBoton == 1 && esMedico) {
+            panelManager.showPanel("consultaNueva");
         } else {
             panelManager.showPanel("panel" + indiceBoton);
         }
@@ -181,6 +184,9 @@ public class InterfazMedica extends JFrame {
 
         // Registrar panel de formulario de registro
         panelManager.registerPanel(new PanelRegistroPaciente());
+        // Registrar panel de consulta nueva
+        panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+
     }
 
     // Nuevo método auxiliar para crear el panel superior
