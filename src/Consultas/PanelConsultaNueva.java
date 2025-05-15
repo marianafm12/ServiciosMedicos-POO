@@ -27,7 +27,7 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
         setBackground(Color.WHITE);
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
         JLabel lblTitulo = new JLabel("Consulta Médica - Dr. " + nombreMedico);
@@ -43,9 +43,11 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
         gbc.gridy++;
 
         txtIDPaciente = new JTextField(25);
-        txtNombre = new JTextField(25); txtNombre.setEditable(false);
+        txtNombre = new JTextField(25);
+        txtNombre.setEditable(false);
         txtEdad = new JTextField(25);
-        txtCorreo = new JTextField(25); txtCorreo.setEditable(false);
+        txtCorreo = new JTextField(25);
+        txtCorreo.setEditable(false);
         txtSintomas = new JTextArea(2, 25);
         txtMedicamentos = new JTextArea(2, 25);
         txtDiagnostico = new JTextArea(2, 25);
@@ -93,7 +95,8 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
 
         txtEdad.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
-                if (!Character.isDigit(e.getKeyChar())) e.consume();
+                if (!Character.isDigit(e.getKeyChar()))
+                    e.consume();
             }
         });
     }
@@ -117,10 +120,9 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
 
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:Servicios medicos.db")) {
             PreparedStatement stmt = conn.prepareStatement(
-                "SELECT ia.Nombre || ' ' || ia.ApellidoPaterno || ' ' || ia.ApellidoMaterno AS NombreCompleto, " +
-                "ia.Correo, r.Edad FROM InformacionAlumno ia " +
-                "JOIN Registro r ON ia.ID = r.ID WHERE ia.ID = ?"
-            );
+                    "SELECT ia.Nombre || ' ' || ia.ApellidoPaterno || ' ' || ia.ApellidoMaterno AS NombreCompleto, " +
+                            "ia.Correo, r.Edad FROM InformacionAlumno ia " +
+                            "JOIN Registro r ON ia.ID = r.ID WHERE ia.ID = ?");
             stmt.setInt(1, Integer.parseInt(id));
             ResultSet rs = stmt.executeQuery();
 
@@ -138,7 +140,8 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
     }
 
     private void guardarConsulta() {
-        if (!validarCampos()) return;
+        if (!validarCampos())
+            return;
 
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:Servicios medicos.db")) {
             int idPaciente = Integer.parseInt(txtIDPaciente.getText().trim());
@@ -150,9 +153,9 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
             psEdad.executeUpdate();
 
             PreparedStatement psConsulta = conn.prepareStatement(
-                "INSERT INTO Consultas (IDPaciente, IDMedico, Sintomas, Medicamentos, Diagnostico, FechaConsulta, FechaUltimaConsulta, FechaInicioSintomas, Receta) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
+                    "INSERT INTO Consultas (IDPaciente, IDMedico, Sintomas, Medicamentos, Diagnostico, FechaConsulta, FechaUltimaConsulta, FechaInicioSintomas, Receta) "
+                            +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             psConsulta.setInt(1, idPaciente);
             psConsulta.setInt(2, idMedico);
@@ -195,9 +198,9 @@ public class PanelConsultaNueva extends JPanel implements PanelProvider {
         }
 
         if (!validarAlfanumerico(txtSintomas.getText()) ||
-            !validarAlfanumerico(txtMedicamentos.getText()) ||
-            !validarAlfanumerico(txtDiagnostico.getText()) ||
-            !validarAlfanumerico(txtReceta.getText())) {
+                !validarAlfanumerico(txtMedicamentos.getText()) ||
+                !validarAlfanumerico(txtDiagnostico.getText()) ||
+                !validarAlfanumerico(txtReceta.getText())) {
             mostrarError("Los campos de texto deben contener solo letras, números y espacios.");
             return false;
         }
