@@ -25,6 +25,7 @@ public class MenuMedicosFrame extends JFrame {
     private JPanel center; // panel central
 
     public MenuMedicosFrame() {
+        super("Menú Principal");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         loadIcons();
