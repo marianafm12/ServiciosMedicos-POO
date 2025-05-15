@@ -2,7 +2,7 @@ package Inicio;
 
 //import Consultas.ConsultasFrame;
 import Emergencias.AccidenteFrame;
-import Emergencias.LlamadaEmergencia;
+//import Emergencias.LlamadaEmergencia;
 import GestionEnfermedades.EditarDatosPaciente;
 import Justificantes.SeleccionarPacienteFrame;
 import Registro.AgregarRegistro;
@@ -181,7 +181,7 @@ public class MenuMedicosFrame extends JFrame {
         });
 
         emergenciaButton.addActionListener(e -> {
-            new LlamadaEmergencia().setVisible(true);
+            // new LlamadaEmergencia().setVisible(true);
             // dispose();
         });
 
