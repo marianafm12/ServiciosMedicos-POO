@@ -49,6 +49,8 @@ public class ModificarCitaFrame extends JFrame {
         campoApellidos.setEditable(false);
         campoApellidos.setForeground(Color.GRAY);
 
+        // CAMBIO ID SE LLAMA
+
         campoID = new JTextField(String.valueOf(idPaciente), 12);
         campoID.setEditable(false);
         campoID.addFocusListener(new FocusAdapter() {
