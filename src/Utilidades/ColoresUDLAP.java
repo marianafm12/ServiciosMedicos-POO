@@ -16,5 +16,7 @@ public class ColoresUDLAP {
     public static final Color NEGRO = new Color(0, 0, 0); // Color negro
     public static final Color VERDE_SOLIDO = new Color(0, 102, 0);
     public static final Color ROJO_SOLIDO = new Color(221, 71, 66);
+    public static final Color AMARILLO = Color.YELLOW;
+    public static final Color AZUL = Color.BLUE;
 
 }
