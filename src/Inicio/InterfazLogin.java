@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import BaseDeDatos.ConexionSQLite; // Adaptar al paquete donde tenga su método conectar()
+import BaseDeDatos.ConexionSQLite; // Ajusta según tu paquete
 
 public class InterfazLogin extends JFrame {
     private final JTextField txtID = new JTextField(15);
@@ -18,7 +18,7 @@ public class InterfazLogin extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // === Barra superior naranja ===
+        // Barra superior naranja
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(new Color(255, 102, 0));
         bar.setPreferredSize(new Dimension(0, 30));
@@ -26,7 +26,7 @@ public class InterfazLogin extends JFrame {
         enableDrag(bar);
         add(bar, BorderLayout.NORTH);
 
-        // === Panel central (fondo blanco) con contenido centrado ===
+        // Panel central blanco y centrado
         JPanel main = new JPanel();
         main.setBackground(Color.WHITE);
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -35,7 +35,7 @@ public class InterfazLogin extends JFrame {
 
         main.add(Box.createVerticalGlue());
 
-        // Título “Servicios Médicos UDLAP”
+        // Título
         JLabel lblTitulo = new JLabel(
                 "<html>"
                         + "<span style='font-size:24pt; font-weight:bold; color:#006400;'>Servicios Médicos</span> "
@@ -46,14 +46,14 @@ public class InterfazLogin extends JFrame {
         main.add(lblTitulo);
         main.add(Box.createVerticalStrut(20));
 
-        // Subtítulo “Log In”
+        // Subtítulo
         JLabel lblLogin = new JLabel("Log In", SwingConstants.CENTER);
         lblLogin.setFont(lblLogin.getFont().deriveFont(Font.PLAIN, 18f));
         lblLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
         main.add(lblLogin);
         main.add(Box.createVerticalStrut(20));
 
-        // Formulario de credenciales
+        // Formulario
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -75,7 +75,7 @@ public class InterfazLogin extends JFrame {
         main.add(form);
         main.add(Box.createVerticalStrut(20));
 
-        // Botones de acción
+        // Botones
         JPanel botones = new JPanel();
         botones.setBackground(Color.WHITE);
         botones.setLayout(new BoxLayout(botones, BoxLayout.Y_AXIS));
@@ -88,6 +88,10 @@ public class InterfazLogin extends JFrame {
         btnIniciar.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnIniciar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         botones.add(btnIniciar);
+
+        // ENTER dispara btnIniciar
+        getRootPane().setDefaultButton(btnIniciar);
+
         botones.add(Box.createVerticalStrut(10));
 
         JButton btnRecuperar = new JButton("Recuperar contraseña");
@@ -102,12 +106,12 @@ public class InterfazLogin extends JFrame {
         main.add(botones);
         main.add(Box.createVerticalGlue());
 
-        // Panel inferior con icono SOS pequeño
+        // Footer con SOS
         String sosPath = "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
-                + "4° Semestre\\Programación Orientada a Objetos\\"
-                + "ServiciosMedicos-POO\\SOS.png";
+                + "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png";
         ImageIcon sosOrig = new ImageIcon(sosPath);
-        Image sosImg = sosOrig.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        Image sosImg = sosOrig.getImage()
+                .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
         JLabel lblSOS = new JLabel(new ImageIcon(sosImg));
 
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
@@ -116,18 +120,16 @@ public class InterfazLogin extends JFrame {
         footer.add(lblSOS);
         add(footer, BorderLayout.SOUTH);
 
-        // ─── Lógica de login unificado ───
+        // Lógica de login
         btnIniciar.addActionListener(e -> {
             String idText = txtID.getText().trim();
             String password = new String(txtPass.getPassword());
-
             if (idText.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
                         "Por favor, ingrese sus credenciales.",
                         "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             int id;
             try {
                 id = Integer.parseInt(idText);
@@ -138,37 +140,34 @@ public class InterfazLogin extends JFrame {
                 return;
             }
 
-            // Abrimos conexión una sola vez
             try (Connection con = ConexionSQLite.conectar()) {
-                // 1) Intentamos tabla de médicos
+                // Médicos
                 String sqlMed = "SELECT 1 FROM InformacionMedico WHERE ID = ? AND Contraseña = ?";
-                try (PreparedStatement psMed = con.prepareStatement(sqlMed)) {
-                    psMed.setInt(1, id);
-                    psMed.setString(2, password);
-                    try (ResultSet rs = psMed.executeQuery()) {
+                try (PreparedStatement ps = con.prepareStatement(sqlMed)) {
+                    ps.setInt(1, id);
+                    ps.setString(2, password);
+                    try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            new MenuMedicosFrame().setVisible(true);
+                            new InterfazMedica(true, id).setVisible(true);
                             dispose();
                             return;
                         }
                     }
                 }
-
-                // 2) Si no es médico, intentamos tabla de alumnos
+                // Pacientes
                 String sqlPac = "SELECT ID FROM InformacionAlumno WHERE ID = ? AND Contraseña = ?";
-                try (PreparedStatement psPac = con.prepareStatement(sqlPac)) {
-                    psPac.setInt(1, id);
-                    psPac.setString(2, password);
-                    try (ResultSet rs = psPac.executeQuery()) {
+                try (PreparedStatement ps = con.prepareStatement(sqlPac)) {
+                    ps.setInt(1, id);
+                    ps.setString(2, password);
+                    try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            new MenuPacientesFrame(id).setVisible(true);
+                            new InterfazMedica(false, id).setVisible(true);
                             dispose();
                             return;
                         }
                     }
                 }
-
-                // 3) Ninguna coincidencia
+                // Falló
                 JOptionPane.showMessageDialog(this,
                         "ID o contraseña incorrectos.",
                         "Error", JOptionPane.ERROR_MESSAGE);
