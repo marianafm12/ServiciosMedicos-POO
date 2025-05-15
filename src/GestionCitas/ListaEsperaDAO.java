@@ -3,19 +3,19 @@ package GestionCitas;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 import BaseDeDatos.ConexionSQLite;
 import Modelo.Espera;
 
 public class ListaEsperaDAO {
 
-    public static void registrarEnEspera(String idPaciente, String fecha, String hora, String servicio) throws SQLException {
+    public static void registrarEnEspera(String idPaciente, String fecha, String hora, String servicio)
+            throws SQLException {
         final int MAX_REINTENTOS = 3;
         int intentos = 0;
         boolean completado = false;
 
         while (intentos < MAX_REINTENTOS && !completado) {
-            try (Connection conn = ConexionSQLite.conectar()) {
+            try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
                 String sql = "INSERT INTO ListaEsperaCitas(idPaciente, fechaDeseada, horaDeseada, servicio, estado) VALUES (?,?,?,?, 'pendiente')";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setString(1, idPaciente);
@@ -46,7 +46,7 @@ public class ListaEsperaDAO {
 
     public static List<Espera> obtenerSolicitudesPara(String fecha, String hora, String servicio) throws SQLException {
         List<Espera> lista = new ArrayList<>();
-        try (Connection conn = ConexionSQLite.conectar()) {
+        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
             String sql = "SELECT idPaciente FROM ListaEsperaCitas WHERE fechaDeseada = ? AND horaDeseada = ? AND servicio = ? AND estado = 'pendiente'";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, fecha);
@@ -60,13 +60,14 @@ public class ListaEsperaDAO {
         return lista;
     }
 
-    public static void marcarNotificada(String idPaciente, String fecha, String hora, String servicio) throws SQLException {
+    public static void marcarNotificada(String idPaciente, String fecha, String hora, String servicio)
+            throws SQLException {
         final int MAX_REINTENTOS = 3;
         int intentos = 0;
         boolean completado = false;
 
         while (intentos < MAX_REINTENTOS && !completado) {
-            try (Connection conn = ConexionSQLite.conectar()) {
+            try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
                 String sql = "UPDATE ListaEsperaCitas SET estado = 'notificada' WHERE idPaciente = ? AND fechaDeseada = ? AND horaDeseada = ? AND servicio = ?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setString(1, idPaciente);
@@ -99,7 +100,7 @@ public class ListaEsperaDAO {
         try {
             List<Espera> solicitudes = obtenerSolicitudesPara(fecha, hora, servicio);
             for (Espera espera : solicitudes) {
-                try (Connection conn = ConexionSQLite.conectar()) {
+                try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
                     String mensaje = "Se ha liberado una cita el " + fecha + " a las " + hora + " para " + servicio;
                     String sql = "INSERT INTO Notificaciones(idPaciente, mensaje, estado, fecha, hora, servicio) VALUES (?, ?, 'pendiente', ?, ?, ?)";
                     PreparedStatement stmt = conn.prepareStatement(sql);
@@ -116,4 +117,4 @@ public class ListaEsperaDAO {
             System.err.println("Error al generar notificaciones para lista de espera: " + e.getMessage());
         }
     }
-} 
+}
