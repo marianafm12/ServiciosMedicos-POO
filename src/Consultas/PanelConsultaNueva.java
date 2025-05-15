@@ -1,6 +1,6 @@
 package Consultas;
 
-import Utilidades.PanelProvider;
+import Utilidades.*;
 
 import javax.swing.*;
 import java.awt.*;

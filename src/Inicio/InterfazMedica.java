@@ -27,7 +27,7 @@ public class InterfazMedica extends JFrame {
 
     private void initUI() {
         setUndecorated(true);
-        setSize(1200, 800);
+        setSize(1000, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -204,7 +204,6 @@ public class InterfazMedica extends JFrame {
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
         // Registrar panel de llamada de emergencia
         panelManager.registerPanel(new PanelLlamadaEmergencia());
-
 
     }
 
