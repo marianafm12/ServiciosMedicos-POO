@@ -5,24 +5,28 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConexionSQLite {
-    @SuppressWarnings("CallToPrintStackTrace")
-    public static Connection conectar() {
-        Connection conexion = null;
+    // Asegúrate de usar el nombre (y path) correcto de tu fichero .db
+    private static final String RUTA_BD = "jdbc:sqlite:Servicios medicos.db";
+
+    /**
+     * Conecta a SQLite y lanza SQLException si algo falla.
+     */
+    public static Connection conectar() throws SQLException {
         try {
             Class.forName("org.sqlite.JDBC");
-            String url = "jdbc:sqlite:Servicios medicos.db";
-            conexion = DriverManager.getConnection(url);
-            System.out.println("Conexión exitosa a SQLite");
         } catch (ClassNotFoundException e) {
-            System.err.println("Error: No se encontró el driver SQLite");
-        } catch (SQLException e) {
-            System.err.println("Error de conexión a la base de datos");
-            e.printStackTrace();
+            // Convertimos el ClassNotFound en SQLException
+            throw new SQLException("Driver SQLite no encontrado", e);
         }
-        return conexion;
+        // Si falla aquí (fichero no existe, permisos, etc.), saltará SQLException
+        return DriverManager.getConnection(RUTA_BD);
     }
 
     public static void main(String[] args) {
-        conectar();
+        try (Connection c = conectar()) {
+            System.out.println("Conexión exitosa a SQLite: " + c.getMetaData().getURL());
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 }
