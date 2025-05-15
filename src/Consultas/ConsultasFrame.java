@@ -8,7 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ConsultasFrame {
+public class ConsultasFrame extends JFrame {
     private static int idMedico;
     private static String nombreMedico;
 

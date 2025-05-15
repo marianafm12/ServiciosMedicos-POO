@@ -4,13 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import BaseDeDatos.ConexionSQLite; // Ajusta si cambias de paquete
+import BaseDeDatos.ConexionSQLite;
 
 public class InterfazMedica extends JFrame {
     private Point mouseDownCompCoords;
-    private final JLabel contentLabel = new JLabel("Selecciona una opción del menú", SwingConstants.CENTER);
     private final boolean esMedico;
     private final int userId;
+    private JPanel contentPanel; // Panel dinámico central
 
     public InterfazMedica(boolean esMedico, int userId) {
         this.esMedico = esMedico;
@@ -19,14 +19,13 @@ public class InterfazMedica extends JFrame {
     }
 
     private void initUI() {
-        // Ventana
         setUndecorated(true);
-        setSize(900, 600);
+        setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Barra naranja
+        // Barra naranja superior
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         bar.setPreferredSize(new Dimension(0, 30));
         bar.setBackground(new Color(255, 102, 0));
@@ -36,12 +35,12 @@ public class InterfazMedica extends JFrame {
         enableDrag(bar);
         add(bar, BorderLayout.NORTH);
 
-        // Menú lateral
+        // Menú lateral izquierdo
         JPanel panelMenu = new JPanel(new BorderLayout());
         panelMenu.setPreferredSize(new Dimension(120, 0));
         panelMenu.setBackground(Color.WHITE);
 
-        // Header menú
+        // Header del menú
         JPanel menuHeader = new JPanel(new GridLayout(2, 1));
         menuHeader.setBackground(Color.WHITE);
         String nombre = fetchNombreUsuario();
@@ -55,9 +54,10 @@ public class InterfazMedica extends JFrame {
         menuHeader.add(lblMenu);
         panelMenu.add(menuHeader, BorderLayout.NORTH);
 
-        // Botones dinámicos
+        // Opciones dinámicas según tipo de usuario
         String[] items = esMedico
                 ? new String[] {
+                        "Registrar Paciente Nuevo",
                         "Consulta Nueva",
                         "Editar Datos del Paciente",
                         "Justificantes Médicos",
@@ -72,28 +72,50 @@ public class InterfazMedica extends JFrame {
                         "Reportar Emergencia"
                 };
 
-        JPanel panelButtons = new JPanel(
-                new GridLayout(items.length + 1, 1));
+        JPanel panelButtons = new JPanel(new GridLayout(items.length + 1, 1));
         panelButtons.setBackground(Color.WHITE);
         Color verde = Color.decode("#006400");
+
+        // Panel central dinámico
+        contentPanel = new JPanel(new CardLayout());
+        contentPanel.setBackground(Color.WHITE);
+
+        // Paneles de contenido (uno por opción)
+        contentPanel.add(PanelesContenidoFactory.crearPanelInicio(), "inicio");
+        if (esMedico) {
+            contentPanel.add(PanelesContenidoFactory.crearPanelRegistrarPacienteNuevo(), "panel0"); // Registrar
+                                                                                                    // Paciente Nuevo
+            contentPanel.add(PanelesContenidoFactory.crearPanelConsultaNueva(), "panel1"); // Consulta Nueva
+            contentPanel.add(PanelesContenidoFactory.crearPanelEditarDatos(), "panel2");
+            contentPanel.add(PanelesContenidoFactory.crearPanelJustificantesMedicos(), "panel3");
+            contentPanel.add(PanelesContenidoFactory.crearPanelLlamadaEmergencia(), "panel4");
+            contentPanel.add(PanelesContenidoFactory.crearPanelReporteAccidente(), "panel5");
+        } else {
+            contentPanel.add(PanelesContenidoFactory.crearPanelGestionCitas(), "panel0");
+            contentPanel.add(PanelesContenidoFactory.crearPanelHistorialMedico(), "panel1");
+            contentPanel.add(PanelesContenidoFactory.crearPanelSolicitarJustificante(), "panel2");
+            contentPanel.add(PanelesContenidoFactory.crearPanelMisJustificantes(), "panel3");
+            contentPanel.add(PanelesContenidoFactory.crearPanelReportarEmergencia(), "panel4");
+        }
+
+        // Botones de menú que cambian el contenido central
         for (int i = 0; i < items.length; i++) {
             JButton b = new JButton(items[i]);
             b.setFocusPainted(false);
             b.setOpaque(true);
             b.setBackground(verde);
             b.setForeground(Color.WHITE);
-            b.setBorder(BorderFactory.createMatteBorder(
-                    0, 0, 1, 0, new Color(200, 200, 200)));
+            b.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 200, 200)));
             final int idx = i;
-            b.addActionListener(e -> contentLabel.setText("Has seleccionado: " + items[idx]));
+            b.addActionListener(e -> mostrarPanel("panel" + idx));
             panelButtons.add(b);
         }
-        // SOS
+
+        // Botón SOS al final
         ImageIcon sosOrig = new ImageIcon(
-                "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
-                        + "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png");
-        Image img = sosOrig.getImage()
-                .getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+                "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\" +
+                        "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png");
+        Image img = sosOrig.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
         JButton btnSOS = new JButton(new ImageIcon(img));
         btnSOS.setFocusPainted(false);
         btnSOS.setBackground(Color.WHITE);
@@ -104,11 +126,11 @@ public class InterfazMedica extends JFrame {
         panelMenu.add(panelButtons, BorderLayout.CENTER);
         add(panelMenu, BorderLayout.WEST);
 
-        // Panel central
+        // Panel central, incluye header superior y panel dinámico
         JPanel center = new JPanel(new BorderLayout());
         add(center, BorderLayout.CENTER);
 
-        // Header
+        // Header superior (Servicios Médicos UDLAP)
         JPanel header = new JPanel(new BorderLayout(10, 0));
         header.setBackground(Color.WHITE);
         header.setPreferredSize(new Dimension(0, 60));
@@ -128,13 +150,23 @@ public class InterfazMedica extends JFrame {
         header.add(btnLogout, BorderLayout.EAST);
         center.add(header, BorderLayout.NORTH);
 
-        // Contenido
+        // Panel de contenido dinámico (CardLayout)
         JPanel content = new JPanel(new BorderLayout());
         content.setBackground(Color.WHITE);
-        content.add(contentLabel, BorderLayout.NORTH);
+        content.add(contentPanel, BorderLayout.CENTER);
         center.add(content, BorderLayout.CENTER);
+
+        // Muestra el panel de inicio por defecto
+        mostrarPanel("inicio");
     }
 
+    // Método para mostrar un panel específico
+    private void mostrarPanel(String panelName) {
+        CardLayout cl = (CardLayout) (contentPanel.getLayout());
+        cl.show(contentPanel, panelName);
+    }
+
+    // Consulta nombre de usuario (médico o paciente)
     private String fetchNombreUsuario() {
         String sql = esMedico
                 ? "SELECT Nombre||' '||ApellidoPaterno FROM InformacionMedico WHERE ID=?"
@@ -152,6 +184,7 @@ public class InterfazMedica extends JFrame {
         return null;
     }
 
+    // Botones de control de ventana (minimizar, maximizar, cerrar)
     private JButton createControlButton(String texto) {
         JButton b = new JButton(texto);
         b.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -190,6 +223,7 @@ public class InterfazMedica extends JFrame {
             setExtendedState(Frame.NORMAL);
     }
 
+    // Permite arrastrar la ventana sin bordes
     private void enableDrag(JComponent comp) {
         comp.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -203,8 +237,7 @@ public class InterfazMedica extends JFrame {
         comp.addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
                 Point curr = e.getLocationOnScreen();
-                setLocation(curr.x - mouseDownCompCoords.x,
-                        curr.y - mouseDownCompCoords.y);
+                setLocation(curr.x - mouseDownCompCoords.x, curr.y - mouseDownCompCoords.y);
             }
         });
     }
