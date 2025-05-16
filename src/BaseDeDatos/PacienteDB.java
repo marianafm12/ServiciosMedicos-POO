@@ -1,6 +1,5 @@
 package BaseDeDatos;
 
-import BaseDeDatos.ConexionSQLite;
 import java.sql.*;
 
 public class PacienteDB {
