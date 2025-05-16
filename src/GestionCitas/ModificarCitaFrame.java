@@ -182,38 +182,73 @@ public class ModificarCitaFrame extends JPanel {
 
         btnModificar.addActionListener(e -> modificarCita());
 
-        btnCancelarCita.addActionListener(e -> {
-            String seleccion = (String) comboCitas.getSelectedItem();
-            if (seleccion == null) {
-                errorLabel.setText("Seleccione una cita para cancelar.");
-                return;
+btnCancelarCita.addActionListener(e -> {
+    String seleccion = (String) comboCitas.getSelectedItem();
+    if (seleccion == null) {
+        errorLabel.setText("Seleccione una cita para cancelar.");
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de cancelar esta cita?",
+            "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
+    if (confirm == JOptionPane.YES_OPTION) {
+int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
+String fechaLiberada = null;
+String horaLiberada = null;
+String servicioLiberado = null;
+
+try (Connection conn = ConexionSQLite.conectar();
+     PreparedStatement ps = conn.prepareStatement("SELECT fecha, hora, servicio FROM CitasMedicas WHERE idCita = ?")) {
+    ps.setInt(1, idCita);
+    try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            fechaLiberada = rs.getString("fecha");
+            horaLiberada = rs.getString("hora");
+            servicioLiberado = rs.getString("servicio");
+
+            if (horaLiberada.length() == 8) {
+                horaLiberada = horaLiberada.substring(0, 5);
+            } else if (!horaLiberada.contains(":")) {
+                horaLiberada += ":00";
             }
+        }
+    }
+} catch (SQLException ex) {
+    errorLabel.setText("Error al obtener cita antes de cancelar.");
+    return;
+}
 
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de cancelar esta cita?",
-                    "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
-                String[] partes = seleccion.split("-");
-                String fechaLiberada = partes[0].split(" ")[0].trim();
-                String horaLiberada = partes[0].split(" ")[1].trim();
-                String servicioLiberado = partes[1].trim();
 
-                try (Connection conn = ConexionSQLite.conectar();
-                        PreparedStatement ps = conn.prepareStatement("DELETE FROM CitasMedicas WHERE idCita=?")) {
-                    ps.setInt(1, idCita);
-                    ps.executeUpdate();
-                    errorLabel.setForeground(new Color(0, 128, 0));
-                    errorLabel.setText("Cita cancelada.");
-                    cargarCitas();
+        // 🔧 Normalizar hora
+        if (horaLiberada.length() == 8) {
+            horaLiberada = horaLiberada.substring(0, 5); // de 10:30:00 a 10:30
+        } else if (!horaLiberada.contains(":")) {
+            horaLiberada += ":00";
+        }
 
-                    // 🔔 Notificar a lista de espera
-                    NotificadorListaEspera.notificarDisponibilidad(fechaLiberada, horaLiberada, servicioLiberado);
-                } catch (SQLException ex) {
-                    errorLabel.setForeground(Color.RED);
-                    errorLabel.setText("Error al cancelar cita.");
-                }
-            }
-        });
+try {
+    NotificadorListaEspera.notificarDisponibilidad(fechaLiberada, horaLiberada, servicioLiberado);
+
+    try (Connection conn = ConexionSQLite.conectar();
+         PreparedStatement ps = conn.prepareStatement("DELETE FROM CitasMedicas WHERE idCita=?")) {
+        ps.setInt(1, idCita);
+        ps.executeUpdate();
+    }
+
+    errorLabel.setForeground(new Color(0, 128, 0));
+    errorLabel.setText("Cita cancelada.");
+    cargarCitas();
+
+} catch (SQLException ex) {
+    errorLabel.setForeground(Color.RED);
+    errorLabel.setText("Error al cancelar cita.");
+}
+
+
+    }
+}); // ← ✅ cierre correcto del listener
+
+
 
         btnVolver.addActionListener(e -> panelManager.showPanel("panelGestionCitas"));
 
@@ -304,6 +339,8 @@ public class ModificarCitaFrame extends JPanel {
                     horaAnterior = rs.getString("hora");
                     servicioAnterior = rs.getString("servicio");
                 }
+                if (!horaAnterior.contains(":")) horaAnterior += ":00";
+
             }
         } catch (SQLException ex) {
             errorLabel.setText("Error al obtener cita original.");

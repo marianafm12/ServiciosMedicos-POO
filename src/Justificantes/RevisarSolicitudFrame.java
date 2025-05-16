@@ -1,28 +1,32 @@
 package Justificantes;
 
+import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import Utilidades.ColoresUDLAP;
-import Justificantes.JustificanteDAO;
 
 public class RevisarSolicitudFrame extends JPanel {
+
     private JTextField motivoField;
     private JComboBox<String> diaInicio, mesInicio, anioInicio;
     private JComboBox<String> diaFin, mesFin, anioFin;
     private JTextArea diagnosticoArea;
     private JLabel lblEstado;
     private File archivoReceta;
-    private int folio;
-    private Justificante justificante;
+    private final int folio;
+    private final Justificante justificante;
     private final String medicoFirmante = "Dra. Laura Gómez";
+    private final PanelManager panelManager;
 
-    public RevisarSolicitudFrame(int folio, ActionListener volverAction) {
+    public RevisarSolicitudFrame(int folio, ActionListener volverAction, PanelManager panelManager) {
         this.folio = folio;
-        justificante = JustificanteDAO.obtenerPorFolio(folio).orElse(null);
+        this.panelManager = panelManager;
+        this.justificante = JustificanteDAO.obtenerPorFolio(folio).orElse(null);
 
         if (justificante == null) {
             JOptionPane.showMessageDialog(this, "Justificante no encontrado.");
@@ -42,6 +46,7 @@ public class RevisarSolicitudFrame extends JPanel {
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
         Font titleFont = new Font("Arial", Font.BOLD, 16);
 
+        // Título
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -53,6 +58,7 @@ public class RevisarSolicitudFrame extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
 
+        // Estado
         gbc.gridx = 0;
         lblEstado = new JLabel("Estado:");
         lblEstado.setFont(labelFont);
@@ -64,13 +70,10 @@ public class RevisarSolicitudFrame extends JPanel {
         lblEstadoValor.setFont(fieldFont);
         add(lblEstadoValor, gbc);
 
+        // Motivo
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblMotivo = new JLabel("Motivo:");
-        lblMotivo.setFont(labelFont);
-        lblMotivo.setForeground(ColoresUDLAP.NEGRO);
-        add(lblMotivo, gbc);
-
+        add(new JLabel("Motivo:"), gbc);
         gbc.gridx = 1;
         motivoField = new JTextField(justificante.getMotivo());
         motivoField.setFont(fieldFont);
@@ -79,94 +82,81 @@ public class RevisarSolicitudFrame extends JPanel {
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         add(motivoField, gbc);
 
+        // Fecha inicio
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblInicioReposo = new JLabel("Inicio de Reposo:");
-        lblInicioReposo.setFont(labelFont);
-        lblInicioReposo.setForeground(ColoresUDLAP.NEGRO);
-        add(lblInicioReposo, gbc);
-
+        add(new JLabel("Inicio de Reposo:"), gbc);
         gbc.gridx = 1;
-        JPanel panelInicio = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        panelInicio.setBackground(ColoresUDLAP.BLANCO);
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
+        JPanel panelInicio = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panelInicio.setBackground(ColoresUDLAP.BLANCO);
         panelInicio.add(diaInicio);
         panelInicio.add(mesInicio);
         panelInicio.add(anioInicio);
         add(panelInicio, gbc);
 
+        // Fecha fin
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblFinReposo = new JLabel("Fin de Reposo:");
-        lblFinReposo.setFont(labelFont);
-        lblFinReposo.setForeground(ColoresUDLAP.NEGRO);
-        add(lblFinReposo, gbc);
-
+        add(new JLabel("Fin de Reposo:"), gbc);
         gbc.gridx = 1;
-        JPanel panelFin = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        panelFin.setBackground(ColoresUDLAP.BLANCO);
         diaFin = new JComboBox<>(generarDias());
         mesFin = new JComboBox<>(generarMeses());
         anioFin = new JComboBox<>(generarAnios());
+        JPanel panelFin = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panelFin.setBackground(ColoresUDLAP.BLANCO);
         panelFin.add(diaFin);
         panelFin.add(mesFin);
         panelFin.add(anioFin);
         add(panelFin, gbc);
 
+        // Diagnóstico
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblDiagnostico = new JLabel("Diagnóstico:");
-        lblDiagnostico.setFont(labelFont);
-        lblDiagnostico.setForeground(ColoresUDLAP.NEGRO);
-        add(lblDiagnostico, gbc);
-
+        add(new JLabel("Diagnóstico:"), gbc);
         gbc.gridx = 1;
         diagnosticoArea = new JTextArea(4, 30);
-        diagnosticoArea.setText(justificante.getDiagnostico() != null ? justificante.getDiagnostico() : "");
         diagnosticoArea.setFont(fieldFont);
-        diagnosticoArea.setLineWrap(true);
+        diagnosticoArea.setText(justificante.getDiagnostico() != null ? justificante.getDiagnostico() : "");
         diagnosticoArea.setWrapStyleWord(true);
+        diagnosticoArea.setLineWrap(true);
         diagnosticoArea.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         add(new JScrollPane(diagnosticoArea), gbc);
 
+        // Botones aprobar/rechazar/limpiar
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.CENTER;
         JPanel filaBotones1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         filaBotones1.setBackground(ColoresUDLAP.BLANCO);
-
         JButton btnAprobar = botonTransparente("Aprobar", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
         JButton btnRechazar = botonTransparente("Rechazar", ColoresUDLAP.ROJO, ColoresUDLAP.ROJO_HOVER);
         JButton limpiarBtn = botonTransparente("Limpiar", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
-
         filaBotones1.add(btnAprobar);
         filaBotones1.add(btnRechazar);
         filaBotones1.add(limpiarBtn);
         add(filaBotones1, gbc);
 
+        // Botones archivo/pdf/volver
         gbc.gridy++;
         JPanel filaBotones2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         filaBotones2.setBackground(ColoresUDLAP.BLANCO);
-
         JButton abrirArchivoBtn = botonTransparente("Abrir Archivo", ColoresUDLAP.AZUL, ColoresUDLAP.AZUL);
-        JButton vistaBtn = botonTransparente("Vista preliminar del Justificante", ColoresUDLAP.VERDE_OSCURO,
-                ColoresUDLAP.VERDE_OSCURO);
+        JButton vistaBtn = botonTransparente("Vista preliminar del Justificante", ColoresUDLAP.VERDE_OSCURO, ColoresUDLAP.VERDE_OSCURO);
         JButton volverBtn = botonTransparente("Volver", ColoresUDLAP.GRIS_OSCURO, ColoresUDLAP.GRIS_OSCURO);
-
         filaBotones2.add(abrirArchivoBtn);
         filaBotones2.add(vistaBtn);
         filaBotones2.add(volverBtn);
         add(filaBotones2, gbc);
 
+        // Acción: Aprobar
         btnAprobar.addActionListener(e -> {
             LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
             LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
-
             if (inicio.isAfter(fin)) {
                 JOptionPane.showMessageDialog(this, "Fecha de inicio posterior a la de fin.");
                 return;
@@ -177,17 +167,17 @@ public class RevisarSolicitudFrame extends JPanel {
             boolean ok = JustificanteDAO.aprobarJustificante(folio, motivo, diag, medicoFirmante, inicio, fin);
             if (ok) {
                 JOptionPane.showMessageDialog(this, "Justificante aprobado.");
+                panelManager.mostrarPanelPersonalizado(new CorreosProfesoresPanel(folio, panelManager));
                 volverAction.actionPerformed(null);
             }
         });
 
+        // Acción: Rechazar
         btnRechazar.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this,
-                    "¿Seguro que deseas rechazar esta solicitud?",
-                    "Confirmar rechazo", JOptionPane.YES_NO_OPTION);
+                    "¿Seguro que deseas rechazar esta solicitud?", "Confirmar rechazo", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                boolean ok = JustificanteDAO.rechazarJustificante(folio, medicoFirmante);
-                if (ok) {
+                if (JustificanteDAO.rechazarJustificante(folio, medicoFirmante)) {
                     JOptionPane.showMessageDialog(this, "Justificante rechazado.");
                     volverAction.actionPerformed(null);
                 }
@@ -213,19 +203,20 @@ public class RevisarSolicitudFrame extends JPanel {
 
         vistaBtn.addActionListener(e -> {
             File pdf = GeneradorPDFJustificante.generar(justificante);
-            if (pdf != null && pdf.exists()) {
-                try {
+            try {
+                if (pdf != null && pdf.exists()) {
                     Desktop.getDesktop().open(pdf);
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(this, "Error al abrir el PDF.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo generar el PDF.");
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "No se pudo generar el PDF.");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error al abrir el PDF.");
             }
         });
 
         volverBtn.addActionListener(volverAction);
 
+        // Final
         setFechaCombo(justificante.getFechaInicio(), diaInicio, mesInicio, anioInicio);
         setFechaCombo(justificante.getFechaFin(), diaFin, mesFin, anioFin);
         archivoReceta = justificante.getArchivoReceta();
@@ -245,7 +236,6 @@ public class RevisarSolicitudFrame extends JPanel {
         }
     }
 
-    // Botón traslúcido personalizado
     private JButton botonTransparente(String texto, Color base, Color hover) {
         JButton button = new JButton(texto) {
             @Override
@@ -264,16 +254,6 @@ public class RevisarSolicitudFrame extends JPanel {
         button.setOpaque(false);
         button.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setHorizontalAlignment(SwingConstants.CENTER);
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.repaint();
-            }
-
-            public void mouseExited(MouseEvent e) {
-                button.repaint();
-            }
-        });
         return button;
     }
 
@@ -285,21 +265,19 @@ public class RevisarSolicitudFrame extends JPanel {
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++)
-            d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
         return d;
     }
 
     private String[] generarMeses() {
-        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto",
+                "Septiembre", "Octubre", "Noviembre", "Diciembre"};
     }
 
     private String[] generarAnios() {
-        String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++)
-            a[i] = String.valueOf(base + i);
+        String[] a = new String[6];
+        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
         return a;
     }
 
