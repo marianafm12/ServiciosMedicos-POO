@@ -28,7 +28,7 @@ public class FrameConsulta extends JPanel {
         campos = new JTextField[etiquetas.length];
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
@@ -42,7 +42,7 @@ public class FrameConsulta extends JPanel {
         gbc.gridwidth = 2;
         JLabel titulo = new JLabel("Consulta Médica - Dr. " + nombreMedico, SwingConstants.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 18));
-        titulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        titulo.setForeground(ColoresUDLAP.NARANJA_BARRA);
         add(titulo, gbc);
 
         gbc.gridwidth = 1;
@@ -77,7 +77,7 @@ public class FrameConsulta extends JPanel {
         // Área de texto para la receta
         gbc.gridx = 0;
         gbc.gridy = etiquetas.length + 1;
-        gbc.gridwidth = 1;
+        gbc.weightx = 1;
         JLabel lblReceta = new JLabel("Receta Médica:");
         lblReceta.setFont(labelFont);
         lblReceta.setForeground(ColoresUDLAP.NEGRO);
@@ -85,7 +85,7 @@ public class FrameConsulta extends JPanel {
 
         gbc.gridx = 1;
         gbc.gridy = etiquetas.length + 1;
-        areaTexto = new JTextArea(5, 25);
+        areaTexto = new JTextArea(5, 45);
         areaTexto.setFont(fieldFont);
         areaTexto.setLineWrap(true);
         areaTexto.setWrapStyleWord(true);
@@ -97,7 +97,7 @@ public class FrameConsulta extends JPanel {
 
         // Espacio adicional al final
         gbc.gridy = etiquetas.length + 2;
-        gbc.weighty = 1.0;
+        gbc.weighty = 0.2;
         add(Box.createGlue(), gbc);
     }
 

@@ -5,7 +5,6 @@ import java.awt.*;
 import Inicio.SesionUsuario;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
-import Inicio.MenuPacientesFrame;
 
 public class CorreosProfesoresFrame extends JFrame {
     private final JComboBox<Integer> countBox = new JComboBox<>();
@@ -47,7 +46,7 @@ public class CorreosProfesoresFrame extends JFrame {
         add(bot, BorderLayout.SOUTH);
 
         menuBtn.addActionListener(e -> {
-            new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
+            // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
             dispose();
         });
         backBtn.addActionListener(e -> {
@@ -57,7 +56,7 @@ public class CorreosProfesoresFrame extends JFrame {
         enviarBtn.addActionListener(e -> {
             if (guardarCorreos()) {
                 JOptionPane.showMessageDialog(this, "Correos registrados para folio " + folio);
-                new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
+                // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
                 dispose();
             }
         });

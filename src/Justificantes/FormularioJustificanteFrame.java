@@ -1,12 +1,12 @@
 package Justificantes;
 
 import Inicio.MenuMedicosFrame;
-import Inicio.MenuPacientesFrame;
+//import Inicio.MenuPacientesFrame;
+import Utilidades.ColoresUDLAP;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.time.LocalDate;
 import java.time.LocalDate;
 
 public class FormularioJustificanteFrame extends JFrame {
@@ -20,6 +20,7 @@ public class FormularioJustificanteFrame extends JFrame {
         setSize(600, 400);
         setLocationRelativeTo(null);
         setSize(600, 400);
+        setBackground(ColoresUDLAP.BLANCO);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(0, 2, 5, 5));
@@ -85,7 +86,7 @@ public class FormularioJustificanteFrame extends JFrame {
         JButton regresarBtn = new JButton("Volver a Pacientes");
         regresarBtn.addActionListener(e -> {
             int idPaciente = 1; // Reemplaza con el ID real cuando proceda
-            new MenuPacientesFrame(idPaciente).setVisible(true);
+            // new MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 
