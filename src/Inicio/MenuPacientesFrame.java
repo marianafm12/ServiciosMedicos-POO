@@ -138,11 +138,11 @@ public class MenuPacientesFrame extends JFrame {
             new GestionCitas.InicioFrame().setVisible(true);
             dispose();
         });
-        //historialMedicoButton.addActionListener(e -> {
-            new GestionEnfermedades.VerDatosPaciente(idPaciente)
-                    .setVisible(true);
-            dispose();
-        });justificarNuevoButton.addActionListener(e->
+        // historialMedicoButton.addActionListener(e -> {
+        // new GestionEnfermedades.VerDatosPaciente(idPaciente)
+        // .setVisible(true);
+        dispose();
+    };justificarNuevoButton.addActionListener(e->
 
     {
         new Justificantes.FormularioJustificanteFrame()
@@ -160,7 +160,6 @@ public class MenuPacientesFrame extends JFrame {
     });
 
     add(center, BorderLayout.CENTER);
-    }
 
     public static void main(String[] args) {
         // Aquí debes pasar el ID real del paciente, por ejemplo el de la sesión:

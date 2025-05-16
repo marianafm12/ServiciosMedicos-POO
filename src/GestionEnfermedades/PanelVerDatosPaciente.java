@@ -1,3 +1,4 @@
+// PanelVerDatosPaciente.java
 package GestionEnfermedades;
 
 import javax.swing.*;
@@ -5,9 +6,6 @@ import java.awt.*;
 import Utilidades.ColoresUDLAP;
 import Utilidades.PanelProvider;
 
-/**
- * Panel contenedor para la visualización de datos de un paciente.
- */
 public class PanelVerDatosPaciente extends JPanel implements PanelProvider {
     private final FormularioVerPaciente formulario;
 
