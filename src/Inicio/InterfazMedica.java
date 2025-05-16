@@ -4,10 +4,12 @@ import Utilidades.*;
 import BaseDeDatos.ConexionSQLite;
 import Consultas.PanelConsultaNueva;
 import Emergencias.PanelLlamadaEmergencia;
-import GestionEnfermedades.PanelGestionEnfermedades;
-import GestionEnfermedades.PanelVerDatosPaciente;
+import GestionCitas.NotificacionDAO;
+import GestionCitas.PanelGestionCitas;
 import Justificantes.PanelJustificantesProvider;
 import Justificantes.PanelMenuJustificantes;
+import GestionCitas.AgendaCitaFrame;
+import GestionCitas.ModificarCitaFrame;
 import Registro.*;
 
 import javax.swing.*;
@@ -40,37 +42,29 @@ public class InterfazMedica extends JFrame {
         try {
             URL u1 = getClass().getResource("/icons/bell.png");
             URL u2 = getClass().getResource("/icons/bell_new.png");
-            
-            if (u1 == null || u2 == null) {
-                throw new Exception("Iconos no encontrados");
-            }
-            
-            Image img1 = new ImageIcon(u1).getImage()
-                    .getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-            Image img2 = new ImageIcon(u2).getImage()
-                    .getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+
+            if (u1 == null || u2 == null) throw new Exception("Iconos no encontrados");
+
+            Image img1 = new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            Image img2 = new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
             iconDefault = new ImageIcon(img1);
             iconNew = new ImageIcon(img2);
         } catch (Exception e) {
-            // Usar emojis como fallback si los iconos no se cargan
             iconDefault = new ImageIcon();
             iconNew = new ImageIcon();
         }
     }
 
     private void checkNotifications() {
-        if (esMedico) {
-            // Lógica para médicos (a implementar posteriormente)
-            // hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidasMedico(userId);
-        } else {
+        if (!esMedico) {
             hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
         }
-        
+
         if (hasNewNotification && notificationIcon != null) {
             if (iconNew.getImage() != null) {
                 notificationIcon.setIcon(iconNew);
             } else {
-                notificationIcon.setText("\uD83D\uDD14"); // Emoji de campana
+                notificationIcon.setText("\uD83D\uDD14"); // Emoji fallback
                 notificationIcon.setFont(new Font("Dialog", Font.PLAIN, 24));
             }
         }
@@ -78,48 +72,30 @@ public class InterfazMedica extends JFrame {
 
     private void initUI() {
         setUndecorated(true);
-        setSize(1000, 800);
+        setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        /* ========== 1.1 Barras apiladas en un contenedor ========== */
         JPanel contenedorBarras = new JPanel();
         contenedorBarras.setLayout(new BoxLayout(contenedorBarras, BoxLayout.Y_AXIS));
-
-        // Barra superior con botones (minimizar, maximizar, cerrar)
-        BarraVentanaUDLAP barraVentana = new BarraVentanaUDLAP(this);
-        contenedorBarras.add(barraVentana);
-
-        // Panel superior blanco con saludo, título, campana y cerrar sesión
-        JPanel topPanel = crearTopPanel();
-        contenedorBarras.add(topPanel);
-
-        // Añadimos el contenedor completo a la parte NORTH del marco
+        contenedorBarras.add(new BarraVentanaUDLAP(this));
+        contenedorBarras.add(crearTopPanel());
         add(contenedorBarras, BorderLayout.NORTH);
 
-        /*
-         * ========== 1.2 Panel principal: menú lateral izquierdo + panel central
-         * ==========
-         */
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(ColoresUDLAP.BLANCO);
         add(mainPanel, BorderLayout.CENTER);
 
-        // Menú lateral izquierdo
         JPanel menuPanel = crearMenuPanel();
         mainPanel.add(menuPanel, BorderLayout.WEST);
 
-        // Panel central de contenido (CardLayout)
         contentPanel = new JPanel(new CardLayout());
         contentPanel.setBackground(Color.WHITE);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        // Inicializar PanelManager y registrar paneles
         panelManager = new PanelManager(contentPanel);
         registrarPaneles();
-
-        // Mostrar panel inicial
         panelManager.showPanel("panel0");
     }
 
@@ -129,22 +105,14 @@ public class InterfazMedica extends JFrame {
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(15, 8, 8, 8));
 
-        // Definición de botones del menú
         String[] items = esMedico
-                ? new String[] {
-                        "Registrar Paciente\nNuevo",
-                        "Consulta Nueva",
-                        "Editar Datos del\nPaciente",
-                        "Justificantes Médicos",
-                        "Registrar Llamada\nde Emergencia",
-                        "Llenar Reporte de\nAccidente"
+                ? new String[]{
+                    "Registrar Paciente\nNuevo", "Consulta Nueva", "Editar Datos del\nPaciente",
+                    "Justificantes Médicos", "Registrar Llamada\nde Emergencia", "Llenar Reporte de\nAccidente"
                 }
-                : new String[] {
-                        "Gestión de Citas",
-                        "Historial Médico",
-                        "Solicitar Justificante",
-                        "Mis Justificantes",
-                        "Reportar Emergencia"
+                : new String[]{
+                    "Gestión de Citas", "Historial Médico", "Solicitar Justificante",
+                    "Mis Justificantes", "Reportar Emergencia"
                 };
 
         Font btnFont = new Font("Arial", Font.BOLD, 21);
@@ -156,268 +124,224 @@ public class InterfazMedica extends JFrame {
             JButton boton = botonTransparente(texto, base, hover, btnFont);
             boton.setAlignmentX(Component.CENTER_ALIGNMENT);
             boton.setMaximumSize(new Dimension(260, 80));
-            boton.setPreferredSize(new Dimension(260, 80));
-            boton.setMinimumSize(new Dimension(260, 80));
             final int idx = i;
             boton.addActionListener(e -> manejarClickBoton(idx));
             menuPanel.add(boton);
             menuPanel.add(Box.createRigidArea(new Dimension(0, 13)));
         }
 
-        // Botón emergencias, centrado abajo
-        JButton btnEmergencia = botonTransparente(
-                "<html><div style='text-align:center;'>Emergencias</div></html>",
+        JButton btnEmergencia = botonTransparente("<html><div style='text-align:center;'>Emergencias</div></html>",
                 ColoresUDLAP.ROJO, ColoresUDLAP.ROJO_HOVER, btnFont);
         btnEmergencia.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnEmergencia.setMaximumSize(new Dimension(260, 56));
         btnEmergencia.setPreferredSize(new Dimension(260, 56));
-        btnEmergencia.setMinimumSize(new Dimension(260, 56));
         btnEmergencia.addActionListener(e -> panelManager.showPanel("emergencia"));
         menuPanel.add(btnEmergencia);
 
         menuPanel.add(Box.createVerticalGlue());
-
         return menuPanel;
     }
 
-    private void manejarClickBoton(int indiceBoton) {
-        if (indiceBoton == 0 && esMedico) {
-            panelManager.showPanel("formularioRegistro");
-        } else if (indiceBoton == 1 && esMedico) {
-            panelManager.showPanel("consultaNueva");
-        } else if (indiceBoton == 2 && esMedico) {
-            panelManager.showPanel("editarDatosPaciente");
-        } else if (indiceBoton == 3 && esMedico) {
-            // ✅ Crear nueva instancia al presionar "Justificantes Médicos"
-            JPanel nuevoPanel = new PanelMenuJustificantes();
-            contentPanel.add(nuevoPanel, "justificantesMedicos");
-            CardLayout cl = (CardLayout) contentPanel.getLayout();
-            cl.show(contentPanel, "justificantesMedicos");
-        } else if (indiceBoton == 4 && esMedico) {
-            panelManager.showPanel("llamadaEmergencia");
-        } else if (indiceBoton == 5 && esMedico) {
-            panelManager.showPanel("reporteAccidente");
-        } else if (indiceBoton == 0 && !esMedico) {
-            panelManager.showPanel("gestionCitas");
-        } else if (indiceBoton == 1 && !esMedico) {
-            panelManager.showPanel("historialMedico");
-        } else if (indiceBoton == 2 && !esMedico) {
-            panelManager.showPanel("solicitarJustificante");
-        } else if (indiceBoton == 3 && !esMedico) {
-            panelManager.showPanel("misJustificantes");
-        } else if (indiceBoton == 4 && !esMedico) {
-            panelManager.showPanel("reportarEmergencia");
+    private void manejarClickBoton(int idx) {
+        if (esMedico) {
+            switch (idx) {
+                case 0 -> panelManager.showPanel("formularioRegistro");
+                case 1 -> panelManager.showPanel("consultaNueva");
+                case 2 -> panelManager.showPanel("editarDatosPaciente");
+                case 3 -> {
+                    JPanel nuevoPanel = new PanelMenuJustificantes();
+                    contentPanel.add(nuevoPanel, "justificantesMedicos");
+                    ((CardLayout) contentPanel.getLayout()).show(contentPanel, "justificantesMedicos");
+                }
+                case 4 -> panelManager.showPanel("llamadaEmergencia");
+                case 5 -> panelManager.showPanel("reporteAccidente");
+            }
         } else {
-            panelManager.showPanel("panel" + indiceBoton);
+            switch (idx) {
+                case 0 -> panelManager.showPanel("panelGestionCitas");
+                case 1 -> panelManager.showPanel("historialMedico");
+                case 2 -> panelManager.showPanel("solicitarJustificante");
+                case 3 -> panelManager.showPanel("misJustificantes");
+                case 4 -> panelManager.showPanel("reportarEmergencia");
+            }
         }
     }
 
-    private void registrarPaneles() {
-        for (int i = 0; i < (esMedico ? 6 : 5); i++) {
-            final int idx = i;
-            panelManager.registerPanel(new PanelProvider() {
-                @Override
-                public JPanel getPanel() {
-                    JPanel panel = new JPanel();
-                    panel.setBackground(Color.WHITE);
-                    JLabel lbl = new JLabel("Panel " + (idx + 1), SwingConstants.CENTER);
-                    lbl.setFont(new Font("Arial", Font.BOLD, 26));
-                    panel.add(lbl);
-                    return panel;
-                }
-    private void registrarPaneles() {
-        for (int i = 0; i < (esMedico ? 6 : 5); i++) {
-            final int idx = i;
-            panelManager.registerPanel(new PanelProvider() {
-                @Override
-                public JPanel getPanel() {
-                    JPanel panel = new JPanel();
-                    panel.setBackground(Color.WHITE);
-                    JLabel lbl = new JLabel("Panel " + (idx + 1), SwingConstants.CENTER);
-                    lbl.setFont(new Font("Arial", Font.BOLD, 26));
-                    panel.add(lbl);
-                    return panel;
-                }
-
-                @Override
-                public String getPanelName() {
-                    return "panel" + idx;
-                }
-            });
-
-            // Registrar panel de formulario de registro
-            panelManager.registerPanel(new PanelRegistroPaciente());
-            // Registrar panel de consulta nueva
-            panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-            // Registrar panel de edición de datos del paciente
-            panelManager.registerPanel(new PanelGestionEnfermedades(true));
-
-            // Registrar panel de llamada de emergencia
-            panelManager.registerPanel(new PanelLlamadaEmergencia());
-
-        }
-
-        // Panel de emergencias
+private void registrarPaneles() {
+    for (int i = 0; i < (esMedico ? 6 : 5); i++) {
+        final int idx = i;
         panelManager.registerPanel(new PanelProvider() {
             @Override
             public JPanel getPanel() {
                 JPanel panel = new JPanel();
                 panel.setBackground(Color.WHITE);
-                JLabel lbl = new JLabel("Panel de Emergencias", SwingConstants.CENTER);
-                lbl.setFont(new Font("Arial", Font.BOLD, 26));
-                panel.add(lbl);
-                return panel;
-            }
-        // Panel de emergencias
-        panelManager.registerPanel(new PanelProvider() {
-            @Override
-            public JPanel getPanel() {
-                JPanel panel = new JPanel();
-                panel.setBackground(Color.WHITE);
-                JLabel lbl = new JLabel("Panel de Emergencias", SwingConstants.CENTER);
-                lbl.setFont(new Font("Arial", Font.BOLD, 26));
-                panel.add(lbl);
+                panel.add(new JLabel("Panel " + (idx + 1)));
                 return panel;
             }
 
             @Override
             public String getPanelName() {
-                return "emergencia";
-            }
-        });
-
-        // Paneles funcionales ya existentes
-        panelManager.registerPanel(new PanelRegistroPaciente());
-        panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-        panelManager.registerPanel(new PanelLlamadaEmergencia());
-        // Paneles funcionales ya existentes
-        panelManager.registerPanel(new PanelRegistroPaciente());
-        panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-        panelManager.registerPanel(new PanelLlamadaEmergencia());
-
-        // ➕ Panel funcional de Justificantes
-        panelManager.registerPanel(new PanelJustificantesProvider() {
-            @Override
-            public String getPanelName() {
-                return "justificantesMedicos";
-            }
-        });
-    }
-        // ➕ Panel funcional de Justificantes
-        panelManager.registerPanel(new PanelJustificantesProvider() {
-            @Override
-            public String getPanelName() {
-                return "justificantesMedicos";
+                return "panel" + idx;
             }
         });
     }
 
-    // Nuevo método auxiliar para crear el panel superior
+    panelManager.registerPanel(new PanelProvider() {
+        @Override
+        public JPanel getPanel() {
+            return new JPanel(new BorderLayout()) {{
+                add(new JLabel("Panel de Emergencias", SwingConstants.CENTER));
+            }};
+        }
+
+        @Override
+        public String getPanelName() {
+            return "emergencia";
+        }
+    });
+
+    panelManager.registerPanel(new PanelRegistroPaciente());
+    panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+    panelManager.registerPanel(new PanelLlamadaEmergencia());
+
+    panelManager.registerPanel(new PanelJustificantesProvider() {
+        @Override
+        public String getPanelName() {
+            return "justificantesMedicos";
+        }
+    });
+
+    if (!esMedico) {
+    // Gestión de citas general
+    panelManager.registerPanel(new PanelProvider() {
+        @Override
+        public JPanel getPanel() {
+            return new PanelGestionCitas(userId, panelManager);
+        }
+
+        @Override
+        public String getPanelName() {
+            return "panelGestionCitas";  // Cambiado de "gestionCitas" a "panelGestionCitas" para consistencia
+        }
+    });
+
+
+    // Panel de Agendar Cita
+    panelManager.registerPanel(new PanelProvider() {
+        @Override
+        public JPanel getPanel() {
+            return new AgendaCitaFrame(userId, panelManager);
+        }
+
+        @Override
+        public String getPanelName() {
+            return "agendarCita";
+        }
+    });
+
+
+
+    
+    // Panel de Modificar Cita
+    panelManager.registerPanel(new PanelProvider() {
+        @Override
+        public JPanel getPanel() {
+            return new ModificarCitaFrame(userId, panelManager);
+        }
+
+        @Override
+        public String getPanelName() {
+            return "modificarCita";
+        }
+    });
+
+    }
+}
+
+
     private JPanel crearTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(ColoresUDLAP.BLANCO);
         topPanel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
         topPanel.setPreferredSize(new Dimension(0, 56));
 
-        JLabel lblSaludo = new JLabel("Hola, " + nombreUsuario);
-        lblSaludo.setForeground(ColoresUDLAP.VERDE_OSCURO);
-        lblSaludo.setFont(new Font("Arial", Font.PLAIN, 18));
+        JLabel saludo = new JLabel("Hola, " + nombreUsuario);
+        saludo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        saludo.setFont(new Font("Arial", Font.PLAIN, 18));
+
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 12));
         left.setOpaque(false);
-        left.add(lblSaludo);
+        left.add(saludo);
 
-        JLabel lblTitulo = new JLabel(
+        JLabel titulo = new JLabel(
                 "<html><span style='font-size:25pt;font-weight:bold;color:#006400;'>Servicios Médicos</span> " +
                         "<span style='font-size:25pt;font-weight:bold;color:#FF6600;'>UDLAP</span></html>",
                 SwingConstants.CENTER);
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+
         JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
         center.setOpaque(false);
-        center.add(lblTitulo);
+        center.add(titulo);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 5));
         right.setOpaque(false);
 
-        // Botón de notificaciones (reemplaza el emoji anterior)
         notificationIcon = new JLabel(iconDefault);
-        if (iconDefault.getImage() == null) {
-            notificationIcon.setText("\uD83D\uDD14"); // Emoji de campana como fallback
-            notificationIcon.setFont(new Font("Dialog", Font.PLAIN, 24));
-        }
         notificationIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         notificationIcon.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
                 mostrarNotificaciones();
             }
         });
         right.add(notificationIcon);
 
-        JButton btnCerrarSesion = new JButton("Cerrar sesión");
-        btnCerrarSesion.setFont(new Font("Arial", Font.BOLD, 15));
-        btnCerrarSesion.setBackground(ColoresUDLAP.NARANJA_BARRA);
-        btnCerrarSesion.setForeground(Color.WHITE);
-        btnCerrarSesion.setFocusPainted(false);
-        btnCerrarSesion.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnCerrarSesion.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-        btnCerrarSesion.addActionListener(e -> {
+        JButton cerrarSesion = new JButton("Cerrar sesión");
+        cerrarSesion.setFont(new Font("Arial", Font.BOLD, 15));
+        cerrarSesion.setBackground(ColoresUDLAP.NARANJA_BARRA);
+        cerrarSesion.setForeground(Color.WHITE);
+        cerrarSesion.setFocusPainted(false);
+        cerrarSesion.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cerrarSesion.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        cerrarSesion.addActionListener(e -> {
             new InterfazLogin().setVisible(true);
             dispose();
         });
-        right.add(btnCerrarSesion);
+        right.add(cerrarSesion);
 
         topPanel.add(left, BorderLayout.WEST);
         topPanel.add(center, BorderLayout.CENTER);
         topPanel.add(right, BorderLayout.EAST);
-
         return topPanel;
     }
 
     private void mostrarNotificaciones() {
         if (esMedico) {
-            // Lógica para médicos (a implementar posteriormente)
-            JOptionPane.showMessageDialog(
-                    this,
+            JOptionPane.showMessageDialog(this,
                     "Funcionalidad de notificaciones para médicos en desarrollo.",
                     "Notificaciones Médicas",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
-            // Lógica para pacientes (ya implementada)
             List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
-
             if (lista.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        this,
+                JOptionPane.showMessageDialog(this,
                         "No hay nuevas notificaciones.",
                         "Notificaciones",
                         JOptionPane.INFORMATION_MESSAGE);
-                if (iconDefault.getImage() != null) {
-                    notificationIcon.setIcon(iconDefault);
+                notificationIcon.setIcon(iconDefault);
+            } else {
+                for (NotificacionDAO.Notificacion n : lista) {
+                    JOptionPane.showMessageDialog(this,
+                            String.format("Tienes una cita programada:\nFecha: %s\nHora: %s\nServicio: %s",
+                                    n.fecha, n.hora, n.servicio),
+                            "Notificación de Cita",
+                            JOptionPane.INFORMATION_MESSAGE);
                 }
-                return;
-            }
-            
-            // Mostrar cada notificación (simplificado - en producción debería mostrarse en una lista)
-            for (NotificacionDAO.Notificacion n : lista) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        String.format("Tienes una cita programada:\nFecha: %s\nHora: %s\nServicio: %s", 
-                                n.fecha, n.hora, n.servicio),
-                        "Notificación de Cita",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-            
-            hasNewNotification = false;
-            if (iconDefault.getImage() != null) {
+                hasNewNotification = false;
                 notificationIcon.setIcon(iconDefault);
             }
         }
     }
 
-    // Botón traslúcido personalizado
     private JButton botonTransparente(String texto, Color base, Color hover, Font font) {
         JButton button = new JButton(texto) {
-            @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -434,41 +358,18 @@ public class InterfazMedica extends JFrame {
         button.setOpaque(false);
         button.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setHorizontalAlignment(SwingConstants.CENTER);
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.repaint();
-            }
-
-            public void mouseExited(MouseEvent e) {
-                button.repaint();
-            }
-        });
         return button;
     }
 
-    // Mostrar un panel central según su CardLayout
-    private void mostrarPanel(String panelName) {
-        CardLayout cl = (CardLayout) (contentPanel.getLayout());
-        cl.show(contentPanel, panelName);
-    }
-
-    private void mostrarPanelEmergencia() {
-        CardLayout cl = (CardLayout) (contentPanel.getLayout());
-        cl.show(contentPanel, "emergencia");
-    }
-
-    // Consulta nombre de usuario (médico o paciente)
     private String fetchNombreUsuario() {
         String sql = esMedico
                 ? "SELECT Nombre||' '||ApellidoPaterno FROM InformacionMedico WHERE ID=?"
                 : "SELECT Nombre||' '||ApellidoPaterno FROM InformacionAlumno WHERE ID=?";
         try (Connection con = ConexionSQLite.conectar();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next())
-                    return rs.getString(1);
+                if (rs.next()) return rs.getString(1);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();

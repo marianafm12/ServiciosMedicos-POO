@@ -1,5 +1,7 @@
 package GestionCitas;
 
+import Utilidades.PanelManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -8,9 +10,12 @@ import java.awt.event.MouseEvent;
 public class PanelGestionCitas extends JPanel {
 
     private final int userId;
+    private final PanelManager panelManager;
 
-    public PanelGestionCitas(int userId) {
+    public PanelGestionCitas(int userId, PanelManager panelManager) {
         this.userId = userId;
+        this.panelManager = panelManager;
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(80, 80, 80, 80));
@@ -27,8 +32,7 @@ public class PanelGestionCitas extends JPanel {
         );
         btnAgendarCita.setMaximumSize(new Dimension(350, 60));
         btnAgendarCita.addActionListener(e -> {
-            new AgendaCitaFrame(userId).setVisible(true);
-            ((Window) SwingUtilities.getRoot(this)).dispose();
+            panelManager.showPanel("agendarCita");
         });
 
         // Botón para modificar cita
@@ -39,8 +43,7 @@ public class PanelGestionCitas extends JPanel {
         );
         btnModificarCita.setMaximumSize(new Dimension(350, 60));
         btnModificarCita.addActionListener(e -> {
-            new ModificarCitaFrame().setVisible(true);
-            ((Window) SwingUtilities.getRoot(this)).dispose();
+            panelManager.showPanel("modificarCita");
         });
 
         // Agregado al panel
