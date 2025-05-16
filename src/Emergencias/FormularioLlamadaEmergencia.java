@@ -18,21 +18,20 @@ public class FormularioLlamadaEmergencia extends JPanel {
         setBackground(ColoresUDLAP.BLANCO);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Configuración de fuentes
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
-        Font titleFont = new Font("Arial", Font.BOLD, 16);
 
         // Título
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         JLabel lblTitulo = new JLabel("Formulario de Llamada de Emergencia", SwingConstants.CENTER);
-        lblTitulo.setFont(titleFont);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
         lblTitulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
         add(lblTitulo, gbc);
 
@@ -183,6 +182,20 @@ public class FormularioLlamadaEmergencia extends JPanel {
         gbc.gridy++;
         gbc.weighty = 1.0;
         add(Box.createGlue(), gbc);
+
+        // Botones de acción
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton btnRegistrar = new JButton("Registrar Emergencia");
+        JButton btnLimpiar = new JButton("Limpiar");
+        panelBotones.add(btnRegistrar);
+        panelBotones.add(btnLimpiar);
+        add(panelBotones, gbc);
+
+        // Acción de los botones
+        btnRegistrar.addActionListener(e -> registrarEmergencia());
+        btnLimpiar.addActionListener(e -> limpiarCampos());
     }
 
     private JRadioButton crearRadioButton(String text, Color color) {
@@ -312,6 +325,16 @@ public class FormularioLlamadaEmergencia extends JPanel {
         public int getId() {
             return id;
         }
+    }
+
+    private void limpiarCampos() {
+        campoIDPaciente.setText("");
+        campoNombrePaciente.setText("");
+        campoTelefonoContacto.setText("");
+        areaDescripcion.setText("");
+        comboTipoEmergencia.setSelectedIndex(0); // Resetea el JComboBox a su primer valor
+        grupoGravedad.clearSelection(); // Desmarcar cualquier opción de gravedad
+        comboResponsable.setSelectedIndex(0); // Resetea el JComboBox de médicos responsables
     }
 
 }
