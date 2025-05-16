@@ -1,7 +1,7 @@
 package Justificantes;
 
 import Inicio.MenuMedicosFrame;
-import Inicio.MenuPacientesFrame;
+//import Inicio.MenuPacientesFrame;
 import Utilidades.ColoresUDLAP;
 
 import javax.swing.*;
@@ -86,7 +86,7 @@ public class FormularioJustificanteFrame extends JFrame {
         JButton regresarBtn = new JButton("Volver a Pacientes");
         regresarBtn.addActionListener(e -> {
             int idPaciente = 1; // Reemplaza con el ID real cuando proceda
-            new MenuPacientesFrame(idPaciente).setVisible(true);
+            // new MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 

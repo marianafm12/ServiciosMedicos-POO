@@ -51,12 +51,12 @@ public class PortadaFrame extends JFrame {
 
         btnEstudiantes.addActionListener(e -> {
             // Llama al login para pacientes
-            new LoginPacientesFrame().setVisible(true);
+            // new LoginPacientesFrame().setVisible(true);
             dispose();
         });
 
         btnEmergencias.addActionListener(e -> {
-            new Emergencias.MenuEmergenciaFrame().setVisible(true);
+            // new Emergencias.MenuEmergenciaFrame().setVisible(true);
             dispose();
         });
 
