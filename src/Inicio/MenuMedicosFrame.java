@@ -1,7 +1,6 @@
 package Inicio;
 
 //import Consultas.ConsultasFrame;
-import Emergencias.AccidenteFrame;
 //import Emergencias.LlamadaEmergencia;
 //import GestionEnfermedades.EditarDatosPaciente;
 import Justificantes.SeleccionarPacienteFrame;
@@ -186,7 +185,7 @@ public class MenuMedicosFrame extends JFrame {
         });
 
         reporteAccidenteButton.addActionListener(e -> {
-            new AccidenteFrame().setVisible(true);
+            // new AccidenteFrame().setVisible(true);
             // dispose();
         });
 
