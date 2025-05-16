@@ -161,10 +161,12 @@ public class InterfazLogin extends JFrame {
                     ps.setString(2, password);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
+                            SesionUsuario.iniciarSesion(id); // ← NECESARIO
                             new InterfazMedica(false, id).setVisible(true);
                             dispose();
                             return;
                         }
+
                     }
                 }
                 // Falló

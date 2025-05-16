@@ -1,3 +1,5 @@
+/* 
+
 package Justificantes;
 
 import javax.swing.*;
@@ -204,3 +206,5 @@ public class PlantillaJustificanteFrame extends JFrame {
         SwingUtilities.invokeLater(() -> new PlantillaJustificanteFrame(1).setVisible(true));
     }
 }
+
+*/
