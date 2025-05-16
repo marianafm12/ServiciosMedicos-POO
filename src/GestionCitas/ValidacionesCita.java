@@ -11,7 +11,6 @@ public class ValidacionesCita {
     public static boolean esIdValido(String id) {
         return id.matches("^[0-9]+$") && Integer.parseInt(id) >= 100000;
     }
-    
 
     public static boolean esFechaValida(int dia, int mes, int año) {
         LocalDate fechaActual = LocalDate.now();
@@ -19,5 +18,4 @@ public class ValidacionesCita {
         return fechaCita.isAfter(fechaActual);
     }
 
-    
 }
