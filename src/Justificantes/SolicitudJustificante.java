@@ -2,15 +2,13 @@ package Justificantes;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.HashMap;
 
-import BaseDeDatos.ConexionSQLite;
 import Inicio.MenuMedicosFrame;
+import Utilidades.ColoresUDLAP;
 
 public class SolicitudJustificante extends JFrame {
 
@@ -26,6 +24,7 @@ public class SolicitudJustificante extends JFrame {
         setTitle("Revisión de Solicitud");
         setSize(600, 500);
         setLocationRelativeTo(null);
+        setBackground(ColoresUDLAP.BLANCO);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(0, 1));
 

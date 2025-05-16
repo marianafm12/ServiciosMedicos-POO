@@ -3,7 +3,7 @@ package Inicio;
 //import Consultas.ConsultasFrame;
 import Emergencias.AccidenteFrame;
 //import Emergencias.LlamadaEmergencia;
-import GestionEnfermedades.EditarDatosPaciente;
+//import GestionEnfermedades.EditarDatosPaciente;
 import Justificantes.SeleccionarPacienteFrame;
 import Registro.AgregarRegistro;
 import Registro.FormularioFrame;
@@ -163,7 +163,7 @@ public class MenuMedicosFrame extends JFrame {
             if (idPacienteStr != null && !idPacienteStr.isEmpty()) {
                 try {
                     int idPaciente = Integer.parseInt(idPacienteStr);
-                    new EditarDatosPaciente(idPaciente).setVisible(true);
+                    // new EditarDatosPaciente(idPaciente).setVisible(true);
                     // dispose();
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(

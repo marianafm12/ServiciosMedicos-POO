@@ -8,7 +8,6 @@ import java.time.LocalDate;
 
 import BaseDeDatos.ConexionSQLite;
 import Inicio.PortadaFrame;
-import Inicio.MenuPacientesFrame;
 import Inicio.SesionUsuario;
 
 public class AgendaCitaFrame extends JFrame {
@@ -95,13 +94,15 @@ public class AgendaCitaFrame extends JFrame {
         gbc.gridx = 0;
         add(new JLabel("Fecha de la Cita:"), gbc);
         comboDia = new JComboBox<>();
-        for (int d = 1; d <= 31; d++) comboDia.addItem(d);
+        for (int d = 1; d <= 31; d++)
+            comboDia.addItem(d);
         comboMes = new JComboBox<>(new String[] {
                 "Ene", "Feb", "Mar", "Abr", "May", "Jun",
                 "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
         });
         comboAño = new JComboBox<>();
-        for (int a = LocalDate.now().getYear(); a <= 2030; a++) comboAño.addItem(a);
+        for (int a = LocalDate.now().getYear(); a <= 2030; a++)
+            comboAño.addItem(a);
         JPanel fechaPanel = new JPanel();
         fechaPanel.add(comboDia);
         fechaPanel.add(comboMes);
@@ -155,7 +156,7 @@ public class AgendaCitaFrame extends JFrame {
             dispose();
         });
         btnRegresar.addActionListener(e -> {
-            new MenuPacientesFrame(idPaciente).setVisible(true);
+            // new MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 
@@ -172,14 +173,14 @@ public class AgendaCitaFrame extends JFrame {
         String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno "
                 + "FROM InformacionAlumno WHERE ID = ?";
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     campoNombre.setText(rs.getString("Nombre"));
                     campoApellidos.setText(
-                        rs.getString("ApellidoPaterno") + " "
-                      + rs.getString("ApellidoMaterno"));
+                            rs.getString("ApellidoPaterno") + " "
+                                    + rs.getString("ApellidoMaterno"));
                 } else {
                     campoNombre.setText("Desconocido");
                     campoApellidos.setText("Desconocido");
@@ -195,17 +196,17 @@ public class AgendaCitaFrame extends JFrame {
      */
     private void validarYConfirmarCita(int idPaciente) {
         String servicio = (String) comboServicio.getSelectedItem();
-        int dia   = (int) comboDia.getSelectedItem();
-        int mes   = comboMes.getSelectedIndex() + 1;
-        int año   = (int) comboAño.getSelectedItem();
-        String hora   = (String) comboHora.getSelectedItem();
+        int dia = (int) comboDia.getSelectedItem();
+        int mes = comboMes.getSelectedIndex() + 1;
+        int año = (int) comboAño.getSelectedItem();
+        String hora = (String) comboHora.getSelectedItem();
         String minuto = (String) comboMinuto.getSelectedItem();
 
         if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
             errorLabel.setText("Fecha inválida (debe ser futura)");
             return;
         }
-        String fecha    = String.format("%04d-%02d-%02d", año, mes, dia);
+        String fecha = String.format("%04d-%02d-%02d", año, mes, dia);
         String horaFinal = hora + ":" + minuto;
 
         // ── 1) Verificar disponibilidad ──
@@ -237,13 +238,12 @@ public class AgendaCitaFrame extends JFrame {
                     JOptionPane.QUESTION_MESSAGE,
                     null,
                     opciones,
-                    opciones[0]
-            );
+                    opciones[0]);
             if (opcion == 0) {
                 try {
                     ListaEsperaDAO.registrarEnEspera(
-                        String.valueOf(idPaciente),
-                        fecha, horaFinal, servicio);
+                            String.valueOf(idPaciente),
+                            fecha, horaFinal, servicio);
                     errorLabel.setForeground(Color.ORANGE);
                     errorLabel.setText("Registrado en lista de espera.");
                 } catch (SQLException e) {

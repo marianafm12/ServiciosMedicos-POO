@@ -12,11 +12,12 @@ import java.util.Optional;
 public class JustificanteDAO {
 
     public static boolean guardarJustificante(Justificante j) {
-        String sql = "INSERT INTO JustificantePaciente (idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, rutaArchivo, estado) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO JustificantePaciente (idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, diagnostico, rutaArchivo, estado) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setString(1, j.getIdPaciente());
             pst.setString(2, j.getNombrePaciente());
@@ -39,7 +40,7 @@ public class JustificanteDAO {
         String sql = "SELECT * FROM JustificantePaciente WHERE folio = ?";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setInt(1, folio);
             ResultSet rs = pst.executeQuery();
@@ -59,8 +60,8 @@ public class JustificanteDAO {
         String sql = "SELECT * FROM JustificantePaciente ORDER BY folio DESC";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql);
-             ResultSet rs = pst.executeQuery()) {
+                PreparedStatement pst = conn.prepareStatement(sql);
+                ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
                 lista.add(mapearDesdeResultSet(rs));
@@ -77,7 +78,7 @@ public class JustificanteDAO {
         String sql = "UPDATE JustificantePaciente SET diagnostico = ?, fechaInicio = ?, fechaFin = ? WHERE folio = ?";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setString(1, diagnostico);
             pst.setString(2, inicio.toString());
@@ -92,38 +93,38 @@ public class JustificanteDAO {
         }
     }
 
-public static boolean aprobarJustificante(int folio, String motivo, String diagnostico, String medicoFirmante,
-                                        LocalDate fechaInicio, LocalDate fechaFin) {
-    
-    String sql = "UPDATE JustificantePaciente SET estado = 'Aprobado', " +
-                 "motivo = ?, diagnostico = ?, resueltoPor = ?, " +
-                 "fechaResolucion = CURRENT_DATE, " +  // Usamos CURRENT_DATE para la fecha actual
-                 "fechaInicio = ?, fechaFin = ? " +
-                 "WHERE folio = ?";
+    public static boolean aprobarJustificante(int folio, String motivo, String diagnostico, String medicoFirmante,
+            LocalDate fechaInicio, LocalDate fechaFin) {
 
-    try (Connection conn = ConexionSQLite.conectar();
-         PreparedStatement pst = conn.prepareStatement(sql)) {
+        String sql = "UPDATE JustificantePaciente SET estado = 'Aprobado', " +
+                "motivo = ?, diagnostico = ?, resueltoPor = ?, " +
+                "fechaResolucion = CURRENT_DATE, " + // Usamos CURRENT_DATE para la fecha actual
+                "fechaInicio = ?, fechaFin = ? " +
+                "WHERE folio = ?";
 
-        pst.setString(1, motivo);
-        pst.setString(2, diagnostico);
-        pst.setString(3, medicoFirmante);
-        pst.setString(4, fechaInicio.toString());
-        pst.setString(5, fechaFin.toString());
-        pst.setInt(6, folio);
+        try (Connection conn = ConexionSQLite.conectar();
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
-        return pst.executeUpdate() > 0;
+            pst.setString(1, motivo);
+            pst.setString(2, diagnostico);
+            pst.setString(3, medicoFirmante);
+            pst.setString(4, fechaInicio.toString());
+            pst.setString(5, fechaFin.toString());
+            pst.setInt(6, folio);
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
+            return pst.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
 
     public static boolean rechazarJustificante(int folio, String medicoFirmante) {
         String sql = "UPDATE JustificantePaciente SET estado = 'Rechazado', resueltoPor = ?, fechaResolucion = ? WHERE folio = ?";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setString(1, medicoFirmante);
             pst.setString(2, LocalDate.now().toString());
@@ -141,7 +142,7 @@ public static boolean aprobarJustificante(int folio, String motivo, String diagn
         String sql = "DELETE FROM JustificantePaciente WHERE folio = ?";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+                PreparedStatement pst = conn.prepareStatement(sql)) {
 
             pst.setInt(1, folio);
             return pst.executeUpdate() > 0;

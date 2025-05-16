@@ -7,7 +7,7 @@ import Inicio.SesionUsuario;
 /*import GestionCitas.AgendaCitaFrame;
 import GestionCitas.ModificarCitaFrame;*/
 import Inicio.PortadaFrame;
-import Inicio.MenuPacientesFrame;
+//import Inicio.MenuPacientesFrame;
 
 public class InicioFrame extends JFrame {
 
@@ -75,7 +75,7 @@ public class InicioFrame extends JFrame {
         // Listener para Regresar (vuelve al menú de pacientes)
         regresarButton.addActionListener(e -> {
             int idPaciente = SesionUsuario.getPacienteActual();
-            new MenuPacientesFrame(idPaciente).setVisible(true);
+            // new MenuPacientesFrame(idPaciente).setVisible(true);
             dispose();
         });
 
