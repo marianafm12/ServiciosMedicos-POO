@@ -18,17 +18,27 @@ public class FrameRegistro extends JPanel {
         campos = new JTextField[etiquetas.length];
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Configuración de fuente
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
+        // Título
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        JLabel titulo = new JLabel("Registro de Pacientes", SwingConstants.CENTER);
+        titulo.setFont(new Font("Arial", Font.BOLD, 18));
+        titulo.setForeground(ColoresUDLAP.VERDE_SOLIDO);
+        add(titulo, gbc);
 
+        gbc.gridwidth = 1;
         for (int i = 0; i < etiquetas.length; i++) {
+
             gbc.gridx = 0;
-            gbc.gridy = i;
+            gbc.gridy = i + 1; // +1 por el título
             gbc.weightx = 0.3;
 
             JLabel label = new JLabel(etiquetas[i]);

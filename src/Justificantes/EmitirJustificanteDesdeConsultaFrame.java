@@ -1,81 +1,235 @@
 package Justificantes;
 
+import Utilidades.ColoresUDLAP;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.sql.*;
 import java.time.LocalDate;
 
-public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
-    private JTextField idField, nombreField, motivoField;
-    private JComboBox<String> diaInicio, mesInicio, anioInicio;
-    private JComboBox<String> diaFin, mesFin, anioFin;
-    private JTextArea diagnosticoArea;
+import BaseDeDatos.ConexionSQLite;
+
+public class EmitirJustificanteDesdeConsultaFrame extends JPanel {
+
+    private final JTextField idField, nombreField, motivoField;
+    private final JComboBox<String> diaInicio, mesInicio, anioInicio;
+    private final JComboBox<String> diaFin, mesFin, anioFin;
+    private final JTextArea diagnosticoArea;
+    private final JLabel mensajeError;
     private File archivoReceta;
     private final String medicoFirmante = "Dra. Laura Gómez";
 
     public EmitirJustificanteDesdeConsultaFrame() {
-        setTitle("Emitir Justificante Médico");
-        setSize(600, 500);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridLayout(0, 1));
+        setLayout(new GridBagLayout());
+        setBackground(ColoresUDLAP.BLANCO);
 
-        idField = new JTextField();
-        nombreField = new JTextField();
-        motivoField = new JTextField();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6, 10, 6, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        add(new JLabel("ID del Paciente:"));
-        add(idField);
-        add(new JLabel("Nombre del Paciente:"));
-        add(nombreField);
-        add(new JLabel("Motivo:"));
-        add(motivoField);
+        Font labelFont = new Font("Arial", Font.BOLD, 14);
+        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
+        Font titleFont = new Font("Arial", Font.BOLD, 18);
 
+        // Título
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        JLabel titulo = new JLabel("Emitir Justificante Médico", SwingConstants.CENTER);
+        titulo.setFont(titleFont);
+        titulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        add(titulo, gbc);
+
+        gbc.gridwidth = 1;
+
+        // ID
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("ID del Paciente:", labelFont), gbc);
+
+        gbc.gridx = 1;
+        idField = campoTexto(fieldFont);
+        add(idField, gbc);
+
+        // Nombre
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("Nombre del Paciente:", labelFont), gbc);
+
+        gbc.gridx = 1;
+        nombreField = campoTexto(fieldFont);
+        nombreField.setEditable(false);
+        add(nombreField, gbc);
+
+        // Motivo
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("Motivo:", labelFont), gbc);
+
+        gbc.gridx = 1;
+        motivoField = campoTexto(fieldFont);
+        add(motivoField, gbc);
+
+        // Fecha Inicio
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("Inicio de Reposo:", labelFont), gbc);
+
+        gbc.gridx = 1;
         diaInicio = new JComboBox<>(generarDias());
         mesInicio = new JComboBox<>(generarMeses());
         anioInicio = new JComboBox<>(generarAnios());
-        add(new JLabel("Inicio de Reposo:"));
-        JPanel panelInicio = new JPanel();
-        panelInicio.add(diaInicio);
-        panelInicio.add(mesInicio);
-        panelInicio.add(anioInicio);
-        add(panelInicio);
+        add(panelFechas(diaInicio, mesInicio, anioInicio), gbc);
 
+        // Fecha Fin
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("Fin de Reposo:", labelFont), gbc);
+
+        gbc.gridx = 1;
         diaFin = new JComboBox<>(generarDias());
         mesFin = new JComboBox<>(generarMeses());
         anioFin = new JComboBox<>(generarAnios());
-        add(new JLabel("Fin de Reposo:"));
-        JPanel panelFin = new JPanel();
-        panelFin.add(diaFin);
-        panelFin.add(mesFin);
-        panelFin.add(anioFin);
-        add(panelFin);
+        add(panelFechas(diaFin, mesFin, anioFin), gbc);
 
-        diagnosticoArea = new JTextArea(4, 30);
-        add(new JLabel("Diagnóstico:"));
-        add(new JScrollPane(diagnosticoArea));
+        // Diagnóstico
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(label("Diagnóstico:", labelFont), gbc);
 
-        JButton subirArchivoBtn = new JButton("Subir Receta");
+        gbc.gridx = 1;
+        diagnosticoArea = new JTextArea(4, 20);
+        diagnosticoArea.setFont(fieldFont);
+        diagnosticoArea.setLineWrap(true);
+        diagnosticoArea.setWrapStyleWord(true);
+        diagnosticoArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        add(new JScrollPane(diagnosticoArea), gbc);
+
+        // Mensaje de error
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        mensajeError = new JLabel();
+        mensajeError.setForeground(Color.RED);
+        mensajeError.setFont(new Font("Arial", Font.BOLD, 13));
+        add(mensajeError, gbc);
+        gbc.gridwidth = 1;
+
+        // Botones
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        panelBotones.setBackground(ColoresUDLAP.BLANCO);
+
+        JButton subirArchivoBtn = botonEstilo("Subir Receta", ColoresUDLAP.AZUL);
         subirArchivoBtn.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
-            int op = fc.showOpenDialog(this);
-            if (op == JFileChooser.APPROVE_OPTION) {
+            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                 archivoReceta = fc.getSelectedFile();
             }
         });
 
-        JButton guardarBtn = new JButton("Emitir Justificante");
+        JButton guardarBtn = botonEstilo("Emitir Justificante", ColoresUDLAP.VERDE_OSCURO);
         guardarBtn.addActionListener(e -> guardar());
 
-        JButton cancelarBtn = new JButton("Cancelar");
-        cancelarBtn.addActionListener(e -> dispose());
+        JButton cancelarBtn = botonEstilo("Cancelar", ColoresUDLAP.ROJO);
+        cancelarBtn.addActionListener(e -> {
+            Container cont = getParent();
+            if (cont != null) {
+                cont.removeAll();
+                cont.setLayout(new BorderLayout());
+                cont.add(new PanelMenuJustificantes(), BorderLayout.CENTER);
+                cont.revalidate();
+                cont.repaint();
+            }
+        });
 
-        JPanel panelBotones = new JPanel();
         panelBotones.add(subirArchivoBtn);
         panelBotones.add(guardarBtn);
         panelBotones.add(cancelarBtn);
-        add(panelBotones);
+
+        add(panelBotones, gbc);
+
+        // Evento de autocompletado de nombre
+        idField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String input = idField.getText().trim();
+                if (input.matches("\\d{6}")) {
+                    int id = Integer.parseInt(input);
+                    if (id >= 180000 && id <= 999999) {
+                        try (Connection conn = ConexionSQLite.conectar();
+                             PreparedStatement pst = conn.prepareStatement(
+                                     "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
+                            pst.setInt(1, id);
+                            ResultSet rs = pst.executeQuery();
+                            if (rs.next()) {
+                                String nombreCompleto = rs.getString("Nombre") + " " +
+                                                        rs.getString("ApellidoPaterno") + " " +
+                                                        rs.getString("ApellidoMaterno");
+                                nombreField.setText(nombreCompleto);
+                                nombreField.setEditable(false);
+                                mensajeError.setText("");
+                            } else {
+                                nombreField.setText("");
+                                mensajeError.setText("⚠️ El paciente no se encuentra registrado.");
+                            }
+                        } catch (SQLException ex) {
+                            mensajeError.setText("❌ Error al acceder a la base de datos.");
+                            ex.printStackTrace();
+                        }
+                    } else {
+                        nombreField.setText("");
+                        mensajeError.setText("⚠️ El ID debe estar entre 180000 y 999999.");
+                    }
+                } else {
+                    nombreField.setText("");
+                    mensajeError.setText("⚠️ El ID debe tener 6 dígitos.");
+                }
+            }
+        });
+    }
+
+    private JLabel label(String texto, Font fuente) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(fuente);
+        lbl.setForeground(ColoresUDLAP.NEGRO);
+        return lbl;
+    }
+
+    private JTextField campoTexto(Font fuente) {
+        JTextField t = new JTextField(20);
+        t.setFont(fuente);
+        t.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        return t;
+    }
+
+    private JPanel panelFechas(JComboBox<String> d, JComboBox<String> m, JComboBox<String> a) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panel.setBackground(ColoresUDLAP.BLANCO);
+        panel.add(d);
+        panel.add(m);
+        panel.add(a);
+        return panel;
+    }
+
+    private JButton botonEstilo(String texto, Color colorFondo) {
+        JButton b = new JButton(texto);
+        b.setFont(new Font("Arial", Font.BOLD, 14));
+        b.setForeground(Color.WHITE);
+        b.setBackground(colorFondo);
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setBorder(BorderFactory.createEmptyBorder(6, 15, 6, 15));
+        return b;
     }
 
     private void guardar() {
@@ -86,13 +240,13 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
         LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
 
-        if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty() || diagnostico.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Completa todos los campos.");
+        if (id.isEmpty() || motivo.isEmpty() || diagnostico.isEmpty()) {
+            mensajeError.setText("⚠️ Todos los campos son obligatorios.");
             return;
         }
 
         if (inicio.isAfter(fin)) {
-            JOptionPane.showMessageDialog(this, "Fecha inicio > fin.");
+            mensajeError.setText("⚠️ Fecha de inicio posterior a la fecha de fin.");
             return;
         }
 
@@ -102,32 +256,7 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         j.setFechaResolucion(LocalDate.now());
 
         boolean ok = JustificanteDAO.guardarJustificante(j);
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Justificante emitido y guardado.");
-            dispose();
-        } else {
-            JOptionPane.showMessageDialog(this, "Error al guardar justificante.");
-        }
-    }
-
-    private String[] generarDias() {
-        String[] d = new String[31];
-        for (int i = 1; i <= 31; i++)
-            d[i - 1] = String.valueOf(i);
-        return d;
-    }
-
-    private String[] generarMeses() {
-        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
-    }
-
-    private String[] generarAnios() {
-        String[] a = new String[6];
-        int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++)
-            a[i] = String.valueOf(base + i);
-        return a;
+        mensajeError.setText(ok ? "✅ Justificante emitido correctamente." : "❌ Error al guardar justificante.");
     }
 
     private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
@@ -137,7 +266,21 @@ public class EmitirJustificanteDesdeConsultaFrame extends JFrame {
         return LocalDate.of(y, m, d);
     }
 
-    public static void main(String[] args) {
-        new EmitirJustificanteDesdeConsultaFrame().setVisible(true);
+    private String[] generarDias() {
+        String[] dias = new String[31];
+        for (int i = 1; i <= 31; i++) dias[i - 1] = String.valueOf(i);
+        return dias;
+    }
+
+    private String[] generarMeses() {
+        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+    }
+
+    private String[] generarAnios() {
+        String[] a = new String[6];
+        int base = LocalDate.now().getYear();
+        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        return a;
     }
 }
