@@ -1,6 +1,9 @@
 package Justificantes;
+
 import java.awt.event.ActionListener;
 import BaseDeDatos.ConexionSQLite;
+import Utilidades.ColoresUDLAP;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -17,12 +20,14 @@ public class SolicitudesJustificantesFrame extends JFrame {
         setTitle("Solicitudes de Justificantes");
         setSize(950, 600);
         setLocationRelativeTo(null);
+        setBackground(ColoresUDLAP.BLANCO);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
         JLabel titulo = new JLabel("Solicitudes de Justificantes", SwingConstants.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 24));
         titulo.setForeground(new Color(0, 102, 0));
+        titulo.setBackground(ColoresUDLAP.BLANCO);
         titulo.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         add(titulo, BorderLayout.NORTH);
 
@@ -84,14 +89,14 @@ public class SolicitudesJustificantesFrame extends JFrame {
     private void cargarDatosDesdeBD() {
         modelo = new DefaultTableModel();
         modelo.setColumnIdentifiers(new String[] {
-            "Folio", "ID Paciente", "Nombre", "Motivo", "Fecha Inicio", "Fecha Fin", "Estado"
+                "Folio", "ID Paciente", "Nombre", "Motivo", "Fecha Inicio", "Fecha Fin", "Estado"
         });
 
         String sql = "SELECT folio, idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, estado FROM JustificantePaciente";
 
         try (Connection con = ConexionSQLite.conectar();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 int folio = rs.getInt("folio");
@@ -106,7 +111,7 @@ public class SolicitudesJustificantesFrame extends JFrame {
                     estado = "Pendiente";
                 }
 
-                modelo.addRow(new Object[]{folio, id, nombre, motivo, inicio, fin, estado});
+                modelo.addRow(new Object[] { folio, id, nombre, motivo, inicio, fin, estado });
             }
 
             tabla.setModel(modelo);
@@ -121,7 +126,8 @@ public class SolicitudesJustificantesFrame extends JFrame {
     private void verSeleccionado() {
         int fila = tabla.getSelectedRow();
         if (fila == -1) {
-            JOptionPane.showMessageDialog(this, "Seleccione una fila para revisar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Seleccione una fila para revisar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -143,7 +149,8 @@ public class SolicitudesJustificantesFrame extends JFrame {
     private void eliminarSeleccionado() {
         int fila = tabla.getSelectedRow();
         if (fila == -1) {
-            JOptionPane.showMessageDialog(this, "Seleccione una fila para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Seleccione una fila para eliminar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -156,17 +163,17 @@ public class SolicitudesJustificantesFrame extends JFrame {
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 opciones,
-                opciones[1]
-        );
+                opciones[1]);
 
-        if (confirmacion != JOptionPane.YES_OPTION) return;
+        if (confirmacion != JOptionPane.YES_OPTION)
+            return;
 
         int folio = (int) modelo.getValueAt(fila, 0);
 
         String sql = "DELETE FROM JustificantePaciente WHERE folio = ?";
 
         try (Connection con = ConexionSQLite.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, folio);
             int eliminado = ps.executeUpdate();
@@ -175,12 +182,14 @@ public class SolicitudesJustificantesFrame extends JFrame {
                 modelo.removeRow(fila);
                 JOptionPane.showMessageDialog(this, "Solicitud eliminada correctamente.");
             } else {
-                JOptionPane.showMessageDialog(this, "No se pudo eliminar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar la solicitud.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
 
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al eliminar de la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al eliminar de la base de datos.", "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
