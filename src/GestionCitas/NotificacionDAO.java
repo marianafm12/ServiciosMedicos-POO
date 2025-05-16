@@ -32,7 +32,7 @@ public class NotificacionDAO {
         while (intentos < MAX_REINTENTOS && !completado) {
             try (Connection conn = ConexionSQLite.conectar()) {
                 String sql = "INSERT INTO Notificaciones (idPaciente, mensaje, estado, fecha, hora, servicio) " +
-                             "VALUES (?, ?, 'pendiente', ?, ?, ?)";
+                        "VALUES (?, ?, 'pendiente', ?, ?, ?)";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setString(1, idPaciente);
                     stmt.setString(2, "Se ha liberado una cita para " + servicio + " el " + fecha + " a las " + hora);
@@ -93,7 +93,7 @@ public class NotificacionDAO {
         String sql = "SELECT COUNT(*) FROM Notificaciones WHERE idPaciente = ? AND estado = 'pendiente'";
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idPaciente);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

@@ -7,6 +7,9 @@ import Emergencias.PanelLlamadaEmergencia;
 import Emergencias.PanelReportarEmergencia;
 import GestionCitas.NotificacionDAO;
 import GestionCitas.PanelGestionCitas;
+import GestionCitas.AgendaCitaFrame;
+import GestionCitas.ModificarCitaFrame;
+import GestionCitas.NotificacionCitasFrame;
 import GestionEnfermedades.PanelHistorialMedico;
 import Justificantes.PanelJustificantesProvider;
 import Justificantes.PanelMenuJustificantes;
@@ -14,8 +17,10 @@ import Registro.PanelRegistroPaciente;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.net.URL;
 import java.sql.*;
+import java.util.List;
 
 public class InterfazMedica extends JFrame {
     private JPanel contentPanel;
@@ -51,9 +56,35 @@ public class InterfazMedica extends JFrame {
     private void checkNotifications() {
         if (!esMedico) {
             hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
+            System.out.println("¿Tiene notificaciones pendientes? " + hasNewNotification);
         }
+
         if (notificationIcon != null) {
             notificationIcon.setIcon(hasNewNotification ? iconNew : iconDefault);
+        }
+    }
+
+    private void mostrarNotificaciones() {
+        if (esMedico) {
+            JOptionPane.showMessageDialog(this,
+                    "Funcionalidad de notificaciones para médicos en desarrollo.",
+                    "Notificaciones Médicas",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
+        if (lista.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay nuevas notificaciones.",
+                    "Notificaciones", JOptionPane.INFORMATION_MESSAGE);
+            notificationIcon.setIcon(iconDefault);
+        } else {
+            for (NotificacionDAO.Notificacion n : lista) {
+                new NotificacionCitasFrame(n.fecha, n.hora, n.servicio, String.valueOf(userId));
+            }
+            hasNewNotification = false;
+            notificationIcon.setIcon(iconDefault);
         }
     }
 
@@ -83,7 +114,7 @@ public class InterfazMedica extends JFrame {
 
         panelManager = new PanelManager(contentPanel);
         registrarPaneles();
-        panelManager.showPanel("inicio");
+        panelManager.showPanel("panel0");
     }
 
     private JPanel crearMenuPanel() {
@@ -114,18 +145,21 @@ public class InterfazMedica extends JFrame {
         return menu;
     }
 
+    private void manejarClick(int idx) {
+        String[] medicoKeys = { "formularioRegistro", "consultaNueva", "historialMedico", "justificantes",
+                "llamadaEmergencia", "reporteAccidente" };
+        String[] pacienteKeys = { "panelGestionCitas", "historialMedico", "justificantesPaciente",
+                "reportarEmergencia" };
+        String key = esMedico ? medicoKeys[idx] : pacienteKeys[idx];
+        panelManager.showPanel(key);
+    }
+
     private void registrarPaneles() {
         if (esMedico) {
-            // Panel: Registro de paciente
             panelManager.registerPanel(new PanelRegistroPaciente());
-
-            // Panel: Consulta nueva
             panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-
-            // Panel: Historial médico (paciente) accesado por el médico
             panelManager.registerPanel(new PanelHistorialMedico(userId));
 
-            // Panel: Justificantes médicos
             panelManager.registerPanel(new PanelProvider() {
                 public JPanel getPanel() {
                     return new PanelMenuJustificantes();
@@ -136,10 +170,8 @@ public class InterfazMedica extends JFrame {
                 }
             });
 
-            // Panel: Llamada de emergencia
             panelManager.registerPanel(new PanelLlamadaEmergencia(esMedico, userId));
 
-            // Panel: Reporte de accidente (placeholder por ahora)
             panelManager.registerPanel(new PanelProvider() {
                 public JPanel getPanel() {
                     JPanel panel = new JPanel();
@@ -154,19 +186,8 @@ public class InterfazMedica extends JFrame {
             });
 
         } else {
-            panelManager.registerPanel(new PanelProvider() {
-                @Override
-                public JPanel getPanel() {
-                    return new PanelHistorialMedico(userId);
-                }
+            panelManager.registerPanel(new PanelHistorialMedico(userId));
 
-                @Override
-                public String getPanelName() {
-                    return "historialMedico";
-                }
-            });
-
-            // Panel: Gestión de citas
             panelManager.registerPanel(new PanelProvider() {
                 public JPanel getPanel() {
                     return new PanelGestionCitas(userId, panelManager);
@@ -177,28 +198,34 @@ public class InterfazMedica extends JFrame {
                 }
             });
 
-            // Panel: Historial médico del paciente
-            panelManager.registerPanel(new PanelHistorialMedico(userId));
-
-            // Panel: Justificantes (paciente)
             panelManager.registerPanel(new PanelJustificantesProvider() {
                 public String getPanelName() {
                     return "justificantesPaciente";
                 }
             });
 
-            // Panel: Reportar emergencia
             panelManager.registerPanel(new PanelReportarEmergencia());
-        }
-    }
 
-    private void manejarClick(int idx) {
-        String[] medicoKeys = { "formularioRegistro", "consultaNueva", "editarDatosPaciente", "justificantes",
-                "llamadaEmergencia", "reporteAccidente" };
-        String[] pacienteKeys = { "panelGestionCitas", "historialMedico", "justificantesPaciente",
-                "reportarEmergencia" };
-        String key = esMedico ? medicoKeys[idx] : pacienteKeys[idx];
-        panelManager.showPanel(key);
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new AgendaCitaFrame(userId, panelManager);
+                }
+
+                public String getPanelName() {
+                    return "agendarCita";
+                }
+            });
+
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new ModificarCitaFrame(userId, panelManager);
+                }
+
+                public String getPanelName() {
+                    return "modificarCita";
+                }
+            });
+        }
     }
 
     private JPanel crearTopPanel() {
@@ -227,6 +254,11 @@ public class InterfazMedica extends JFrame {
 
         notificationIcon = new JLabel(iconDefault);
         notificationIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        notificationIcon.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                mostrarNotificaciones();
+            }
+        });
         right.add(notificationIcon);
 
         JButton cerrarSesion = new JButton("Cerrar sesión");
@@ -245,7 +277,6 @@ public class InterfazMedica extends JFrame {
         panel.add(left, BorderLayout.WEST);
         panel.add(center, BorderLayout.CENTER);
         panel.add(right, BorderLayout.EAST);
-
         return panel;
     }
 
