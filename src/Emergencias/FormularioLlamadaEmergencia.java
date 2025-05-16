@@ -1,118 +1,70 @@
 package Emergencias;
 
+import Utilidades.*;
+import BaseDeDatos.PacienteDB;
+
 import javax.swing.*;
 import java.awt.*;
-import java.sql.*;
-import Utilidades.ColoresUDLAP;
+import java.awt.event.*;
 
-public class FormularioLlamadaEmergencia extends JPanel {
-    private final JTextField campoIDPaciente, campoNombrePaciente, campoTelefonoContacto;
+public class FormularioLlamadaEmergencia extends FormularioMedicoBase {
+
     private final JComboBox<String> comboTipoEmergencia;
-    private final JRadioButton rbRojo, rbNaranja, rbAmarillo, rbVerde, rbAzul;
-    private final ButtonGroup grupoGravedad;
     private final JTextArea areaDescripcion;
     private final JComboBox<ResponsableItem> comboResponsable;
+    private final ButtonGroup grupoGravedad;
+    private final JRadioButton rbRojo, rbNaranja, rbAmarillo, rbVerde, rbAzul;
+    private final PanelBotonesFormulario botones;
 
-    public FormularioLlamadaEmergencia() {
-        setLayout(new GridBagLayout());
-        setBackground(ColoresUDLAP.BLANCO);
+    private final boolean esMedico;
+    private final int idUsuario;
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+    public FormularioLlamadaEmergencia(boolean esMedico, int idUsuario) {
+        super("Formulario de Llamada de Emergencia", new String[] {
+                "ID Paciente:", "Nombre del Paciente:", "Teléfono de Contacto:",
+                "Tipo de Emergencia:", "Nivel de Gravedad:", "Descripción:", "Responsable:"
+        });
 
-        // Configuración de fuentes
-        Font labelFont = new Font("Arial", Font.BOLD, 14);
-        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
+        this.esMedico = esMedico;
+        this.idUsuario = idUsuario;
 
-        // Título
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        JLabel lblTitulo = new JLabel("Formulario de Llamada de Emergencia", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
-        lblTitulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
-        add(lblTitulo, gbc);
+        JTextField txtID = (JTextField) campos[0];
+        JTextField txtNombre = (JTextField) campos[1];
+        txtNombre.setEditable(false);
 
-        // Campos del formulario
-        gbc.gridwidth = 1;
-        gbc.gridy++;
+        if (!esMedico) {
+            txtID.setText(String.valueOf(idUsuario));
+            txtID.setEditable(false);
+            txtNombre.setText(PacienteDB.obtenerNombrePorID(txtID.getText()));
+        }
 
-        // ID Paciente
-        gbc.gridx = 0;
-        JLabel lblID = new JLabel("ID del Paciente:");
-        lblID.setFont(labelFont);
-        lblID.setForeground(ColoresUDLAP.NEGRO);
-        add(lblID, gbc);
-
-        gbc.gridx = 1;
-        campoIDPaciente = new JTextField(20);
-        campoIDPaciente.setFont(fieldFont);
-        campoIDPaciente.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        add(campoIDPaciente, gbc);
-
-        // Nombre Paciente
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblNombre = new JLabel("Nombre del Paciente:");
-        lblNombre.setFont(labelFont);
-        lblNombre.setForeground(ColoresUDLAP.NEGRO);
-        add(lblNombre, gbc);
-
-        gbc.gridx = 1;
-        campoNombrePaciente = new JTextField(20);
-        campoNombrePaciente.setFont(fieldFont);
-        campoNombrePaciente.setEditable(false);
-        campoNombrePaciente.setForeground(Color.GRAY);
-        campoNombrePaciente.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        add(campoNombrePaciente, gbc);
-
-        // Cargar paciente por ID
-        campoIDPaciente.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent e) {
-                cargarDatosPaciente();
+        txtID.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (esMedico) {
+                    String id = txtID.getText().trim();
+                    String nombre = PacienteDB.obtenerNombrePorID(id);
+                    txtNombre.setText(nombre != null ? nombre : "");
+                }
             }
         });
 
-        // Tipo de emergencia
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblTipo = new JLabel("Tipo de Emergencia:");
-        lblTipo.setFont(labelFont);
-        lblTipo.setForeground(ColoresUDLAP.NEGRO);
-        add(lblTipo, gbc);
-
-        gbc.gridx = 1;
         comboTipoEmergencia = new JComboBox<>(new String[] {
-                "Caída/Golpe", "Corte", "Quemadura", "Atragantamiento", "Intoxicación Alimentaria",
-                "Accidente Eléctrico", "Accidente Deportivo", "Accidente Automovilístico"
+                "Accidente", "Enfermedad súbita", "Crisis emocional", "Otro"
         });
-        comboTipoEmergencia.setFont(fieldFont);
-        comboTipoEmergencia.setBackground(Color.WHITE);
-        add(comboTipoEmergencia, gbc);
+        campos[3] = comboTipoEmergencia;
 
         // Gravedad
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblGravedad = new JLabel("Nivel de Gravedad:");
-        lblGravedad.setFont(labelFont);
-        lblGravedad.setForeground(ColoresUDLAP.NEGRO);
-        add(lblGravedad, gbc);
-
-        gbc.gridx = 1;
-        JPanel panelGravedad = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panelGravedad.setBackground(ColoresUDLAP.BLANCO);
-
-        rbRojo = crearRadioButton("Rojo", ColoresUDLAP.ROJO);
-        rbNaranja = crearRadioButton("Naranja", ColoresUDLAP.NARANJA);
-        rbAmarillo = crearRadioButton("Amarillo", ColoresUDLAP.AMARILLO);
-        rbVerde = crearRadioButton("Verde", ColoresUDLAP.VERDE);
-        rbAzul = crearRadioButton("Azul", ColoresUDLAP.AZUL);
+        rbRojo = new JRadioButton("Rojo");
+        rbRojo.setForeground(ColoresUDLAP.ROJO_SOLIDO);
+        rbNaranja = new JRadioButton("Naranja");
+        rbNaranja.setForeground(ColoresUDLAP.NARANJA);
+        rbAmarillo = new JRadioButton("Amarillo");
+        rbAmarillo.setForeground(ColoresUDLAP.AMARILLO);
+        rbVerde = new JRadioButton("Verde");
+        rbVerde.setForeground(ColoresUDLAP.VERDE);
+        rbAzul = new JRadioButton("Azul");
+        rbAzul.setForeground(ColoresUDLAP.AZUL);
 
         grupoGravedad = new ButtonGroup();
         grupoGravedad.add(rbRojo);
@@ -121,220 +73,86 @@ public class FormularioLlamadaEmergencia extends JPanel {
         grupoGravedad.add(rbVerde);
         grupoGravedad.add(rbAzul);
 
-        panelGravedad.add(rbRojo);
-        panelGravedad.add(rbNaranja);
-        panelGravedad.add(rbAmarillo);
-        panelGravedad.add(rbVerde);
-        panelGravedad.add(rbAzul);
+        JPanel gravedadPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        gravedadPanel.setBackground(ColoresUDLAP.BLANCO);
+        gravedadPanel.add(rbRojo);
+        gravedadPanel.add(rbNaranja);
+        gravedadPanel.add(rbAmarillo);
+        gravedadPanel.add(rbVerde);
+        gravedadPanel.add(rbAzul);
+        campos[4] = gravedadPanel;
 
-        add(panelGravedad, gbc);
+        areaDescripcion = new JTextArea(3, 25);
+        campos[5] = new JScrollPane(areaDescripcion);
 
-        // Teléfono de contacto
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblTelefono = new JLabel("Teléfono de Contacto:");
-        lblTelefono.setFont(labelFont);
-        lblTelefono.setForeground(ColoresUDLAP.NEGRO);
-        add(lblTelefono, gbc);
-
-        gbc.gridx = 1;
-        campoTelefonoContacto = new JTextField(20);
-        campoTelefonoContacto.setFont(fieldFont);
-        campoTelefonoContacto.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        add(campoTelefonoContacto, gbc);
-
-        // Descripción
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblDescripcion = new JLabel("Descripción:");
-        lblDescripcion.setFont(labelFont);
-        lblDescripcion.setForeground(ColoresUDLAP.NEGRO);
-        add(lblDescripcion, gbc);
-
-        gbc.gridx = 1;
-        areaDescripcion = new JTextArea(4, 20);
-        areaDescripcion.setFont(fieldFont);
-        areaDescripcion.setLineWrap(true);
-        areaDescripcion.setWrapStyleWord(true);
-        areaDescripcion.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        add(new JScrollPane(areaDescripcion), gbc);
-
-        // Médico Responsable
-        gbc.gridy++;
-        gbc.gridx = 0;
-        JLabel lblResponsable = new JLabel("Médico Responsable:");
-        lblResponsable.setFont(labelFont);
-        lblResponsable.setForeground(ColoresUDLAP.NEGRO);
-        add(lblResponsable, gbc);
-
-        gbc.gridx = 1;
         comboResponsable = new JComboBox<>();
-        comboResponsable.setFont(fieldFont);
-        comboResponsable.setBackground(Color.WHITE);
-        add(comboResponsable, gbc);
-        cargarResponsables();
+        comboResponsable.addItem(new ResponsableItem(0, "Seleccione..."));
 
-        // Espacio flexible al final
-        gbc.gridy++;
-        gbc.weighty = 1.0;
-        add(Box.createGlue(), gbc);
-
-        // Botones de acción
-        gbc.gridy++;
-        gbc.gridwidth = 2;
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton btnRegistrar = new JButton("Registrar Emergencia");
-        JButton btnLimpiar = new JButton("Limpiar");
-        panelBotones.add(btnRegistrar);
-        panelBotones.add(btnLimpiar);
-        add(panelBotones, gbc);
-
-        // Acción de los botones
-        btnRegistrar.addActionListener(e -> registrarEmergencia());
-        btnLimpiar.addActionListener(e -> limpiarCampos());
-    }
-
-    private JRadioButton crearRadioButton(String text, Color color) {
-        JRadioButton radio = new JRadioButton(text);
-        radio.setFont(new Font("Arial", Font.PLAIN, 13));
-        radio.setBackground(ColoresUDLAP.BLANCO);
-        radio.setForeground(color.darker());
-        return radio;
-    }
-
-    // Método para cargar los datos del paciente
-    private void cargarDatosPaciente() {
-        String txt = campoIDPaciente.getText().trim();
-        if (!txt.matches("\\d+")) {
-            campoNombrePaciente.setText("");
-            return;
+        for (ResponsableItem r : ResponsablesDB.obtenerResponsables()) {
+            comboResponsable.addItem(r);
         }
-        int id = Integer.parseInt(txt);
-        String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?";
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    campoNombrePaciente.setText(
-                            rs.getString("Nombre") + " " + rs.getString("ApellidoPaterno") + " "
-                                    + rs.getString("ApellidoMaterno"));
-                } else {
-                    campoNombrePaciente.setText("");
-                }
+        campos[6] = comboResponsable;
+
+        if (!esMedico) {
+            comboTipoEmergencia.setEnabled(false);
+            for (AbstractButton b : new JRadioButton[] { rbRojo, rbNaranja, rbAmarillo, rbVerde, rbAzul }) {
+                b.setEnabled(false);
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al cargar paciente:\n" + ex.getMessage(), "Error de BD",
-                    JOptionPane.ERROR_MESSAGE);
+            areaDescripcion.setEditable(false);
+            comboResponsable.setEnabled(false);
         }
+
+        botones = new PanelBotonesFormulario("Guardar", "Buscar", "Limpiar");
+        add(botones, BorderLayout.SOUTH);
+
+        if (!esMedico) {
+            botones.btnGuardar.setEnabled(false);
+            botones.btnLimpiar.setEnabled(false);
+        }
+
+        botones.setListeners(
+                e -> guardar(),
+                e -> buscar(),
+                e -> limpiarCampos());
     }
 
-    // Método para cargar los médicos responsables
-    private void cargarResponsables() {
-        String sql = "SELECT ID, Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionMedico";
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                int id = rs.getInt("ID");
-                String n = rs.getString("Nombre") + " "
-                        + rs.getString("ApellidoPaterno") + " "
-                        + rs.getString("ApellidoMaterno");
-                comboResponsable.addItem(new ResponsableItem(id, n));
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error al cargar médicos:\n" + ex.getMessage(),
-                    "Error de BD", JOptionPane.ERROR_MESSAGE);
-        }
+    public String getNivelGravedad() {
+        if (rbRojo.isSelected())
+            return "Rojo";
+        if (rbNaranja.isSelected())
+            return "Naranja";
+        if (rbAmarillo.isSelected())
+            return "Amarillo";
+        if (rbVerde.isSelected())
+            return "Verde";
+        if (rbAzul.isSelected())
+            return "Azul";
+        return null;
     }
 
-    // Método para registrar la emergencia
-    private void registrarEmergencia() {
-        // Validaciones previas
-        String txtID = campoIDPaciente.getText().trim();
-        if (!txtID.matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "ID de paciente inválido", "Error", JOptionPane.ERROR_MESSAGE);
+    private void guardar() {
+        String id = ((JTextField) campos[0]).getText().trim();
+        String telefono = ((JTextField) campos[2]).getText().trim();
+        String tipo = (String) comboTipoEmergencia.getSelectedItem();
+        String gravedad = getNivelGravedad();
+        String descripcion = areaDescripcion.getText().trim();
+        String responsable = ((ResponsableItem) comboResponsable.getSelectedItem()).toString();
+
+        if (id.isEmpty() || telefono.isEmpty() || gravedad == null || descripcion.isEmpty()
+                || responsable.equals("Seleccione...")) {
+            JOptionPane.showMessageDialog(this, "Por favor complete todos los campos obligatorios.", "Validación",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Validaciones para los otros campos
-        String telefono = campoTelefonoContacto.getText().trim();
-        if (telefono.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El teléfono de contacto es obligatorio", "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Guardar la emergencia en la base de datos
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            String query = "INSERT INTO Emergencias (IDPaciente, TipoEmergencia, Descripcion, Telefono) VALUES (?, ?, ?, ?)";
-            try (PreparedStatement ps = conn.prepareStatement(query)) {
-                ps.setInt(1, Integer.parseInt(txtID));
-                ps.setString(2, (String) comboTipoEmergencia.getSelectedItem());
-                ps.setString(3, areaDescripcion.getText());
-                ps.setString(4, telefono);
-                ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Emergencia registrada con éxito", "Éxito",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al registrar la emergencia:\n" + ex.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        boolean exito = LlamadaEmergenciaDB.guardarLlamada(id, telefono, tipo, gravedad, descripcion, responsable);
+        if (exito) {
+            JOptionPane.showMessageDialog(this, "Llamada de emergencia registrada con éxito.");
+            limpiarCampos();
         }
     }
 
-    // Método para limpiar el formulario
-    private void limpiarFormulario() {
-        campoIDPaciente.setText("");
-        campoNombrePaciente.setText("");
-        campoTelefonoContacto.setText("");
-        areaDescripcion.setText("");
-        comboTipoEmergencia.setSelectedIndex(0);
-        grupoGravedad.clearSelection();
-        comboResponsable.setSelectedIndex(0);
+    private void buscar() {
+        JOptionPane.showMessageDialog(this, "Lógica de búsqueda aún no implementada.");
     }
-
-    public JTextField[] obtenerCampos() {
-        return new JTextField[] { campoIDPaciente, campoNombrePaciente, campoTelefonoContacto };
-    }
-
-    public JTextArea getAreaDescripcion() {
-        return areaDescripcion;
-    }
-
-    // Clase interna ResponsableItem se mantiene igual
-    private static class ResponsableItem {
-        private final int id;
-        private final String nombre;
-
-        public ResponsableItem(int id, String nombre) {
-            this.id = id;
-            this.nombre = nombre;
-        }
-
-        @Override
-        public String toString() {
-            return nombre;
-        }
-
-        public int getId() {
-            return id;
-        }
-    }
-
-    private void limpiarCampos() {
-        campoIDPaciente.setText("");
-        campoNombrePaciente.setText("");
-        campoTelefonoContacto.setText("");
-        areaDescripcion.setText("");
-        comboTipoEmergencia.setSelectedIndex(0); // Resetea el JComboBox a su primer valor
-        grupoGravedad.clearSelection(); // Desmarcar cualquier opción de gravedad
-        comboResponsable.setSelectedIndex(0); // Resetea el JComboBox de médicos responsables
-    }
-
 }
