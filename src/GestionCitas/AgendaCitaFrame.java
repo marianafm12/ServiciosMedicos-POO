@@ -181,7 +181,7 @@ public class AgendaCitaFrame extends JPanel {
         panelBotones.setBackground(ColoresUDLAP.BLANCO);
 
         JButton btnConfirmar = botonTransparente("Confirmar", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
-        JButton btnCancelar = botonTransparente("Cancelar", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
+        JButton btnCancelar = botonTransparente("Volver", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
 
         btnConfirmar.addActionListener(e -> validarYConfirmarCita(idPaciente));
         btnCancelar.addActionListener(e -> panelManager.showPanel("panelGestionCitas"));
@@ -240,10 +240,22 @@ public class AgendaCitaFrame extends JPanel {
                                 "Horario ocupado",
                                 JOptionPane.YES_NO_OPTION);
                         if (opcion == JOptionPane.YES_OPTION) {
-                            ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, horaFinal, servicio);
+                            new javax.swing.SwingWorker<Void, Void>() {
+                                @Override
+                                protected Void doInBackground() {
+                                    try {
+                                        ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, hora, servicio);
+                                    } catch (SQLException e) {
+                                        e.printStackTrace(); // o muestra error en pantalla si lo deseas
+                                    }
+                                    return null;
+                                }
+                            }.execute();
+
                             errorLabel.setForeground(Color.ORANGE);
                             errorLabel.setText("Registrado en lista de espera.");
                         }
+
                         return;
                     }
                 }
