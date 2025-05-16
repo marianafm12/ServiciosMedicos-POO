@@ -12,15 +12,17 @@ public class ConexionSQLite {
      * Conecta a SQLite y lanza SQLException si algo falla.
      */
     public static Connection conectar() throws SQLException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException e) {
-            // Convertimos el ClassNotFound en SQLException
-            throw new SQLException("Driver SQLite no encontrado", e);
-        }
-        // Si falla aquí (fichero no existe, permisos, etc.), saltará SQLException
-        return DriverManager.getConnection(RUTA_BD);
+    try {
+        Class.forName("org.sqlite.JDBC");
+    } catch (ClassNotFoundException e) {
+        throw new SQLException("Driver SQLite no encontrado", e);
     }
+    Connection conn = DriverManager.getConnection(RUTA_BD);
+    // 🔐 Esperar hasta 5 segundos si la base está bloqueada
+    conn.createStatement().execute("PRAGMA busy_timeout = 5000");
+    return conn;
+}
+
 
     public static void main(String[] args) {
         try (Connection c = conectar()) {

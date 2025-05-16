@@ -1,5 +1,5 @@
 package GestionCitas;
-//Cambio
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,81 +12,113 @@ import Modelo.Espera;
 
 public class ListaEsperaDAO {
 
-public static void registrarEnEspera(String idPaciente, String fecha, String hora, String servicio)
-        throws SQLException {
-    // 1) Verificación básica de duplicado
-    if (yaRegistradoEnLista(idPaciente, fecha, hora, servicio)) {
-        SwingUtilities.invokeLater(() ->
-            JOptionPane.showMessageDialog(null,
-                "Ya estás en lista de espera para esta cita.",
-                "Registro duplicado",
-                JOptionPane.WARNING_MESSAGE)
-        );
-        return;
+    public synchronized static void registrarEnEspera(String idPaciente, String fecha, String hora, String servicio)
+            throws SQLException {
+
+        // Normaliza formato de hora a HH:mm
+        if (!hora.contains(":")) {
+            hora = hora + ":00";
+        }
+
+        if (yaRegistradoEnLista(idPaciente, fecha, hora, servicio)) {
+            SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(null,
+                    "Ya estás en lista de espera para esta cita.",
+                    "Registro duplicado",
+                    JOptionPane.WARNING_MESSAGE)
+            );
+            return;
+        }
+
+        final int MAX_REINTENTOS = 5;
+        int intentos = 0;
+        boolean completado = false;
+
+        while (intentos < MAX_REINTENTOS && !completado) {
+            try (Connection conn = ConexionSQLite.conectar()) {
+                String sql = "INSERT INTO ListaEsperaCitas(idPaciente, fechaDeseada, horaDeseada, servicio, estado) " +
+                             "VALUES (?, ?, ?, ?, 'pendiente')";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, Integer.parseInt(idPaciente.trim()));
+                    stmt.setString(2, fecha);
+                    stmt.setString(3, hora);
+                    stmt.setString(4, servicio);
+                    stmt.executeUpdate();
+                    completado = true;
+                }
+
+                SwingUtilities.invokeLater(() ->
+                    JOptionPane.showMessageDialog(null,
+                        "Registrado correctamente en lista de espera.",
+                        "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE)
+                );
+
+            } catch (SQLException e) {
+                if (e.getMessage().contains("database is locked")) {
+                    intentos++;
+                    try {
+                        Thread.sleep(500); // espera medio segundo antes de reintentar
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    mostrarError("Error al insertar en lista de espera:\n" + e.getMessage());
+                    throw e;
+                }
+            }
+        }
+
+        if (!completado) {
+            mostrarError("No se pudo registrar en lista de espera tras varios intentos.");
+            throw new SQLException("No se pudo registrar en lista de espera tras varios intentos.");
+        }
     }
 
-    // 2) Intento único de inserción (para depuración)
-    try (Connection conn = ConexionSQLite.conectar()) {
-        String sql = "INSERT INTO ListaEsperaCitas(idPaciente, fechaDeseada, horaDeseada, servicio, estado) " +
-                     "VALUES (?, ?, ?, ?, 'pendiente')";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            // <-- Usa setInt en lugar de setString para idPaciente
-            stmt.setInt(1, Integer.parseInt(idPaciente.trim()));
-            stmt.setString(2, fecha);
-            stmt.setString(3, hora);
-            stmt.setString(4, servicio);
-            stmt.executeUpdate();
-        }
+    private static void mostrarError(String mensaje) {
         SwingUtilities.invokeLater(() ->
             JOptionPane.showMessageDialog(null,
-                "Registrado correctamente en lista de espera.",
-                "Éxito",
-                JOptionPane.INFORMATION_MESSAGE)
-        );
-    } catch (SQLException e) {
-        // Muéstrame el mensaje real de SQLite
-        SwingUtilities.invokeLater(() ->
-            JOptionPane.showMessageDialog(null,
-                "Error al insertar en lista de espera:\n" + e.getMessage(),
+                mensaje,
                 "Error SQL",
                 JOptionPane.ERROR_MESSAGE)
         );
-        throw e;
     }
-}
 
-
-private static boolean yaRegistradoEnLista(String idPaciente, String fecha, String hora, String servicio) {
-    String sql = "SELECT COUNT(*) FROM ListaEsperaCitas " +
-                 "WHERE idPaciente = ? AND fechaDeseada = ? AND horaDeseada = ? AND servicio = ? AND estado = 'pendiente'";
-
-    System.out.println("[DEBUG] Verificando si ya está en lista:");
-    System.out.println("  idPaciente: " + idPaciente);
-    System.out.println("  fecha: " + fecha);
-    System.out.println("  hora: " + hora);
-    System.out.println("  servicio: " + servicio);
-
-    try (Connection conn = ConexionSQLite.conectar();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, idPaciente);
-        stmt.setString(2, fecha);
-        stmt.setString(3, hora);
-        stmt.setString(4, servicio);
-
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                int count = rs.getInt(1);
-                System.out.println("  Resultado de la consulta COUNT: " + count);
-                return count > 0;
-            }
+    private static boolean yaRegistradoEnLista(String idPaciente, String fecha, String hora, String servicio) {
+        // Normaliza formato de hora
+        if (!hora.contains(":")) {
+            hora = hora + ":00";
         }
-    } catch (SQLException e) {
-        System.err.println("Error en verificación de duplicado: " + e.getMessage());
+
+        String sql = "SELECT COUNT(*) FROM ListaEsperaCitas " +
+                     "WHERE idPaciente = ? AND fechaDeseada = ? AND horaDeseada = ? AND servicio = ? AND estado = 'pendiente'";
+
+        try (Connection conn = ConexionSQLite.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, idPaciente);
+            stmt.setString(2, fecha);
+            stmt.setString(3, hora);
+            stmt.setString(4, servicio);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    return count > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error en verificación de duplicado: " + e.getMessage());
+        }
+        return false;
     }
-    return false;
-}
 
     public static List<Espera> obtenerSolicitudesPara(String fecha, String hora, String servicio) throws SQLException {
+        // Normaliza formato de hora
+        if (!hora.contains(":")) {
+            hora = hora + ":00";
+        }
+
         List<Espera> lista = new ArrayList<>();
         try (Connection conn = ConexionSQLite.conectar()) {
             String sql = "SELECT idPaciente FROM ListaEsperaCitas " +
@@ -107,6 +139,11 @@ private static boolean yaRegistradoEnLista(String idPaciente, String fecha, Stri
 
     public static void marcarNotificada(String idPaciente, String fecha, String hora, String servicio)
             throws SQLException {
+        // Normaliza formato de hora
+        if (!hora.contains(":")) {
+            hora = hora + ":00";
+        }
+
         final int MAX_REINTENTOS = 3;
         int intentos = 0;
         boolean completado = false;
@@ -144,6 +181,11 @@ private static boolean yaRegistradoEnLista(String idPaciente, String fecha, Stri
     }
 
     public static void generarNotificacionParaListaEspera(String fecha, String hora, String servicio) {
+        // Normaliza formato de hora
+        if (!hora.contains(":")) {
+            hora = hora + ":00";
+        }
+
         try {
             List<Espera> solicitudes = obtenerSolicitudesPara(fecha, hora, servicio);
             for (Espera espera : solicitudes) {
