@@ -1,3 +1,5 @@
+/*
+
 package Justificantes;
 
 import javax.swing.*;
@@ -188,3 +190,5 @@ public class SolicitudJustificante extends JFrame {
         new SolicitudJustificante(1);
     }
 }
+
+*/

@@ -1,64 +1,89 @@
 package Justificantes;
 
+import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
+
 import javax.swing.*;
 import java.awt.*;
-import Inicio.SesionUsuario;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import BaseDeDatos.ConexionSQLite;
 
-public class CorreosProfesoresFrame extends JFrame {
+public class CorreosProfesoresPanel extends JPanel {
+
     private final JComboBox<Integer> countBox = new JComboBox<>();
     private final JPanel correosPanel = new JPanel();
     private final JButton enviarBtn = new JButton("Enviar Justificante");
     private final JButton menuBtn = new JButton("Menú Principal");
     private final JButton backBtn = new JButton("Regresar");
-    private final int folio;
 
-    public CorreosProfesoresFrame(int folio) {
-        super("Agregar Correos de Profesores");
+    private final int folio;
+    private final PanelManager panelManager;
+
+    public CorreosProfesoresPanel(int folio, PanelManager panelManager) {
         this.folio = folio;
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(500, 400);
-        setLocationRelativeTo(null);
+        this.panelManager = panelManager;
+
         setLayout(new BorderLayout(10, 10));
+        setBackground(ColoresUDLAP.BLANCO);
 
         // Top
         JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        top.setBackground(ColoresUDLAP.BLANCO);
         top.add(new JLabel("Cantidad de profesores:"));
+
         for (int i = 1; i <= 12; i++)
             countBox.addItem(i);
+        countBox.setSelectedItem(3);
+        countBox.setBackground(Color.WHITE);
         top.add(countBox);
-
-        // Center
-        correosPanel.setLayout(new BoxLayout(correosPanel, BoxLayout.Y_AXIS));
-        actualizarCampos(3);
 
         countBox.addActionListener(e -> actualizarCampos((int) countBox.getSelectedItem()));
 
+        // Center
+        correosPanel.setLayout(new BoxLayout(correosPanel, BoxLayout.Y_AXIS));
+        correosPanel.setBackground(ColoresUDLAP.BLANCO);
+        actualizarCampos(3);
+        JScrollPane scroll = new JScrollPane(correosPanel);
+        scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
         // Bottom
-        JPanel bot = new JPanel();
+        JPanel bot = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        bot.setBackground(ColoresUDLAP.BLANCO);
+
+        enviarBtn.setBackground(ColoresUDLAP.VERDE_OSCURO);
+        enviarBtn.setForeground(Color.WHITE);
+        enviarBtn.setFocusPainted(false);
+
+        menuBtn.setBackground(ColoresUDLAP.NARANJA);
+        menuBtn.setForeground(Color.WHITE);
+        menuBtn.setFocusPainted(false);
+
+        backBtn.setBackground(new Color(120, 120, 120));
+        backBtn.setForeground(Color.WHITE);
+        backBtn.setFocusPainted(false);
+
         bot.add(menuBtn);
         bot.add(backBtn);
         bot.add(enviarBtn);
 
         add(top, BorderLayout.NORTH);
-        add(new JScrollPane(correosPanel), BorderLayout.CENTER);
+        add(scroll, BorderLayout.CENTER);
         add(bot, BorderLayout.SOUTH);
 
-        menuBtn.addActionListener(e -> {
-            // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
-            dispose();
-        });
-        backBtn.addActionListener(e -> {
-            new FormularioJustificanteFrame().setVisible(true);
-            dispose();
-        });
+        // Acciones
         enviarBtn.addActionListener(e -> {
             if (guardarCorreos()) {
-                JOptionPane.showMessageDialog(this, "Correos registrados para folio " + folio);
-                // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
-                dispose();
+                JOptionPane.showMessageDialog(this, "Correos registrados correctamente.");
+                panelManager.showPanel("justificantesPaciente");
             }
+        });
+
+        menuBtn.addActionListener(e -> panelManager.showPanel("justificantesPaciente"));
+
+        backBtn.addActionListener(e -> {
+            panelManager.showPanel("justificantesPaciente"); // o regresar a un formulario si tienes uno específico
         });
     }
 
@@ -66,7 +91,9 @@ public class CorreosProfesoresFrame extends JFrame {
         correosPanel.removeAll();
         for (int i = 1; i <= n; i++) {
             correosPanel.add(new JLabel("Correo profesor " + i + ":"));
-            correosPanel.add(new JTextField(30));
+            JTextField campo = new JTextField(30);
+            campo.setMaximumSize(new Dimension(400, 30));
+            correosPanel.add(campo);
             correosPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
         correosPanel.revalidate();
@@ -74,9 +101,9 @@ public class CorreosProfesoresFrame extends JFrame {
     }
 
     private boolean guardarCorreos() {
-        String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?,?)";
+        String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?, ?)";
         try (Connection c = ConexionSQLite.conectar();
-                PreparedStatement ps = c.prepareStatement(sql)) {
+             PreparedStatement ps = c.prepareStatement(sql)) {
             for (Component comp : correosPanel.getComponents()) {
                 if (comp instanceof JTextField) {
                     String mail = ((JTextField) comp).getText().trim();
@@ -94,9 +121,5 @@ public class CorreosProfesoresFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Error al guardar correos.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CorreosProfesoresFrame(0).setVisible(true));
     }
 }

@@ -1,3 +1,5 @@
+/* 
+
 package Justificantes;
 
 import javax.swing.*;
@@ -43,3 +45,5 @@ public class SeleccionarPacienteFrame extends JFrame {
     }
 }
 //f
+
+*/

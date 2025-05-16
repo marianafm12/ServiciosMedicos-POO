@@ -141,7 +141,8 @@ public class SolicitudesJustificantesFrame extends JFrame {
 
         panelCentro.removeAll();
         panelCentro.setLayout(new BorderLayout());
-        panelCentro.add(new RevisarSolicitudFrame(folio, volverAction), BorderLayout.CENTER);
+        panelCentro.add(new RevisarSolicitudFrame(folio, volverAction, null), BorderLayout.CENTER);
+
         panelCentro.revalidate();
         panelCentro.repaint();
     }
