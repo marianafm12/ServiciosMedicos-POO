@@ -13,7 +13,9 @@ import Registro.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.URL;
 import java.sql.*;
+import java.util.List;
 
 public class InterfazMedica extends JFrame {
     private JPanel contentPanel;
@@ -21,12 +23,57 @@ public class InterfazMedica extends JFrame {
     private final int userId;
     private String nombreUsuario;
     private PanelManager panelManager;
+    private JLabel notificationIcon;
+    private ImageIcon iconDefault, iconNew;
+    private boolean hasNewNotification = false;
 
     public InterfazMedica(boolean esMedico, int userId) {
         this.esMedico = esMedico;
         this.userId = userId;
         this.nombreUsuario = fetchNombreUsuario();
+        loadNotificationIcons();
         initUI();
+        checkNotifications();
+    }
+
+    private void loadNotificationIcons() {
+        try {
+            URL u1 = getClass().getResource("/icons/bell.png");
+            URL u2 = getClass().getResource("/icons/bell_new.png");
+            
+            if (u1 == null || u2 == null) {
+                throw new Exception("Iconos no encontrados");
+            }
+            
+            Image img1 = new ImageIcon(u1).getImage()
+                    .getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            Image img2 = new ImageIcon(u2).getImage()
+                    .getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            iconDefault = new ImageIcon(img1);
+            iconNew = new ImageIcon(img2);
+        } catch (Exception e) {
+            // Usar emojis como fallback si los iconos no se cargan
+            iconDefault = new ImageIcon();
+            iconNew = new ImageIcon();
+        }
+    }
+
+    private void checkNotifications() {
+        if (esMedico) {
+            // Lógica para médicos (a implementar posteriormente)
+            // hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidasMedico(userId);
+        } else {
+            hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
+        }
+        
+        if (hasNewNotification && notificationIcon != null) {
+            if (iconNew.getImage() != null) {
+                notificationIcon.setIcon(iconNew);
+            } else {
+                notificationIcon.setText("\uD83D\uDD14"); // Emoji de campana
+                notificationIcon.setFont(new Font("Dialog", Font.PLAIN, 24));
+            }
+        }
     }
 
     private void initUI() {
@@ -178,6 +225,19 @@ public class InterfazMedica extends JFrame {
                     panel.add(lbl);
                     return panel;
                 }
+    private void registrarPaneles() {
+        for (int i = 0; i < (esMedico ? 6 : 5); i++) {
+            final int idx = i;
+            panelManager.registerPanel(new PanelProvider() {
+                @Override
+                public JPanel getPanel() {
+                    JPanel panel = new JPanel();
+                    panel.setBackground(Color.WHITE);
+                    JLabel lbl = new JLabel("Panel " + (idx + 1), SwingConstants.CENTER);
+                    lbl.setFont(new Font("Arial", Font.BOLD, 26));
+                    panel.add(lbl);
+                    return panel;
+                }
 
                 @Override
                 public String getPanelName() {
@@ -208,6 +268,17 @@ public class InterfazMedica extends JFrame {
                 panel.add(lbl);
                 return panel;
             }
+        // Panel de emergencias
+        panelManager.registerPanel(new PanelProvider() {
+            @Override
+            public JPanel getPanel() {
+                JPanel panel = new JPanel();
+                panel.setBackground(Color.WHITE);
+                JLabel lbl = new JLabel("Panel de Emergencias", SwingConstants.CENTER);
+                lbl.setFont(new Font("Arial", Font.BOLD, 26));
+                panel.add(lbl);
+                return panel;
+            }
 
             @Override
             public String getPanelName() {
@@ -219,7 +290,19 @@ public class InterfazMedica extends JFrame {
         panelManager.registerPanel(new PanelRegistroPaciente());
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
         panelManager.registerPanel(new PanelLlamadaEmergencia());
+        // Paneles funcionales ya existentes
+        panelManager.registerPanel(new PanelRegistroPaciente());
+        panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+        panelManager.registerPanel(new PanelLlamadaEmergencia());
 
+        // ➕ Panel funcional de Justificantes
+        panelManager.registerPanel(new PanelJustificantesProvider() {
+            @Override
+            public String getPanelName() {
+                return "justificantesMedicos";
+            }
+        });
+    }
         // ➕ Panel funcional de Justificantes
         panelManager.registerPanel(new PanelJustificantesProvider() {
             @Override
@@ -255,9 +338,20 @@ public class InterfazMedica extends JFrame {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 5));
         right.setOpaque(false);
 
-        JLabel bell = new JLabel("\uD83D\uDD14");
-        bell.setFont(new Font("Dialog", Font.PLAIN, 24));
-        right.add(bell);
+        // Botón de notificaciones (reemplaza el emoji anterior)
+        notificationIcon = new JLabel(iconDefault);
+        if (iconDefault.getImage() == null) {
+            notificationIcon.setText("\uD83D\uDD14"); // Emoji de campana como fallback
+            notificationIcon.setFont(new Font("Dialog", Font.PLAIN, 24));
+        }
+        notificationIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        notificationIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                mostrarNotificaciones();
+            }
+        });
+        right.add(notificationIcon);
 
         JButton btnCerrarSesion = new JButton("Cerrar sesión");
         btnCerrarSesion.setFont(new Font("Arial", Font.BOLD, 15));
@@ -277,6 +371,47 @@ public class InterfazMedica extends JFrame {
         topPanel.add(right, BorderLayout.EAST);
 
         return topPanel;
+    }
+
+    private void mostrarNotificaciones() {
+        if (esMedico) {
+            // Lógica para médicos (a implementar posteriormente)
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Funcionalidad de notificaciones para médicos en desarrollo.",
+                    "Notificaciones Médicas",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            // Lógica para pacientes (ya implementada)
+            List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
+
+            if (lista.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No hay nuevas notificaciones.",
+                        "Notificaciones",
+                        JOptionPane.INFORMATION_MESSAGE);
+                if (iconDefault.getImage() != null) {
+                    notificationIcon.setIcon(iconDefault);
+                }
+                return;
+            }
+            
+            // Mostrar cada notificación (simplificado - en producción debería mostrarse en una lista)
+            for (NotificacionDAO.Notificacion n : lista) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        String.format("Tienes una cita programada:\nFecha: %s\nHora: %s\nServicio: %s", 
+                                n.fecha, n.hora, n.servicio),
+                        "Notificación de Cita",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            hasNewNotification = false;
+            if (iconDefault.getImage() != null) {
+                notificationIcon.setIcon(iconDefault);
+            }
+        }
     }
 
     // Botón traslúcido personalizado

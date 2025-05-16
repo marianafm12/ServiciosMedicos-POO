@@ -2,7 +2,6 @@ package GestionCitas;
 
 import javax.swing.*;
 import java.awt.*;
-
 import Inicio.SesionUsuario;
 /*import GestionCitas.AgendaCitaFrame;
 import GestionCitas.ModificarCitaFrame;*/
@@ -48,7 +47,7 @@ public class InicioFrame extends JFrame {
             dispose();
         });
 
-        // Listener para Modificar Cita (usa el constructor sin parámetros)
+        // Listener para Modificar Cita
         modificarCitaButton.addActionListener(e -> {
             new ModificarCitaFrame().setVisible(true);
             dispose();
@@ -57,7 +56,7 @@ public class InicioFrame extends JFrame {
         // Panel inferior con botones Menú Principal / Regresar
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton menuPrincipalButton = new JButton("Menú Principal");
-        JButton regresarButton = new JButton("Regresar");
+        JButton regresarButton = new JButton("Regresar a Interfaz Médica");
         bottomPanel.add(menuPrincipalButton);
         bottomPanel.add(regresarButton);
 
@@ -66,13 +65,7 @@ public class InicioFrame extends JFrame {
         gbc.gridwidth = 2;
         add(bottomPanel, gbc);
 
-        // Listener para Menú Principal
-        menuPrincipalButton.addActionListener(e -> {
-            new PortadaFrame().setVisible(true);
-            dispose();
-        });
-
-        // Listener para Regresar (vuelve al menú de pacientes)
+        // Listener para Regresar
         regresarButton.addActionListener(e -> {
             int idPaciente = SesionUsuario.getPacienteActual();
             // new MenuPacientesFrame(idPaciente).setVisible(true);
