@@ -1,23 +1,25 @@
 package Emergencias;
 
+import Utilidades.PanelProvider;
 import javax.swing.*;
 
-import Utilidades.*;
-
 public class PanelLlamadaEmergencia implements PanelProvider {
-    private final FormularioLlamadaEmergencia formulario;
 
-    public PanelLlamadaEmergencia() {
-        formulario = new FormularioLlamadaEmergencia();
+    private final JPanel panel;
+    public boolean esMedico;
+
+    public PanelLlamadaEmergencia(boolean esMedico, int idUsuario) {
+        this.esMedico = esMedico;
+        this.panel = new FormularioLlamadaEmergencia(esMedico, idUsuario);
     }
 
     @Override
     public JPanel getPanel() {
-        return formulario;
+        return panel;
     }
 
     @Override
     public String getPanelName() {
-        return "llamadaEmergencia";
+        return esMedico ? "llamadaEmergencia" : "reportarEmergencia";
     }
 }
