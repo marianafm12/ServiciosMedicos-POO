@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import BaseDeDatos.ConexionSQLite;
-import Inicio.MenuPacientesFrame;
+//import Inicio.MenuPacientesFrame;
 import Inicio.SesionUsuario;
 
 public class PlantillaJustificanteFrame extends JFrame {
@@ -100,7 +100,7 @@ public class PlantillaJustificanteFrame extends JFrame {
             }
         });
         menuBtn.addActionListener(e -> {
-            new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
+            // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
             dispose();
         });
         regresarBtn.addActionListener(e -> {
