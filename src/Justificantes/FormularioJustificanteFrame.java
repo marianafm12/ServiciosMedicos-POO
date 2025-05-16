@@ -1,189 +1,127 @@
 package Justificantes;
 
-import Inicio.MenuMedicosFrame;
-//import Inicio.MenuPacientesFrame;
+import BaseDeDatos.ConexionSQLite;
 import Utilidades.ColoresUDLAP;
+import Utilidades.PanelProvider;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
-public class FormularioJustificanteFrame extends JFrame {
-    private JTextField idField, nombreField, motivoField;
-    private JComboBox<String> diaInicio, mesInicio, anioInicio;
-    private JComboBox<String> diaFin, mesFin, anioFin;
-    private File archivoPDF = null;
+public class PanelSolicitarJustificante extends JPanel implements PanelProvider {
+    private final int userId;
+    private final JTextField campoProfesor;
+    private final JTextArea campoMotivo;
+    private final JTextField campoFechaInicio;
+    private final JTextField campoFechaFin;
 
-    public FormularioJustificanteFrame() {
-        setTitle("Solicitud de Justificante Médico");
-        setSize(600, 400);
-        setLocationRelativeTo(null);
-        setSize(600, 400);
+    public PanelSolicitarJustificante(int userId) {
+        this.userId = userId;
+        setLayout(new BorderLayout());
         setBackground(ColoresUDLAP.BLANCO);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridLayout(0, 2, 5, 5));
 
-        // Campos de texto
-        add(new JLabel("ID:"));
-        idField = new JTextField();
-        add(idField);
+        JLabel titulo = new JLabel("Solicitud de Justificante", SwingConstants.CENTER);
+        titulo.setFont(new Font("Arial", Font.BOLD, 22));
+        titulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        titulo.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        add(titulo, BorderLayout.NORTH);
 
-        add(new JLabel("Nombre:"));
-        nombreField = new JTextField();
-        add(nombreField);
+        JPanel formulario = new JPanel();
+        formulario.setLayout(new GridLayout(5, 2, 10, 15));
+        formulario.setBorder(BorderFactory.createEmptyBorder(30, 100, 30, 100));
+        formulario.setBackground(ColoresUDLAP.BLANCO);
 
-        add(new JLabel("Motivo:"));
-        motivoField = new JTextField();
-        add(motivoField);
+        campoProfesor = new JTextField();
+        campoMotivo = new JTextArea(3, 20);
+        campoMotivo.setLineWrap(true);
+        campoMotivo.setWrapStyleWord(true);
+        campoFechaInicio = new JTextField();
+        campoFechaFin = new JTextField();
 
-        // Fecha de inicio
-        add(new JLabel("Inicio de Reposo:"));
-        JPanel panelInicio = new JPanel();
-        diaInicio = new JComboBox<>(generarDias());
-        mesInicio = new JComboBox<>(generarMeses());
-        anioInicio = new JComboBox<>(generarAnios());
-        panelInicio.add(diaInicio);
-        panelInicio.add(mesInicio);
-        panelInicio.add(anioInicio);
-        add(panelInicio);
+        formulario.add(new JLabel("Profesor:"));
+        formulario.add(campoProfesor);
 
-        // Fecha de fin
-        add(new JLabel("Fin de Reposo:"));
-        JPanel panelFin = new JPanel();
-        diaFin = new JComboBox<>(generarDias());
-        mesFin = new JComboBox<>(generarMeses());
-        anioFin = new JComboBox<>(generarAnios());
-        panelFin.add(diaFin);
-        panelFin.add(mesFin);
-        panelFin.add(anioFin);
-        add(panelFin);
+        formulario.add(new JLabel("Motivo:"));
+        formulario.add(new JScrollPane(campoMotivo));
 
-        // Botón para subir PDF
-        JButton subirPDF = new JButton("Subir receta (PDF)");
-        subirPDF.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                archivoPDF = chooser.getSelectedFile();
-                JOptionPane.showMessageDialog(this,
-                        "Archivo cargado: " + archivoPDF.getName());
-            }
-        });
+        formulario.add(new JLabel("Fecha Inicio (yyyy-mm-dd):"));
+        formulario.add(campoFechaInicio);
 
-        // Botón para guardar y pasar al siguiente paso
-        JButton siguienteBtn = new JButton("Siguiente");
-        siguienteBtn.addActionListener(e -> guardarJustificante());
+        formulario.add(new JLabel("Fecha Fin (yyyy-mm-dd):"));
+        formulario.add(campoFechaFin);
 
-        // Botón para volver al Menú Médico
-        JButton menuBtn = new JButton("Menú Principal");
-        menuBtn.addActionListener(e -> {
-            new MenuMedicosFrame().setVisible(true);
-            dispose();
-        });
+        JButton btnEnviar = new JButton("Enviar Solicitud");
+        btnEnviar.setBackground(ColoresUDLAP.VERDE);
+        btnEnviar.setForeground(Color.WHITE);
+        btnEnviar.setFont(new Font("Arial", Font.BOLD, 16));
+        btnEnviar.setFocusPainted(false);
+        btnEnviar.addActionListener(e -> enviarSolicitud());
 
-        // --- Aquí estaba el error: faltaba declarar 'regresarBtn' ---
-        JButton regresarBtn = new JButton("Volver a Pacientes");
-        regresarBtn.addActionListener(e -> {
-            int idPaciente = 1; // Reemplaza con el ID real cuando proceda
-            // new MenuPacientesFrame(idPaciente).setVisible(true);
-            dispose();
-        });
+        JPanel panelBoton = new JPanel();
+        panelBoton.setBackground(ColoresUDLAP.BLANCO);
+        panelBoton.add(btnEnviar);
 
-        // Panel que agrupa los botones al final
-        JPanel panelBotones = new JPanel();
-        panelBotones.add(subirPDF);
-        panelBotones.add(siguienteBtn);
-        panelBotones.add(menuBtn);
-        panelBotones.add(regresarBtn);
-
-        // Relleno de la cuadrícula
-        add(new JLabel()); // celda vacía de separación
-        add(panelBotones); // panel con todos los botones
-
-        setVisible(true);
+        add(formulario, BorderLayout.CENTER);
+        add(panelBoton, BorderLayout.SOUTH);
     }
 
-    private void guardarJustificante() {
-        String id = idField.getText().trim();
-        String nombre = nombreField.getText().trim();
-        String motivo = motivoField.getText().trim();
+    private void enviarSolicitud() {
+        String profesor = campoProfesor.getText().trim();
+        String motivo = campoMotivo.getText().trim();
+        String inicio = campoFechaInicio.getText().trim();
+        String fin = campoFechaFin.getText().trim();
 
-        if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Completa todos los campos obligatorios.",
-                    "Aviso",
+        if (profesor.isEmpty() || motivo.isEmpty() || inicio.isEmpty() || fin.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.", "Campos vacíos",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
-        LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
-
-        if (inicio.isAfter(fin)) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "La fecha de inicio no puede ser posterior a la de fin.",
-                    "Error de fechas",
+        try {
+            LocalDate.parse(inicio, DateTimeFormatter.ISO_LOCAL_DATE);
+            LocalDate.parse(fin, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Formato de fecha incorrecto. Usa yyyy-mm-dd.", "Error de formato",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Justificante nuevo = new Justificante(
-                id, nombre, motivo, inicio, fin, "", archivoPDF);
+        String sql = "INSERT INTO SolicitudesJustificantes (IDAlumno, Profesor, Motivo, FechaInicio, FechaFin) VALUES (?, ?, ?, ?, ?)";
 
-        boolean exito = JustificanteDAO.guardarJustificante(nuevo);
-        if (exito) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Justificante guardado exitosamente.");
-            dispose();
-            new SeleccionarPacienteFrame().setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error al guardar justificante.",
-                    "Error",
+        try (Connection conn = ConexionSQLite.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ps.setString(2, profesor);
+            ps.setString(3, motivo);
+            ps.setString(4, inicio);
+            ps.setString(5, fin);
+            ps.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Solicitud enviada correctamente.", "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+            campoProfesor.setText("");
+            campoMotivo.setText("");
+            campoFechaInicio.setText("");
+            campoFechaFin.setText("");
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al guardar la solicitud: " + ex.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private String[] generarDias() {
-        String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) {
-            d[i - 1] = String.valueOf(i);
-        }
-        return d;
+    @Override
+    public JPanel getPanel() {
+        return this;
     }
 
-    private String[] generarMeses() {
-        return new String[] {
-                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        };
-    }
-
-    private String[] generarAnios() {
-        int base = LocalDate.now().getYear();
-        String[] a = new String[6];
-        for (int i = 0; i < 6; i++) {
-            a[i] = String.valueOf(base + i);
-        }
-        return a;
-    }
-
-    private LocalDate construirFecha(
-            JComboBox<String> dia,
-            JComboBox<String> mes,
-            JComboBox<String> anio) {
-        int d = Integer.parseInt((String) dia.getSelectedItem());
-        int m = mes.getSelectedIndex() + 1;
-        int y = Integer.parseInt((String) anio.getSelectedItem());
-        return LocalDate.of(y, m, d);
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(FormularioJustificanteFrame::new);
+    @Override
+    public String getPanelName() {
+        return "solicitarJustificante";
     }
 }

@@ -3,10 +3,9 @@ package Consultas;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import BaseDeDatos.ConexionSQLite;
 import java.sql.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+
+import BaseDeDatos.ConexionSQLite;
 
 public class GuardarConsulta implements ActionListener {
     private final JTextField[] campos;
@@ -19,58 +18,67 @@ public class GuardarConsulta implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (validarCampos()) {
-            try {
-                guardarConsultaEnBD();
-                mostrarConfirmacion();
-                limpiarCampos();
-            } catch (SQLException | ParseException ex) {
-                JOptionPane.showMessageDialog(null,
-                        "Error al guardar consulta:\n" + ex.getMessage(),
-                        "Error de BD", JOptionPane.ERROR_MESSAGE);
+        String idPaciente = campos[0].getText().trim();
+        String nombre = campos[1].getText().trim();
+        String edad = campos[2].getText().trim();
+        String correo = campos[3].getText().trim();
+        String diagnostico = campos[4].getText().trim();
+        String observaciones = areaTexto.getText().trim();
+
+        if (idPaciente.isEmpty() || nombre.isEmpty() || edad.isEmpty() || correo.isEmpty()
+                || diagnostico.isEmpty() || observaciones.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Todos los campos deben estar completos.",
+                    "Campos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!idPaciente.matches("\\d+")) {
+            JOptionPane.showMessageDialog(null,
+                    "El ID del paciente debe ser numérico.",
+                    "ID inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try (Connection conn = ConexionSQLite.conectar()) {
+            // Verificar si existe el paciente
+            String checkSql = "SELECT COUNT(*) FROM InformacionAlumno WHERE ID = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, Integer.parseInt(idPaciente));
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) == 0) {
+                    JOptionPane.showMessageDialog(null,
+                            "No existe un paciente con ese ID.",
+                            "Paciente no encontrado", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
+
+            String insertSql = "INSERT INTO Consultas (IDPaciente, FechaConsulta, Diagnostico, Observaciones) VALUES (?, CURRENT_DATE, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setInt(1, Integer.parseInt(idPaciente));
+                ps.setString(2, diagnostico);
+                ps.setString(3, observaciones);
+                ps.executeUpdate();
+            }
+
+            JOptionPane.showMessageDialog(null,
+                    "Consulta guardada exitosamente.",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            limpiarCampos();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    "Error al guardar la consulta:\n" + ex.getMessage(),
+                    "Error de BD", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private boolean validarCampos() {
-        // Implementar validación similar a la original
-        return true;
-    }
-
-    private void guardarConsultaEnBD() throws SQLException, ParseException {
-        String sql = "INSERT INTO Consultas (IDPaciente, IDMedico, Sintomas, Medicamentos, Diagnostico, " +
-                "FechaConsulta, FechaUltimaConsulta, FechaInicioSintomas, Receta) " +
-                "VALUES (?,?,?,?,?,?,?,?,?)";
-
-        try (Connection conn = ConexionSQLite.conectar();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, Integer.parseInt(campos[0].getText().trim()));
-            ps.setInt(2, /* ID del médico */ 1); // Deberías obtener esto de la sesión
-            ps.setString(3, campos[4].getText().trim());
-            ps.setString(4, campos[5].getText().trim());
-            ps.setString(5, campos[6].getText().trim());
-
-            SimpleDateFormat srcFmt = new SimpleDateFormat("dd/MM/yyyy");
-            SimpleDateFormat dstFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-            ps.setString(6, dstFmt.format(srcFmt.parse(campos[7].getText().trim())));
-            ps.setString(7, dstFmt.format(srcFmt.parse(campos[8].getText().trim())));
-            ps.setString(8, dstFmt.format(srcFmt.parse(campos[9].getText().trim())));
-
-            ps.setString(9, areaTexto.getText().trim());
-
-            ps.executeUpdate();
-        }
-    }
-
-    private void mostrarConfirmacion() {
-        // Implementar diálogo de confirmación
     }
 
     private void limpiarCampos() {
-        for (int i = 4; i < campos.length; i++) { // Limpiar solo campos de consulta
-            campos[i].setText("");
+        for (JTextField campo : campos) {
+            campo.setText("");
         }
         areaTexto.setText("");
     }
