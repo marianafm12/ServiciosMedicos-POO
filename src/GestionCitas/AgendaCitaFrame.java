@@ -106,7 +106,7 @@ public class AgendaCitaFrame extends JPanel {
         add(lblServicio, gbc);
 
         gbc.gridx = 1;
-        comboServicio = new JComboBox<>(new String[]{"Consulta", "Enfermería", "Examen Médico"});
+        comboServicio = new JComboBox<>(new String[] { "Consulta", "Enfermería", "Examen Médico" });
         comboServicio.setFont(fieldFont);
         comboServicio.setBackground(Color.WHITE);
         add(comboServicio, gbc);
@@ -123,17 +123,19 @@ public class AgendaCitaFrame extends JPanel {
         panelFecha.setBackground(ColoresUDLAP.BLANCO);
 
         comboDia = new JComboBox<>();
-        for (int d = 1; d <= 31; d++) comboDia.addItem(d);
+        for (int d = 1; d <= 31; d++)
+            comboDia.addItem(d);
         comboDia.setFont(fieldFont);
 
-        comboMes = new JComboBox<>(new String[]{
+        comboMes = new JComboBox<>(new String[] {
                 "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         });
         comboMes.setFont(fieldFont);
 
         comboAño = new JComboBox<>();
-        for (int a = LocalDate.now().getYear(); a <= 2030; a++) comboAño.addItem(a);
+        for (int a = LocalDate.now().getYear(); a <= 2030; a++)
+            comboAño.addItem(a);
         comboAño.setFont(fieldFont);
 
         panelFecha.add(comboDia);
@@ -152,13 +154,13 @@ public class AgendaCitaFrame extends JPanel {
         JPanel panelHora = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         panelHora.setBackground(ColoresUDLAP.BLANCO);
 
-        comboHora = new JComboBox<>(new String[]{
+        comboHora = new JComboBox<>(new String[] {
                 "08", "09", "10", "11", "12", "13", "14", "15",
                 "16", "17", "18", "19", "20", "21"
         });
         comboHora.setFont(fieldFont);
 
-        comboMinuto = new JComboBox<>(new String[]{"00", "30"});
+        comboMinuto = new JComboBox<>(new String[] { "00", "30" });
         comboMinuto.setFont(fieldFont);
 
         panelHora.add(comboHora);
@@ -194,7 +196,7 @@ public class AgendaCitaFrame extends JPanel {
     private void cargarDatosPersonales(int id) {
         String sql = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?";
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -244,7 +246,8 @@ public class AgendaCitaFrame extends JPanel {
                                 @Override
                                 protected Void doInBackground() {
                                     try {
-                                        ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, hora, servicio);
+                                        ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, hora,
+                                                servicio);
                                     } catch (SQLException e) {
                                         e.printStackTrace(); // o muestra error en pantalla si lo deseas
                                     }
@@ -293,8 +296,6 @@ public class AgendaCitaFrame extends JPanel {
         }
     }
 
-
-
     private JButton botonTransparente(String texto, Color base, Color hover) {
         JButton button = new JButton(texto) {
             @Override
@@ -317,13 +318,10 @@ public class AgendaCitaFrame extends JPanel {
         return button;
     }
 
-
-
     private Border getCampoBorde() {
-    return BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
-    );
-}
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    }
 
 }
