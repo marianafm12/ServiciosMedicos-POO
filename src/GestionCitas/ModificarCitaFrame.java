@@ -115,7 +115,7 @@ public class ModificarCitaFrame extends JPanel {
         add(new JLabel("Servicio:"), gbc);
 
         gbc.gridx = 1;
-        comboServicio = new JComboBox<>(new String[]{"Consulta", "Enfermería", "Examen Médico"});
+        comboServicio = new JComboBox<>(new String[] { "Consulta", "Enfermería", "Examen Médico" });
         comboServicio.setFont(fieldFont);
         comboServicio.setBackground(Color.WHITE);
         add(comboServicio, gbc);
@@ -131,8 +131,8 @@ public class ModificarCitaFrame extends JPanel {
 
         comboDia = new JComboBox<>(crearRango(1, 31));
         comboDia.setFont(fieldFont);
-        comboMes = new JComboBox<>(new String[]{"Ene", "Feb", "Mar", "Abr", "May", "Jun",
-                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"});
+        comboMes = new JComboBox<>(new String[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" });
         comboMes.setFont(fieldFont);
         comboAño = new JComboBox<>(crearRango(LocalDate.now().getYear(), 2030));
         comboAño.setFont(fieldFont);
@@ -151,10 +151,10 @@ public class ModificarCitaFrame extends JPanel {
         JPanel panelHora = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         panelHora.setBackground(ColoresUDLAP.BLANCO);
 
-        comboHora = new JComboBox<>(new String[]{"08", "09", "10", "11", "12", "13", "14", "15",
-                "16", "17", "18", "19", "20", "21"});
+        comboHora = new JComboBox<>(new String[] { "08", "09", "10", "11", "12", "13", "14", "15",
+                "16", "17", "18", "19", "20", "21" });
         comboHora.setFont(fieldFont);
-        comboMinuto = new JComboBox<>(new String[]{"00", "30"});
+        comboMinuto = new JComboBox<>(new String[] { "00", "30" });
         comboMinuto.setFont(fieldFont);
 
         panelHora.add(comboHora);
@@ -176,50 +176,50 @@ public class ModificarCitaFrame extends JPanel {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         panelBotones.setBackground(ColoresUDLAP.BLANCO);
 
- JButton btnModificar = botonTransparente("Modificar Cita", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
-JButton btnCancelarCita = botonTransparente("Cancelar Cita", ColoresUDLAP.ROJO, ColoresUDLAP.ROJO_HOVER);
-JButton btnVolver = botonTransparente("Volver", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
+        JButton btnModificar = botonTransparente("Modificar Cita", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
+        JButton btnCancelarCita = botonTransparente("Cancelar Cita", ColoresUDLAP.ROJO, ColoresUDLAP.ROJO_HOVER);
+        JButton btnVolver = botonTransparente("Volver", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
 
-btnModificar.addActionListener(e -> modificarCita());
+        btnModificar.addActionListener(e -> modificarCita());
 
-btnCancelarCita.addActionListener(e -> {
-    String seleccion = (String) comboCitas.getSelectedItem();
-    if (seleccion == null) {
-        errorLabel.setText("Seleccione una cita para cancelar.");
-        return;
-    }
+        btnCancelarCita.addActionListener(e -> {
+            String seleccion = (String) comboCitas.getSelectedItem();
+            if (seleccion == null) {
+                errorLabel.setText("Seleccione una cita para cancelar.");
+                return;
+            }
 
-    int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de cancelar esta cita?", "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
-    if (confirm == JOptionPane.YES_OPTION) {
-        int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
-        String[] partes = seleccion.split("-");
-        String fechaLiberada = partes[0].split(" ")[0].trim();
-        String horaLiberada = partes[0].split(" ")[1].trim();
-        String servicioLiberado = partes[1].trim();
+            int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de cancelar esta cita?",
+                    "Confirmar cancelación", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
+                String[] partes = seleccion.split("-");
+                String fechaLiberada = partes[0].split(" ")[0].trim();
+                String horaLiberada = partes[0].split(" ")[1].trim();
+                String servicioLiberado = partes[1].trim();
 
-        try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM CitasMedicas WHERE idCita=?")) {
-            ps.setInt(1, idCita);
-            ps.executeUpdate();
-            errorLabel.setForeground(new Color(0, 128, 0));
-            errorLabel.setText("Cita cancelada.");
-            cargarCitas();
+                try (Connection conn = ConexionSQLite.conectar();
+                        PreparedStatement ps = conn.prepareStatement("DELETE FROM CitasMedicas WHERE idCita=?")) {
+                    ps.setInt(1, idCita);
+                    ps.executeUpdate();
+                    errorLabel.setForeground(new Color(0, 128, 0));
+                    errorLabel.setText("Cita cancelada.");
+                    cargarCitas();
 
-            // 🔔 Notificar a lista de espera
-            NotificadorListaEspera.notificarDisponibilidad(fechaLiberada, horaLiberada, servicioLiberado);
-        } catch (SQLException ex) {
-            errorLabel.setForeground(Color.RED);
-            errorLabel.setText("Error al cancelar cita.");
-        }
-    }
-});
+                    // 🔔 Notificar a lista de espera
+                    NotificadorListaEspera.notificarDisponibilidad(fechaLiberada, horaLiberada, servicioLiberado);
+                } catch (SQLException ex) {
+                    errorLabel.setForeground(Color.RED);
+                    errorLabel.setText("Error al cancelar cita.");
+                }
+            }
+        });
 
-btnVolver.addActionListener(e -> panelManager.showPanel("panelGestionCitas"));
+        btnVolver.addActionListener(e -> panelManager.showPanel("panelGestionCitas"));
 
-panelBotones.add(btnModificar);
-panelBotones.add(btnCancelarCita);
-panelBotones.add(btnVolver);
-
+        panelBotones.add(btnModificar);
+        panelBotones.add(btnCancelarCita);
+        panelBotones.add(btnVolver);
 
         add(panelBotones, gbc);
 
@@ -230,9 +230,8 @@ panelBotones.add(btnVolver);
 
     private void cargarDatosPersonales() {
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?"
-             )) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
             ps.setInt(1, idPaciente);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -251,9 +250,8 @@ panelBotones.add(btnVolver);
     private void cargarCitas() {
         comboCitas.removeAllItems();
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT idCita, fecha || ' ' || hora || ' - ' || servicio AS desc FROM CitasMedicas WHERE idPaciente = ?"
-             )) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT idCita, fecha || ' ' || hora || ' - ' || servicio AS desc FROM CitasMedicas WHERE idPaciente = ?")) {
             ps.setInt(1, idPaciente);
             try (ResultSet rs = ps.executeQuery()) {
                 boolean found = false;
@@ -261,99 +259,101 @@ panelBotones.add(btnVolver);
                     found = true;
                     comboCitas.addItem(rs.getInt("idCita") + ": " + rs.getString("desc"));
                 }
-                if (!found) errorLabel.setText("No hay citas para este paciente.");
-                else errorLabel.setText("");
+                if (!found)
+                    errorLabel.setText("No hay citas para este paciente.");
+                else
+                    errorLabel.setText("");
             }
         } catch (SQLException ex) {
             errorLabel.setText("Error al cargar citas.");
         }
     }
 
-private void modificarCita() {
-    String seleccion = (String) comboCitas.getSelectedItem();
-    if (seleccion == null) {
-        errorLabel.setText("Seleccione una cita para modificar.");
-        return;
-    }
-
-    int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
-    String servicio = (String) comboServicio.getSelectedItem();
-    int dia = (Integer) comboDia.getSelectedItem();
-    int mes = comboMes.getSelectedIndex() + 1;
-    int año = (Integer) comboAño.getSelectedItem();
-    String hora = (String) comboHora.getSelectedItem();
-    String minuto = (String) comboMinuto.getSelectedItem();
-
-    if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
-        errorLabel.setText("Fecha inválida.");
-        return;
-    }
-
-    String nuevaFecha = String.format("%04d-%02d-%02d", año, mes, dia);
-    String nuevaHora = hora + ":" + minuto;
-
-    // Obtener datos anteriores de la cita
-    String fechaAnterior = null, horaAnterior = null, servicioAnterior = null;
-    try (Connection conn = ConexionSQLite.conectar();
-         PreparedStatement ps = conn.prepareStatement("SELECT fecha, hora, servicio FROM CitasMedicas WHERE idCita=?")) {
-        ps.setInt(1, idCita);
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                fechaAnterior = rs.getString("fecha");
-                horaAnterior = rs.getString("hora");
-                servicioAnterior = rs.getString("servicio");
-            }
+    private void modificarCita() {
+        String seleccion = (String) comboCitas.getSelectedItem();
+        if (seleccion == null) {
+            errorLabel.setText("Seleccione una cita para modificar.");
+            return;
         }
-    } catch (SQLException ex) {
-        errorLabel.setText("Error al obtener cita original.");
-        return;
-    }
 
-    try (Connection conn = ConexionSQLite.conectar()) {
-        // Validar conflicto con otras citas
-        try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=? AND idCita<>?")) {
-            ps.setString(1, nuevaFecha);
-            ps.setString(2, nuevaHora);
-            ps.setString(3, servicio);
-            ps.setInt(4, idCita);
+        int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
+        String servicio = (String) comboServicio.getSelectedItem();
+        int dia = (Integer) comboDia.getSelectedItem();
+        int mes = comboMes.getSelectedIndex() + 1;
+        int año = (Integer) comboAño.getSelectedItem();
+        String hora = (String) comboHora.getSelectedItem();
+        String minuto = (String) comboMinuto.getSelectedItem();
+
+        if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
+            errorLabel.setText("Fecha inválida.");
+            return;
+        }
+
+        String nuevaFecha = String.format("%04d-%02d-%02d", año, mes, dia);
+        String nuevaHora = hora + ":" + minuto;
+
+        // Obtener datos anteriores de la cita
+        String fechaAnterior = null, horaAnterior = null, servicioAnterior = null;
+        try (Connection conn = ConexionSQLite.conectar();
+                PreparedStatement ps = conn
+                        .prepareStatement("SELECT fecha, hora, servicio FROM CitasMedicas WHERE idCita=?")) {
+            ps.setInt(1, idCita);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next() && rs.getInt(1) > 0) {
-                    errorLabel.setText("Ya existe otra cita en ese horario.");
-                    return;
+                if (rs.next()) {
+                    fechaAnterior = rs.getString("fecha");
+                    horaAnterior = rs.getString("hora");
+                    servicioAnterior = rs.getString("servicio");
                 }
             }
+        } catch (SQLException ex) {
+            errorLabel.setText("Error al obtener cita original.");
+            return;
         }
 
-        try (PreparedStatement ps = conn.prepareStatement(
-                "UPDATE CitasMedicas SET fecha=?, hora=?, servicio=? WHERE idCita=?")) {
-            ps.setString(1, nuevaFecha);
-            ps.setString(2, nuevaHora);
-            ps.setString(3, servicio);
-            ps.setInt(4, idCita);
-            ps.executeUpdate();
-            errorLabel.setForeground(new Color(0, 128, 0));
-            errorLabel.setText("Cita modificada correctamente.");
-            cargarCitas();
-        }
+        try (Connection conn = ConexionSQLite.conectar()) {
+            // Validar conflicto con otras citas
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=? AND idCita<>?")) {
+                ps.setString(1, nuevaFecha);
+                ps.setString(2, nuevaHora);
+                ps.setString(3, servicio);
+                ps.setInt(4, idCita);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        errorLabel.setText("Ya existe otra cita en ese horario.");
+                        return;
+                    }
+                }
+            }
 
-        // 🔔 Verificar si la modificación liberó la cita original
-        if (!nuevaFecha.equals(fechaAnterior) || !nuevaHora.equals(horaAnterior) || !servicio.equals(servicioAnterior)) {
-            NotificadorListaEspera.notificarDisponibilidad(fechaAnterior, horaAnterior, servicioAnterior);
-        }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE CitasMedicas SET fecha=?, hora=?, servicio=? WHERE idCita=?")) {
+                ps.setString(1, nuevaFecha);
+                ps.setString(2, nuevaHora);
+                ps.setString(3, servicio);
+                ps.setInt(4, idCita);
+                ps.executeUpdate();
+                errorLabel.setForeground(new Color(0, 128, 0));
+                errorLabel.setText("Cita modificada correctamente.");
+                cargarCitas();
+            }
 
-    } catch (SQLException ex) {
-        errorLabel.setForeground(Color.RED);
-        errorLabel.setText("Error al modificar la cita.");
+            // 🔔 Verificar si la modificación liberó la cita original
+            if (!nuevaFecha.equals(fechaAnterior) || !nuevaHora.equals(horaAnterior)
+                    || !servicio.equals(servicioAnterior)) {
+                NotificadorListaEspera.notificarDisponibilidad(fechaAnterior, horaAnterior, servicioAnterior);
+            }
+
+        } catch (SQLException ex) {
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setText("Error al modificar la cita.");
+        }
     }
-}
-
 
     private Border getCampoBorde() {
         return BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        );
+                BorderFactory.createEmptyBorder(5, 5, 5, 5));
     }
 
     private Integer[] crearRango(int desde, int hasta) {
