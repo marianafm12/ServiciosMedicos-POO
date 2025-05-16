@@ -138,27 +138,28 @@ public class MenuPacientesFrame extends JFrame {
             new GestionCitas.InicioFrame().setVisible(true);
             dispose();
         });
-        historialMedicoButton.addActionListener(e -> {
+        //historialMedicoButton.addActionListener(e -> {
             new GestionEnfermedades.VerDatosPaciente(idPaciente)
                     .setVisible(true);
             dispose();
-        });
-        justificarNuevoButton.addActionListener(e -> {
-            new Justificantes.FormularioJustificanteFrame()
-                    .setVisible(true);
-            dispose();
-        });
-        verJustificantesButton.addActionListener(e -> {
-            new MisJustificantesPacienteFrame(String.valueOf(idPaciente))
-                    .setVisible(true);
-            dispose();
-        });
-        reportarEmergenciaButton.addActionListener(e -> {
-            new Emergencias.MenuEmergenciaFrame().setVisible(true);
-            dispose();
-        });
+        });justificarNuevoButton.addActionListener(e->
 
-        add(center, BorderLayout.CENTER);
+    {
+        new Justificantes.FormularioJustificanteFrame()
+                .setVisible(true);
+        dispose();
+    });verJustificantesButton.addActionListener(e->
+    {
+        new MisJustificantesPacienteFrame(String.valueOf(idPaciente))
+                .setVisible(true);
+        dispose();
+    });reportarEmergenciaButton.addActionListener(e->
+    {
+        new Emergencias.MenuEmergenciaFrame().setVisible(true);
+        dispose();
+    });
+
+    add(center, BorderLayout.CENTER);
     }
 
     public static void main(String[] args) {

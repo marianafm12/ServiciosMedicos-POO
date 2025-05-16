@@ -4,6 +4,9 @@ import Utilidades.*;
 import BaseDeDatos.ConexionSQLite;
 import Consultas.PanelConsultaNueva;
 import Emergencias.PanelLlamadaEmergencia;
+import GestionEnfermedades.FormularioEditarPaciente;
+import GestionEnfermedades.PanelEditarDatosPaciente;
+import GestionEnfermedades.PanelVerDatosPaciente;
 import Registro.*;
 
 import javax.swing.*;
@@ -202,6 +205,9 @@ public class InterfazMedica extends JFrame {
         panelManager.registerPanel(new PanelRegistroPaciente());
         // Registrar panel de consulta nueva
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+        // Registrar panel de edición de datos del paciente
+        panelManager.registerPanel(new PanelVerDatosPaciente(userId));
+
         // Registrar panel de llamada de emergencia
         panelManager.registerPanel(new PanelLlamadaEmergencia());
 
