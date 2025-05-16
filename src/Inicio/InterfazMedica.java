@@ -55,20 +55,24 @@ public class InterfazMedica extends JFrame {
         }
     }
 
-    private void checkNotifications() {
-        if (!esMedico) {
-            hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
-        }
+private void checkNotifications() {
+    if (!esMedico) {
+        hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
+        System.out.println("¿Tiene notificaciones pendientes? " + hasNewNotification + " para userId=" + userId);
+    }
 
-        if (hasNewNotification && notificationIcon != null) {
-            if (iconNew.getImage() != null) {
-                notificationIcon.setIcon(iconNew);
-            } else {
-                notificationIcon.setText("\uD83D\uDD14"); // Emoji fallback
-                notificationIcon.setFont(new Font("Dialog", Font.PLAIN, 24));
-            }
+    if (notificationIcon != null) {
+        if (hasNewNotification) {
+            System.out.println("Mostrando icono con notificaciones.");
+            notificationIcon.setIcon(iconNew);
+        } else {
+            System.out.println("Mostrando icono sin notificaciones.");
+            notificationIcon.setIcon(iconDefault);
         }
     }
+}
+
+
 
     private void initUI() {
         setUndecorated(true);
@@ -287,10 +291,12 @@ private void registrarPaneles() {
         notificationIcon = new JLabel(iconDefault);
         notificationIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         notificationIcon.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
+         public void mouseClicked(MouseEvent e) {
+                System.out.println("Campana clickeada por: " + userId); // ← DEBUG
                 mostrarNotificaciones();
             }
         });
+
         right.add(notificationIcon);
 
         JButton cerrarSesion = new JButton("Cerrar sesión");
@@ -312,33 +318,45 @@ private void registrarPaneles() {
         return topPanel;
     }
 
-    private void mostrarNotificaciones() {
-        if (esMedico) {
-            JOptionPane.showMessageDialog(this,
-                    "Funcionalidad de notificaciones para médicos en desarrollo.",
-                    "Notificaciones Médicas",
-                    JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
-            if (lista.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "No hay nuevas notificaciones.",
-                        "Notificaciones",
-                        JOptionPane.INFORMATION_MESSAGE);
-                notificationIcon.setIcon(iconDefault);
-            } else {
-                for (NotificacionDAO.Notificacion n : lista) {
-                    JOptionPane.showMessageDialog(this,
-                            String.format("Tienes una cita programada:\nFecha: %s\nHora: %s\nServicio: %s",
-                                    n.fecha, n.hora, n.servicio),
-                            "Notificación de Cita",
-                            JOptionPane.INFORMATION_MESSAGE);
-                }
-                hasNewNotification = false;
-                notificationIcon.setIcon(iconDefault);
-            }
-        }
+private void mostrarNotificaciones() {
+    if (esMedico) {
+        JOptionPane.showMessageDialog(this,
+                "Funcionalidad de notificaciones para médicos en desarrollo.",
+                "Notificaciones Médicas",
+                JOptionPane.INFORMATION_MESSAGE);
+        return;
     }
+
+    List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
+    if (lista.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+                "No hay nuevas notificaciones.",
+                "Notificaciones",
+                JOptionPane.INFORMATION_MESSAGE);
+        notificationIcon.setIcon(iconDefault);
+    } else {
+for (NotificacionDAO.Notificacion n : lista) {
+    System.out.println("[NOTIFICACIÓN PENDIENTE] Para ID: " + userId);
+    System.out.println(" → Fecha: " + n.fecha);
+    System.out.println(" → Hora: " + n.hora);
+    System.out.println(" → Servicio: " + n.servicio);
+    System.out.println(" → Estado: pendiente");
+    
+    // Crea el panel emergente para aceptar o rechazar la cita
+    new GestionCitas.NotificacionCitasFrame(
+        n.fecha,
+        n.hora,
+        n.servicio,
+        String.valueOf(userId)
+    );
+}
+
+        hasNewNotification = false;
+        notificationIcon.setIcon(iconDefault);
+    }
+}
+
+
 
     private JButton botonTransparente(String texto, Color base, Color hover, Font font) {
         JButton button = new JButton(texto) {
