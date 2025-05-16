@@ -4,9 +4,9 @@ import Utilidades.*;
 import BaseDeDatos.ConexionSQLite;
 import Consultas.PanelConsultaNueva;
 import Emergencias.PanelLlamadaEmergencia;
-import GestionEnfermedades.FormularioEditarPaciente;
-import GestionEnfermedades.PanelEditarDatosPaciente;
 import GestionEnfermedades.PanelVerDatosPaciente;
+import Justificantes.PanelJustificantesProvider;
+import Justificantes.PanelMenuJustificantes;
 import Registro.*;
 
 import javax.swing.*;
@@ -140,7 +140,11 @@ public class InterfazMedica extends JFrame {
         } else if (indiceBoton == 2 && esMedico) {
             panelManager.showPanel("editarDatosPaciente");
         } else if (indiceBoton == 3 && esMedico) {
-            panelManager.showPanel("justificantesMedicos");
+            // ✅ Crear nueva instancia al presionar "Justificantes Médicos"
+            JPanel nuevoPanel = new PanelMenuJustificantes();
+            contentPanel.add(nuevoPanel, "justificantesMedicos");
+            CardLayout cl = (CardLayout) contentPanel.getLayout();
+            cl.show(contentPanel, "justificantesMedicos");
         } else if (indiceBoton == 4 && esMedico) {
             panelManager.showPanel("llamadaEmergencia");
         } else if (indiceBoton == 5 && esMedico) {
@@ -161,7 +165,6 @@ public class InterfazMedica extends JFrame {
     }
 
     private void registrarPaneles() {
-        // Registrar paneles básicos
         for (int i = 0; i < (esMedico ? 6 : 5); i++) {
             final int idx = i;
             panelManager.registerPanel(new PanelProvider() {
@@ -180,11 +183,21 @@ public class InterfazMedica extends JFrame {
                     return "panel" + idx;
                 }
             });
+
+            // Registrar panel de formulario de registro
+            panelManager.registerPanel(new PanelRegistroPaciente());
+            // Registrar panel de consulta nueva
+            panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+            // Registrar panel de edición de datos del paciente
+            panelManager.registerPanel(new PanelVerDatosPaciente(userId));
+
+            // Registrar panel de llamada de emergencia
+            panelManager.registerPanel(new PanelLlamadaEmergencia());
+
         }
 
-        // Registrar panel de emergencia
+        // Panel de emergencias
         panelManager.registerPanel(new PanelProvider() {
-
             @Override
             public JPanel getPanel() {
                 JPanel panel = new JPanel();
@@ -201,16 +214,18 @@ public class InterfazMedica extends JFrame {
             }
         });
 
-        // Registrar panel de formulario de registro
+        // Paneles funcionales ya existentes
         panelManager.registerPanel(new PanelRegistroPaciente());
-        // Registrar panel de consulta nueva
         panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-        // Registrar panel de edición de datos del paciente
-        panelManager.registerPanel(new PanelVerDatosPaciente(userId));
-
-        // Registrar panel de llamada de emergencia
         panelManager.registerPanel(new PanelLlamadaEmergencia());
 
+        // ➕ Panel funcional de Justificantes
+        panelManager.registerPanel(new PanelJustificantesProvider() {
+            @Override
+            public String getPanelName() {
+                return "justificantesMedicos";
+            }
+        });
     }
 
     // Nuevo método auxiliar para crear el panel superior
