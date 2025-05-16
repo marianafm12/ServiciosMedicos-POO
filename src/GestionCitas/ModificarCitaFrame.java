@@ -1,17 +1,18 @@
 package GestionCitas;
-//Cambio
+
+import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.sql.*;
 import java.time.LocalDate;
-
 import BaseDeDatos.ConexionSQLite;
-import Inicio.SesionUsuario;
 
-public class ModificarCitaFrame extends JFrame {
-    private static final String NO_EDITABLE = "No editable";
+public class ModificarCitaFrame extends JPanel {
+
+    private final int idPaciente;
+    private final PanelManager panelManager;
 
     private JTextField campoNombre;
     private JTextField campoApellidos;
@@ -25,200 +26,239 @@ public class ModificarCitaFrame extends JFrame {
     private JComboBox<String> comboMinuto;
     private JLabel errorLabel;
 
-    /** Constructor principal: toma automáticamente el ID del paciente en sesión */
-    public ModificarCitaFrame() {
-        super("Modificar Cita");
-        int idPaciente = SesionUsuario.getPacienteActual();
+    public ModificarCitaFrame(int idPaciente, PanelManager panelManager) {
+        this.idPaciente = idPaciente;
+        this.panelManager = panelManager;
 
-        // Configuración de la ventana
-        setSize(500, 550);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
+        setBackground(ColoresUDLAP.BLANCO);
 
-        // Inicialización de componentes
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5,5,5,5);
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        campoNombre = new JTextField(NO_EDITABLE, 12);
-        campoNombre.setEditable(false);
-        campoNombre.setForeground(Color.GRAY);
+        Font labelFont = new Font("Arial", Font.BOLD, 14);
+        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
 
-        campoApellidos = new JTextField(NO_EDITABLE, 12);
-        campoApellidos.setEditable(false);
-        campoApellidos.setForeground(Color.GRAY);
+        // Título
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        JLabel lblTitulo = new JLabel("Modificar Cita Médica", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
+        lblTitulo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        add(lblTitulo, gbc);
 
-        // CAMBIO ID SE LLAMA
+        gbc.gridwidth = 1;
+        gbc.gridy++;
 
-        campoID = new JTextField(String.valueOf(idPaciente), 12);
-        campoID.setEditable(false);
-        campoID.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                cargarDatosPersonales();
-            }
-        });
-
-        comboCitas    = new JComboBox<>();
-        comboServicio = new JComboBox<>(new String[] { "Consulta", "Enfermería", "Examen Médico" });
-        comboDia      = new JComboBox<>(crearRango(1, 31));
-        comboMes      = new JComboBox<>(new String[] {
-            "Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"
-        });
-        comboAño      = new JComboBox<>(crearRango(LocalDate.now().getYear(), 2030));
-        comboHora     = new JComboBox<>(new String[] {
-            "08","09","10","11","12","13","14","15","16","17","18","19","20","21"
-        });
-        comboMinuto   = new JComboBox<>(new String[] { "00", "30" });
-
-        errorLabel = new JLabel("", SwingConstants.CENTER);
-        errorLabel.setForeground(Color.RED);
-
-        // Añadir componentes al layout
-        gbc.gridx = 0; gbc.gridy = 0;
-        add(new JLabel("Nombre:"), gbc);
-        gbc.gridx = 1;
-        add(campoNombre, gbc);
-
-        gbc.gridy++; gbc.gridx = 0;
-        add(new JLabel("Apellidos:"), gbc);
-        gbc.gridx = 1;
-        add(campoApellidos, gbc);
-
-        gbc.gridy++; gbc.gridx = 0;
+        // ID
+        gbc.gridx = 0;
         add(new JLabel("ID:"), gbc);
+
         gbc.gridx = 1;
+        campoID = new JTextField(String.valueOf(idPaciente), 20);
+        campoID.setFont(fieldFont);
+        campoID.setEditable(false);
+        campoID.setBorder(getCampoBorde());
         add(campoID, gbc);
 
-        gbc.gridy++; gbc.gridx = 0;
+        // Nombre
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(new JLabel("Nombre:"), gbc);
+
+        gbc.gridx = 1;
+        campoNombre = new JTextField("No editable", 20);
+        campoNombre.setFont(fieldFont);
+        campoNombre.setEditable(false);
+        campoNombre.setForeground(Color.GRAY);
+        campoNombre.setBorder(getCampoBorde());
+        add(campoNombre, gbc);
+
+        // Apellidos
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(new JLabel("Apellidos:"), gbc);
+
+        gbc.gridx = 1;
+        campoApellidos = new JTextField("No editable", 20);
+        campoApellidos.setFont(fieldFont);
+        campoApellidos.setEditable(false);
+        campoApellidos.setForeground(Color.GRAY);
+        campoApellidos.setBorder(getCampoBorde());
+        add(campoApellidos, gbc);
+
+        // Botón buscar citas
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
         JButton btnBuscar = new JButton("Buscar Citas");
         btnBuscar.addActionListener(e -> cargarCitas());
         add(btnBuscar, gbc);
+        gbc.gridwidth = 1;
 
-        gbc.gridy++; gbc.gridx = 0;
+        // Combo de citas
+        gbc.gridy++;
+        gbc.gridx = 0;
         add(new JLabel("Selecciona tu cita:"), gbc);
         gbc.gridx = 1;
+        comboCitas = new JComboBox<>();
+        comboCitas.setFont(fieldFont);
+        comboCitas.setBackground(Color.WHITE);
         add(comboCitas, gbc);
 
-        gbc.gridy++; gbc.gridx = 0;
+        // Servicio
+        gbc.gridy++;
+        gbc.gridx = 0;
         add(new JLabel("Servicio:"), gbc);
+
         gbc.gridx = 1;
+        comboServicio = new JComboBox<>(new String[]{"Consulta", "Enfermería", "Examen Médico"});
+        comboServicio.setFont(fieldFont);
+        comboServicio.setBackground(Color.WHITE);
         add(comboServicio, gbc);
 
-        gbc.gridy++; gbc.gridx = 0;
+        // Fecha
+        gbc.gridy++;
+        gbc.gridx = 0;
         add(new JLabel("Nueva Fecha:"), gbc);
-        gbc.gridx = 1;
-        add(agrupar(comboDia, comboMes, comboAño), gbc);
 
-        gbc.gridy++; gbc.gridx = 0;
+        gbc.gridx = 1;
+        JPanel panelFecha = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panelFecha.setBackground(ColoresUDLAP.BLANCO);
+
+        comboDia = new JComboBox<>(crearRango(1, 31));
+        comboDia.setFont(fieldFont);
+        comboMes = new JComboBox<>(new String[]{"Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"});
+        comboMes.setFont(fieldFont);
+        comboAño = new JComboBox<>(crearRango(LocalDate.now().getYear(), 2030));
+        comboAño.setFont(fieldFont);
+
+        panelFecha.add(comboDia);
+        panelFecha.add(comboMes);
+        panelFecha.add(comboAño);
+        add(panelFecha, gbc);
+
+        // Hora
+        gbc.gridy++;
+        gbc.gridx = 0;
         add(new JLabel("Hora de la Cita:"), gbc);
-        gbc.gridx = 1;
-        add(agrupar(comboHora, comboMinuto), gbc);
 
-        gbc.gridy++; gbc.gridx = 0; gbc.gridwidth = 2;
+        gbc.gridx = 1;
+        JPanel panelHora = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        panelHora.setBackground(ColoresUDLAP.BLANCO);
+
+        comboHora = new JComboBox<>(new String[]{"08", "09", "10", "11", "12", "13", "14", "15",
+                "16", "17", "18", "19", "20", "21"});
+        comboHora.setFont(fieldFont);
+        comboMinuto = new JComboBox<>(new String[]{"00", "30"});
+        comboMinuto.setFont(fieldFont);
+
+        panelHora.add(comboHora);
+        panelHora.add(new JLabel(":"));
+        panelHora.add(comboMinuto);
+        add(panelHora, gbc);
+
+        // Error label
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        errorLabel = new JLabel("", SwingConstants.CENTER);
+        errorLabel.setFont(new Font("Arial", Font.PLAIN, 13));
+        errorLabel.setForeground(Color.RED);
         add(errorLabel, gbc);
 
+        // Botones
         gbc.gridy++;
-        JButton btnModificar = new JButton("Modificar Cita");
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        panelBotones.setBackground(ColoresUDLAP.BLANCO);
+
+        JButton btnModificar = botonTransparente("Modificar Cita", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
+        JButton btnCancelar = botonTransparente("Cancelar", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
+
         btnModificar.addActionListener(e -> modificarCita());
-        add(btnModificar, gbc);
+        btnCancelar.addActionListener(e -> panelManager.showPanel("panelGestionCitas"));
 
-        gbc.gridy++;
-        JButton btnCancelar = new JButton("Cancelar Cita");
-        btnCancelar.addActionListener(e -> cancelarCita());
-        add(btnCancelar, gbc);
+        panelBotones.add(btnModificar);
+        panelBotones.add(btnCancelar);
+        add(panelBotones, gbc);
 
-        setVisible(true);
-
-        // Al iniciar, cargar datos personales y citas
+        // Inicial
         cargarDatosPersonales();
         cargarCitas();
     }
 
-    /** Carga nombre y apellidos del paciente basado en campoID */
     private void cargarDatosPersonales() {
-        String idText = campoID.getText().trim();
-        if (idText.isEmpty()) return;
         try (Connection conn = ConexionSQLite.conectar();
              PreparedStatement ps = conn.prepareStatement(
-                 "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?"
+                     "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?"
              )) {
-            ps.setInt(1, Integer.parseInt(idText));
+            ps.setInt(1, idPaciente);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     campoNombre.setText(rs.getString("Nombre"));
                     campoNombre.setForeground(Color.BLACK);
-                    campoApellidos.setText(
-                        rs.getString("ApellidoPaterno") + " " + rs.getString("ApellidoMaterno")
-                    );
+                    campoApellidos.setText(rs.getString("ApellidoPaterno") + " " + rs.getString("ApellidoMaterno"));
                     campoApellidos.setForeground(Color.BLACK);
                 }
             }
         } catch (SQLException ex) {
-            campoNombre.setText(NO_EDITABLE);
-            campoApellidos.setText(NO_EDITABLE);
+            campoNombre.setText("Error");
+            campoApellidos.setText("Error");
         }
     }
 
-    /** Llena el combo de citas pendientes del paciente */
     private void cargarCitas() {
         comboCitas.removeAllItems();
-        String idText = campoID.getText().trim();
-        if (idText.isEmpty()) {
-            errorLabel.setText("ID de paciente faltante.");
-            return;
-        }
         try (Connection conn = ConexionSQLite.conectar();
              PreparedStatement ps = conn.prepareStatement(
-                 "SELECT idCita, fecha || ' ' || hora || ' - ' || servicio AS desc FROM CitasMedicas WHERE idPaciente = ?"
+                     "SELECT idCita, fecha || ' ' || hora || ' - ' || servicio AS desc FROM CitasMedicas WHERE idPaciente = ?"
              )) {
-            ps.setInt(1, Integer.parseInt(idText));
+            ps.setInt(1, idPaciente);
             try (ResultSet rs = ps.executeQuery()) {
                 boolean found = false;
                 while (rs.next()) {
                     found = true;
-                    comboCitas.addItem(
-                        rs.getInt("idCita") + ": " + rs.getString("desc")
-                    );
+                    comboCitas.addItem(rs.getInt("idCita") + ": " + rs.getString("desc"));
                 }
                 if (!found) errorLabel.setText("No hay citas para este paciente.");
-                else       errorLabel.setText("");
+                else errorLabel.setText("");
             }
         } catch (SQLException ex) {
             errorLabel.setText("Error al cargar citas.");
         }
     }
 
-    /** Modifica la cita seleccionada con los nuevos datos */
     private void modificarCita() {
-        String sel = (String) comboCitas.getSelectedItem();
-        if (sel == null) {
-            errorLabel.setText("Debe seleccionar una cita.");
+        String seleccion = (String) comboCitas.getSelectedItem();
+        if (seleccion == null) {
+            errorLabel.setText("Seleccione una cita para modificar.");
             return;
         }
-        int idCita = Integer.parseInt(sel.split(":")[0].trim());
+
+        int idCita = Integer.parseInt(seleccion.split(":")[0].trim());
         String servicio = (String) comboServicio.getSelectedItem();
-        int dia   = (Integer) comboDia.getSelectedItem();
-        int mes   = comboMes.getSelectedIndex() + 1;
-        int año   = (Integer) comboAño.getSelectedItem();
-        String hora   = (String) comboHora.getSelectedItem();
+        int dia = (Integer) comboDia.getSelectedItem();
+        int mes = comboMes.getSelectedIndex() + 1;
+        int año = (Integer) comboAño.getSelectedItem();
+        String hora = (String) comboHora.getSelectedItem();
         String minuto = (String) comboMinuto.getSelectedItem();
 
         if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
-            errorLabel.setText("Fecha inválida (debe ser futura).");
+            errorLabel.setText("Fecha inválida.");
             return;
         }
 
         String nuevaFecha = String.format("%04d-%02d-%02d", año, mes, dia);
-        String nuevaHora  = hora + ":" + minuto;
-        String idText     = campoID.getText().trim();
+        String nuevaHora = hora + ":" + minuto;
 
         try (Connection conn = ConexionSQLite.conectar()) {
-            // Verificar conflicto
+            // Conflicto
             try (PreparedStatement ps = conn.prepareStatement(
-                 "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=? AND idCita<>?"
-            )) {
+                    "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=? AND idCita<>?")) {
                 ps.setString(1, nuevaFecha);
                 ps.setString(2, nuevaHora);
                 ps.setString(3, servicio);
@@ -230,67 +270,58 @@ public class ModificarCitaFrame extends JFrame {
                     }
                 }
             }
-            // Actualizar
+
             try (PreparedStatement ps = conn.prepareStatement(
-                 "UPDATE CitasMedicas SET fecha=?, hora=?, servicio=? WHERE idCita=? AND idPaciente=?"
-            )) {
+                    "UPDATE CitasMedicas SET fecha=?, hora=?, servicio=? WHERE idCita=?")) {
                 ps.setString(1, nuevaFecha);
                 ps.setString(2, nuevaHora);
                 ps.setString(3, servicio);
                 ps.setInt(4, idCita);
-                ps.setInt(5, Integer.parseInt(idText));
                 ps.executeUpdate();
+                errorLabel.setForeground(new Color(0, 128, 0));
+                errorLabel.setText("Cita modificada correctamente.");
+                cargarCitas();
             }
-            errorLabel.setForeground(Color.GREEN);
-            errorLabel.setText("Cita modificada correctamente.");
-            cargarCitas();
         } catch (SQLException ex) {
             errorLabel.setForeground(Color.RED);
-            errorLabel.setText("Error al modificar cita.");
+            errorLabel.setText("Error al modificar la cita.");
         }
     }
 
-    /** Cancela la cita seleccionada */
-    private void cancelarCita() {
-        String sel = (String) comboCitas.getSelectedItem();
-        if (sel == null) {
-            errorLabel.setText("Debe seleccionar una cita para cancelar.");
-            return;
-        }
-        int idCita = Integer.parseInt(sel.split(":")[0].trim());
-        try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(
-                 "DELETE FROM CitasMedicas WHERE idCita = ?"
-             )) {
-            ps.setInt(1, idCita);
-            ps.executeUpdate();
-            errorLabel.setForeground(Color.BLUE);
-            errorLabel.setText("Cita cancelada correctamente.");
-            cargarCitas();
-        } catch (SQLException ex) {
-            errorLabel.setForeground(Color.RED);
-            errorLabel.setText("Error al cancelar cita.");
-        }
+    private Border getCampoBorde() {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ColoresUDLAP.GRIS_CLARO),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        );
     }
 
-    /** Agrupa varios JComboBox en un JPanel horizontal */
-    private JPanel agrupar(JComponent... comps) {
-        JPanel p = new JPanel();
-        for (Component c : comps) p.add(c);
-        return p;
-    }
-
-    /** Crea un array de Integer de inicio a fin inclusive */
-    private Integer[] crearRango(int inicio, int fin) {
-        int size = fin - inicio + 1;
-        Integer[] arr = new Integer[size];
-        for (int i = 0; i < size; i++) {
-            arr[i] = inicio + i;
+    private Integer[] crearRango(int desde, int hasta) {
+        Integer[] arr = new Integer[hasta - desde + 1];
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = desde + i;
         }
         return arr;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(ModificarCitaFrame::new);
+    private JButton botonTransparente(String texto, Color base, Color hover) {
+        JButton button = new JButton(texto) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isRollover() ? hover : base);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return button;
     }
 }
