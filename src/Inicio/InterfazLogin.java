@@ -106,19 +106,24 @@ public class InterfazLogin extends JFrame {
         main.add(botones);
         main.add(Box.createVerticalGlue());
 
-        // Footer con SOS
-        String sosPath = "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
-                + "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png";
-        ImageIcon sosOrig = new ImageIcon(sosPath);
-        Image sosImg = sosOrig.getImage()
-                .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-        JLabel lblSOS = new JLabel(new ImageIcon(sosImg));
-
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        footer.setBackground(Color.WHITE);
-        footer.setPreferredSize(new Dimension(0, 40));
-        footer.add(lblSOS);
-        add(footer, BorderLayout.SOUTH);
+        /*
+         * Footer con SOS
+         * String sosPath =
+         * "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
+         * +
+         * "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png"
+         * ;
+         * ImageIcon sosOrig = new ImageIcon(sosPath);
+         * Image sosImg = sosOrig.getImage()
+         * .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+         * JLabel lblSOS = new JLabel(new ImageIcon(sosImg));
+         * 
+         * JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+         * footer.setBackground(Color.WHITE);
+         * footer.setPreferredSize(new Dimension(0, 40));
+         * footer.add(lblSOS);
+         * add(footer, BorderLayout.SOUTH);
+         */
 
         // Lógica de login
         btnIniciar.addActionListener(e -> {
@@ -142,18 +147,21 @@ public class InterfazLogin extends JFrame {
 
             try (Connection con = ConexionSQLite.conectar()) {
                 // Médicos
-                String sqlMed = "SELECT 1 FROM InformacionMedico WHERE ID = ? AND Contraseña = ?";
-                try (PreparedStatement ps = con.prepareStatement(sqlMed)) {
-                    ps.setInt(1, id);
-                    ps.setString(2, password);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            new InterfazMedica(true, id).setVisible(true);
-                            dispose();
-                            return;
-                        }
+            String sqlMed = "SELECT Nombre, ApellidoPaterno FROM InformacionMedico WHERE ID = ? AND Contraseña = ?";
+            try (PreparedStatement ps = con.prepareStatement(sqlMed)) {
+                ps.setInt(1, id);
+                ps.setString(2, password);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String nombreCompleto = rs.getString("Nombre") + " " + rs.getString("ApellidoPaterno");
+                        SesionUsuario.iniciarSesionMedico(nombreCompleto); // ← AQUÍ se guarda el nombre del médico
+                        new InterfazMedica(true, id).setVisible(true);
+                        dispose();
+                        return;
                     }
                 }
+            }
+
                 // Pacientes
                 String sqlPac = "SELECT ID FROM InformacionAlumno WHERE ID = ? AND Contraseña = ?";
                 try (PreparedStatement ps = con.prepareStatement(sqlPac)) {
@@ -161,10 +169,12 @@ public class InterfazLogin extends JFrame {
                     ps.setString(2, password);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
+                            SesionUsuario.iniciarSesion(id); // ← NECESARIO
                             new InterfazMedica(false, id).setVisible(true);
                             dispose();
                             return;
                         }
+
                     }
                 }
                 // Falló

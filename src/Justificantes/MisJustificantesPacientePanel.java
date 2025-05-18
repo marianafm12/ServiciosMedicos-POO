@@ -1,51 +1,81 @@
 package Justificantes;
 
+import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
-import Inicio.SesionUsuario;
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-//import Inicio.MenuPacientesFrame;
 
-public class MisJustificantesPacienteFrame extends JFrame {
+public class MisJustificantesPacientePanel extends JPanel {
+
     private JTable tabla;
     private DefaultTableModel modelo;
     private String idPaciente;
+    private final PanelManager panelManager;
 
-    public MisJustificantesPacienteFrame(String idPaciente) {
+    public MisJustificantesPacientePanel(String idPaciente, PanelManager panelManager) {
         this.idPaciente = idPaciente;
+        this.panelManager = panelManager;
 
-        setTitle("Mis Justificantes Médicos");
-        setSize(850, 400);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
+        setBackground(ColoresUDLAP.BLANCO);
 
-        modelo = new DefaultTableModel(new String[] {
+        JLabel titulo = new JLabel("Mis Justificantes Médicos", SwingConstants.CENTER);
+        titulo.setFont(new Font("Arial", Font.BOLD, 24));
+        titulo.setForeground(new Color(0, 102, 0));
+        titulo.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
+        add(titulo, BorderLayout.NORTH);
+
+        modelo = new DefaultTableModel(new String[]{
                 "Folio", "Motivo", "Inicio", "Fin", "Estado", "Médico"
         }, 0);
 
         tabla = new JTable(modelo);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        tabla.setRowHeight(28);
+        tabla.setGridColor(new Color(230, 230, 230));
+        tabla.setFillsViewportHeight(true);
+
+        JTableHeader encabezado = tabla.getTableHeader();
+        encabezado.setBackground(new Color(255, 102, 0));
+        encabezado.setForeground(Color.WHITE);
+        encabezado.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        encabezado.setPreferredSize(new Dimension(100, 40));
+        encabezado.setReorderingAllowed(false);
+
         JScrollPane scroll = new JScrollPane(tabla);
+        scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
         add(scroll, BorderLayout.CENTER);
 
         cargarJustificantes();
 
+        // Botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 10));
+        panelBotones.setBackground(ColoresUDLAP.BLANCO);
+
         JButton btnAbrirPDF = new JButton("Abrir Justificante PDF");
-        btnAbrirPDF.addActionListener(e -> abrirSeleccionado());
-
         JButton btnRegresar = new JButton("Regresar");
-        btnRegresar.addActionListener(e -> {
-            dispose(); // Cierra esta ventana
-            // new MenuPacientesFrame(SesionUsuario.getPacienteActual()).setVisible(true);
-            // // Abre el menú principal del
-            // paciente
-        });
 
-        JPanel panelBotones = new JPanel();
+        btnAbrirPDF.setFont(new Font("Arial", Font.BOLD, 15));
+        btnRegresar.setFont(new Font("Arial", Font.BOLD, 15));
+
+        btnAbrirPDF.setBackground(new Color(0, 102, 0));
+        btnAbrirPDF.setForeground(Color.WHITE);
+        btnAbrirPDF.setFocusPainted(false);
+
+        btnRegresar.setBackground(new Color(221, 71, 66));
+        btnRegresar.setForeground(Color.WHITE);
+        btnRegresar.setFocusPainted(false);
+
+        btnAbrirPDF.addActionListener(e -> abrirSeleccionado());
+        btnRegresar.addActionListener(e -> regresarAMenuJustificantes());
+
         panelBotones.add(btnAbrirPDF);
         panelBotones.add(btnRegresar);
         add(panelBotones, BorderLayout.SOUTH);
@@ -59,7 +89,7 @@ public class MisJustificantesPacienteFrame extends JFrame {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (Justificante j : lista) {
-            modelo.addRow(new Object[] {
+            modelo.addRow(new Object[]{
                     j.getFolio(),
                     j.getMotivo(),
                     j.getFechaInicio().format(fmt),
@@ -99,7 +129,7 @@ public class MisJustificantesPacienteFrame extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        new MisJustificantesPacienteFrame("12345").setVisible(true); // para prueba
+    private void regresarAMenuJustificantes() {
+        panelManager.showPanel("justificantesPaciente");
     }
 }
