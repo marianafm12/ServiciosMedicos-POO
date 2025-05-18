@@ -106,19 +106,24 @@ public class InterfazLogin extends JFrame {
         main.add(botones);
         main.add(Box.createVerticalGlue());
 
-        // Footer con SOS
-        String sosPath = "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
-                + "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png";
-        ImageIcon sosOrig = new ImageIcon(sosPath);
-        Image sosImg = sosOrig.getImage()
-                .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-        JLabel lblSOS = new JLabel(new ImageIcon(sosImg));
-
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        footer.setBackground(Color.WHITE);
-        footer.setPreferredSize(new Dimension(0, 40));
-        footer.add(lblSOS);
-        add(footer, BorderLayout.SOUTH);
+        /*
+         * Footer con SOS
+         * String sosPath =
+         * "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\"
+         * +
+         * "4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png"
+         * ;
+         * ImageIcon sosOrig = new ImageIcon(sosPath);
+         * Image sosImg = sosOrig.getImage()
+         * .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+         * JLabel lblSOS = new JLabel(new ImageIcon(sosImg));
+         * 
+         * JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+         * footer.setBackground(Color.WHITE);
+         * footer.setPreferredSize(new Dimension(0, 40));
+         * footer.add(lblSOS);
+         * add(footer, BorderLayout.SOUTH);
+         */
 
         // Lógica de login
         btnIniciar.addActionListener(e -> {

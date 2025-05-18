@@ -36,18 +36,21 @@ public class BuscarPaciente implements ActionListener {
 
     private void buscarPorID(Connection conn, int id) throws SQLException {
         String sqlInfo = "SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Correo FROM InformacionAlumno WHERE ID = ?";
-        String sqlRegistro = "SELECT Edad FROM RegistroPaciente WHERE ID = ?";
+        String sqlRegistro = "SELECT Edad FROM Registro WHERE ID = ?";
 
-        try (PreparedStatement ps1 = conn.prepareStatement(sqlInfo);
+        try (
+                PreparedStatement ps1 = conn.prepareStatement(sqlInfo);
                 PreparedStatement ps2 = conn.prepareStatement(sqlRegistro)) {
-
             ps1.setInt(1, id);
             ps2.setInt(1, id);
 
             ResultSet rsInfo = ps1.executeQuery();
             ResultSet rsReg = ps2.executeQuery();
 
-            if (rsInfo.next()) {
+            boolean infoEncontrado = rsInfo.next();
+            boolean regEncontrado = rsReg.next();
+
+            if (infoEncontrado) {
                 String nombre = rsInfo.getString("Nombre") + " " +
                         rsInfo.getString("ApellidoPaterno") + " " +
                         rsInfo.getString("ApellidoMaterno");
@@ -55,13 +58,13 @@ public class BuscarPaciente implements ActionListener {
                 campos[3].setText(rsInfo.getString("Correo"));
             }
 
-            if (rsReg.next()) {
+            if (regEncontrado) {
                 campos[2].setText(rsReg.getString("Edad"));
             }
 
-            if (!rsInfo.next() && !rsReg.next()) {
-                JOptionPane.showMessageDialog(null, "Paciente no encontrado", "Búsqueda",
-                        JOptionPane.INFORMATION_MESSAGE);
+            if (!infoEncontrado && !regEncontrado) {
+                JOptionPane.showMessageDialog(null,
+                        "Paciente no encontrado", "Búsqueda", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
@@ -75,9 +78,9 @@ public class BuscarPaciente implements ActionListener {
             return;
         }
 
-        String sql = "SELECT IA.ID, IA.Correo, IA.Nombre, IA.ApellidoPaterno, IA.ApellidoMaterno, RP.Edad " +
+        String sql = "SELECT IA.ID, IA.Correo, IA.Nombre, IA.ApellidoPaterno, IA.ApellidoMaterno, R.Edad " +
                 "FROM InformacionAlumno IA " +
-                "LEFT JOIN RegistroPaciente RP ON IA.ID = RP.ID " +
+                "LEFT JOIN Registro R ON IA.ID = R.ID " +
                 "WHERE IA.Nombre = ? AND IA.ApellidoPaterno = ? AND IA.ApellidoMaterno = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

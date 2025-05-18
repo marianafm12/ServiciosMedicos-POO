@@ -11,6 +11,7 @@ import GestionCitas.AgendaCitaFrame;
 import GestionCitas.ModificarCitaFrame;
 import GestionCitas.NotificacionCitasFrame;
 import GestionEnfermedades.PanelHistorialMedico;
+import GestionEnfermedades.PanelHistorialMedicoEditable;
 import Justificantes.PanelJustificantesProvider;
 import Justificantes.PanelMenuJustificantes;
 import Justificantes.PanelJustificantesPacienteMenu;
@@ -173,11 +174,24 @@ private JPanel crearMenuPanel() {
         panelManager.showPanel(key);
     }
 
+    // Fragmento de InterfazMedica.java con registrarPaneles() actualizado para usar
+    // PanelHistorialMedicoEditable
+
     private void registrarPaneles() {
         if (esMedico) {
             panelManager.registerPanel(new PanelRegistroPaciente());
             panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
-            panelManager.registerPanel(new PanelHistorialMedico(userId));
+
+            // Mostrar historial médico editable con campo ID fijo
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new PanelHistorialMedicoEditable();
+                }
+
+                public String getPanelName() {
+                    return "historialMedico";
+                }
+            });
 
             panelManager.registerPanel(new PanelProvider() {
                 public JPanel getPanel() {
@@ -203,6 +217,7 @@ private JPanel crearMenuPanel() {
 
 
         } else {
+            // Paneles para el paciente (sin cambios)
             panelManager.registerPanel(new PanelHistorialMedico(userId));
 
             panelManager.registerPanel(new PanelProvider() {
