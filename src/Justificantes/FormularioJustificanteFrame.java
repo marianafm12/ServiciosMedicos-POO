@@ -1,9 +1,5 @@
 package Justificantes;
 
-import BaseDeDatos.ConexionSQLite;
-import Utilidades.ColoresUDLAP;
-import Utilidades.PanelProvider;
-
 import Utilidades.ColoresUDLAP;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -19,7 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class FormularioJustificanteFrame extends JPanel {
 
@@ -159,11 +154,10 @@ public class FormularioJustificanteFrame extends JPanel {
         add(panelBotones, gbc);
     }
 
-    private void enviarSolicitud() {
-        String profesor = campoProfesor.getText().trim();
-        String motivo = campoMotivo.getText().trim();
-        String inicio = campoFechaInicio.getText().trim();
-        String fin = campoFechaFin.getText().trim();
+    private void guardarJustificante() {
+        String id = idField.getText().trim();
+        String nombre = nombreField.getText().trim();
+        String motivo = motivoField.getText().trim();
 
         if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
             mensajeLabel.setForeground(Color.RED);
@@ -233,20 +227,18 @@ public class FormularioJustificanteFrame extends JPanel {
         return a;
     }
 
-private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
-    try {
-        int d = Integer.parseInt((String) dia.getSelectedItem());
-        int m = mes.getSelectedIndex() + 1;
-        int y = Integer.parseInt((String) anio.getSelectedItem());
-        return LocalDate.of(y, m, d);
-    } catch (Exception e) {
-        mensajeLabel.setForeground(Color.RED);
-        mensajeLabel.setText("Fecha inválida. Verifique el día, mes y año seleccionados.");
-        return null;
+    private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+        try {
+            int d = Integer.parseInt((String) dia.getSelectedItem());
+            int m = mes.getSelectedIndex() + 1;
+            int y = Integer.parseInt((String) anio.getSelectedItem());
+            return LocalDate.of(y, m, d);
+        } catch (Exception e) {
+            mensajeLabel.setForeground(Color.RED);
+            mensajeLabel.setText("Fecha inválida. Verifique el día, mes y año seleccionados.");
+            return null;
+        }
     }
-}
-
-
 
     private JButton botonTransparente(String texto, Color base, Color hover) {
         JButton button = new JButton(texto) {
