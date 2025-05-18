@@ -1,13 +1,20 @@
 package Justificantes;
 
 import javax.swing.*;
+
+import Utilidades.PanelManager;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class PanelMenuJustificantes extends JPanel {
 
-    public PanelMenuJustificantes() {
+    private final PanelManager panelManager;
+
+    public PanelMenuJustificantes(PanelManager panelManager) {
+        this.panelManager = panelManager;
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(80, 80, 80, 80));
@@ -23,7 +30,10 @@ public class PanelMenuJustificantes extends JPanel {
                 new Color(0, 102, 0, 170)
         );
         btnDesdeSolicitud.setMaximumSize(new Dimension(350, 60));
-        btnDesdeSolicitud.addActionListener(e -> mostrarPanel(new SolicitudesJustificantesFrame()));
+        btnDesdeSolicitud.addActionListener(e -> {
+            new SolicitudesJustificantesFrame(panelManager).setVisible(true);
+
+        });
 
         // Botón para emitir directamente
         JButton btnDesdeConsulta = botonTransparente(
@@ -33,11 +43,8 @@ public class PanelMenuJustificantes extends JPanel {
         );
         btnDesdeConsulta.setMaximumSize(new Dimension(350, 60));
         btnDesdeConsulta.addActionListener(e -> {
-            removeAll();
-            setLayout(new BorderLayout());
-            add(new EmitirJustificanteDesdeConsultaFrame(), BorderLayout.CENTER);
-            revalidate();
-            repaint();
+            EmitirJustificanteDesdeConsultaFrame panel = new EmitirJustificanteDesdeConsultaFrame(panelManager);
+            panelManager.mostrarPanelPersonalizado(panel);
         });
 
         // Agregado al panel
@@ -46,14 +53,6 @@ public class PanelMenuJustificantes extends JPanel {
         add(btnDesdeSolicitud);
         add(Box.createVerticalStrut(30));
         add(btnDesdeConsulta);
-    }
-
-    private void mostrarPanel(JFrame frame) {
-        removeAll();
-        setLayout(new BorderLayout());
-        add(frame.getContentPane(), BorderLayout.CENTER);
-        revalidate();
-        repaint();
     }
 
     private JButton botonTransparente(String texto, Color base, Color hover) {

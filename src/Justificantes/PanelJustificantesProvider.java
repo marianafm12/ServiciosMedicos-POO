@@ -1,22 +1,25 @@
 package Justificantes;
 
 import Utilidades.PanelProvider;
+import Utilidades.PanelManager;
+
 import javax.swing.*;
 
 public class PanelJustificantesProvider implements PanelProvider {
+    private final PanelManager panelManager;
 
-    public PanelJustificantesProvider() {
-        // No es necesario guardar una instancia fija
+    public PanelJustificantesProvider(PanelManager panelManager) {
+        this.panelManager = panelManager;
     }
 
     @Override
     public JPanel getPanel() {
-        // Se genera una nueva instancia en cada llamada
-        return new PanelMenuJustificantes();
+        return new PanelMenuJustificantes(panelManager); // ✅ PASA EL PARAMETRO
     }
 
     @Override
     public String getPanelName() {
-        return "justificantesMedicos";
+        return "menuJustificantes";
     }
 }
+
