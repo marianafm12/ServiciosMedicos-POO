@@ -5,6 +5,8 @@ import Utilidades.PanelManager;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import GestionCitas.ValidacionesCita;
+
 
 import java.awt.*;
 import java.sql.*;
@@ -212,89 +214,82 @@ public class AgendaCitaFrame extends JPanel {
         }
     }
 
-    private void validarYConfirmarCita(int idPaciente) {
-        String servicio = (String) comboServicio.getSelectedItem();
-        int dia = (int) comboDia.getSelectedItem();
-        int mes = comboMes.getSelectedIndex() + 1;
-        int año = (int) comboAño.getSelectedItem();
-        String hora = (String) comboHora.getSelectedItem();
-        String minuto = (String) comboMinuto.getSelectedItem();
+private void validarYConfirmarCita(int idPaciente) {
+    String servicio = (String) comboServicio.getSelectedItem();
+    int dia = (int) comboDia.getSelectedItem();
+    int mes = comboMes.getSelectedIndex() + 1;
+    int año = (int) comboAño.getSelectedItem();
+    String hora = (String) comboHora.getSelectedItem();
+    String minuto = (String) comboMinuto.getSelectedItem();
 
-        if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
-            errorLabel.setText("Fecha inválida (debe ser futura)");
+    // ✅ Validación de fecha usando la clase centralizada
+    if (!ValidacionesCita.esFechaValida(dia, mes, año)) {
+        errorLabel.setText("Fecha inválida (debe ser válida y futura)");
+        return;
+    }
+
+    String fecha = String.format("%04d-%02d-%02d", año, mes, dia);
+    String horaFinal = hora + ":" + minuto;
+
+    try (Connection conn = ConexionSQLite.conectar()) {
+
+        if (ValidacionesCita.estaCitaOcupada(fecha, horaFinal, servicio)) {
+            Object[] opciones = { "Sí", "No" };
+            int opcion = JOptionPane.showOptionDialog(
+                    this,
+                    "La cita ya está ocupada. ¿Deseas unirte a la lista de espera?",
+                    "Horario ocupado",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opciones,
+                    opciones[0] // opción por defecto
+            );
+
+            if (opcion == JOptionPane.YES_OPTION) {
+                new javax.swing.SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        try {
+                            ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, hora, servicio);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                }.execute();
+
+                errorLabel.setForeground(Color.ORANGE);
+                errorLabel.setText("Registrado en lista de espera.");
+            }
             return;
         }
 
-        String fecha = String.format("%04d-%02d-%02d", año, mes, dia);
-        String horaFinal = hora + ":" + minuto;
-
-        try (Connection conn = ConexionSQLite.conectar()) {
-            String sqlO = "SELECT COUNT(*) FROM CitasMedicas WHERE fecha=? AND hora=? AND servicio=?";
-            try (PreparedStatement ps = conn.prepareStatement(sqlO)) {
-                ps.setString(1, fecha);
-                ps.setString(2, horaFinal);
-                ps.setString(3, servicio);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        int opcion = JOptionPane.showConfirmDialog(
-                                this,
-                                "La cita ya está ocupada. ¿Deseas unirte a la lista de espera?",
-                                "Horario ocupado",
-                                JOptionPane.YES_NO_OPTION);
-                        if (opcion == JOptionPane.YES_OPTION) {
-                            new javax.swing.SwingWorker<Void, Void>() {
-                                @Override
-                                protected Void doInBackground() {
-                                    try {
-                                        ListaEsperaDAO.registrarEnEspera(String.valueOf(idPaciente), fecha, hora,
-                                                servicio);
-                                    } catch (SQLException e) {
-                                        e.printStackTrace(); // o muestra error en pantalla si lo deseas
-                                    }
-                                    return null;
-                                }
-                            }.execute();
-
-                            errorLabel.setForeground(Color.ORANGE);
-                            errorLabel.setText("Registrado en lista de espera.");
-                        }
-
-                        return;
-                    }
-                }
-            }
-
-            // Verifica duplicado
-            String sqlD = "SELECT COUNT(*) FROM CitasMedicas WHERE idPaciente=? AND servicio=?";
-            try (PreparedStatement psD = conn.prepareStatement(sqlD)) {
-                psD.setInt(1, idPaciente);
-                psD.setString(2, servicio);
-                try (ResultSet rs = psD.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        errorLabel.setText("Ya tienes una cita para este servicio.");
-                        return;
-                    }
-                }
-            }
-
-            // Insertar nueva cita
-            String sqlI = "INSERT INTO CitasMedicas(idPaciente,fecha,hora,servicio) VALUES(?,?,?,?)";
-            try (PreparedStatement psI = conn.prepareStatement(sqlI)) {
-                psI.setInt(1, idPaciente);
-                psI.setString(2, fecha);
-                psI.setString(3, horaFinal);
-                psI.setString(4, servicio);
-                psI.executeUpdate();
-                errorLabel.setForeground(new Color(0, 100, 0));
-                errorLabel.setText("Cita agendada exitosamente.");
-            }
-
-        } catch (SQLException ex) {
-            errorLabel.setForeground(Color.RED);
-            errorLabel.setText("Error al registrar cita.");
-            ex.printStackTrace();
+        // ✅ Validación: ya tiene cita para ese servicio
+        if (ValidacionesCita.pacienteYaTieneCitaParaServicio(idPaciente, servicio)) {
+            errorLabel.setText("Ya tienes una cita para este servicio.");
+            return;
         }
+
+        // 👇 Inserción original sin cambios
+        String sqlI = "INSERT INTO CitasMedicas(idPaciente,fecha,hora,servicio) VALUES(?,?,?,?)";
+        try (PreparedStatement psI = conn.prepareStatement(sqlI)) {
+            psI.setInt(1, idPaciente);
+            psI.setString(2, fecha);
+            psI.setString(3, horaFinal);
+            psI.setString(4, servicio);
+            psI.executeUpdate();
+            errorLabel.setForeground(new Color(0, 100, 0));
+            errorLabel.setText("Cita agendada exitosamente.");
+        }
+
+    } catch (SQLException ex) {
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setText("Error al registrar cita.");
+        ex.printStackTrace();
     }
+}
+
 
     private JButton botonTransparente(String texto, Color base, Color hover) {
         JButton button = new JButton(texto) {
