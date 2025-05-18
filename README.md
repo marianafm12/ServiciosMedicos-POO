@@ -4,7 +4,8 @@ Proyecto final de la materia Programación Orientada a Objetos en el cual se cre
 
 # Estructura del Proyecto
   De dividó el proyecto en diferentes áreas, la cual se le asignó a cada uno de los integrantes del equipo.
-      | **Package | Descripción | Integrante** | 
+  
+      | Package | Descripción | Integrante | 
       | ---- | -------- | --- | 
       | BaseDeDatos | Se incluyen los archivos de la base de datos como la conexión con SQLite y la clase con la que al ingresar el ID de un alumno automáticamnete se buscan sus otros datos | Mariana | 
       | Consultas | Códigos del área de consultas destinado a cunado el médico se encuentra en consulta y se hace un registro de los síntomas, diagnósitco e infomación importante de la consulta | - | 
