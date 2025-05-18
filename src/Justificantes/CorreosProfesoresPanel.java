@@ -135,7 +135,7 @@ public class CorreosProfesoresPanel extends JPanel {
         String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?, ?)";
 
         try (Connection c = ConexionSQLite.conectar();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+                PreparedStatement ps = c.prepareStatement(sql)) {
 
             for (String correo : correos) {
                 ps.setInt(1, folio);
