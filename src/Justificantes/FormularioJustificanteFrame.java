@@ -1,5 +1,9 @@
 package Justificantes;
 
+import BaseDeDatos.ConexionSQLite;
+import Utilidades.ColoresUDLAP;
+import Utilidades.PanelProvider;
+
 import Utilidades.ColoresUDLAP;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -15,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class FormularioJustificanteFrame extends JPanel {
 
@@ -154,10 +159,11 @@ public class FormularioJustificanteFrame extends JPanel {
         add(panelBotones, gbc);
     }
 
-    private void guardarJustificante() {
-        String id = idField.getText().trim();
-        String nombre = nombreField.getText().trim();
-        String motivo = motivoField.getText().trim();
+    private void enviarSolicitud() {
+        String profesor = campoProfesor.getText().trim();
+        String motivo = campoMotivo.getText().trim();
+        String inicio = campoFechaInicio.getText().trim();
+        String fin = campoFechaFin.getText().trim();
 
         if (id.isEmpty() || nombre.isEmpty() || motivo.isEmpty()) {
             mensajeLabel.setForeground(Color.RED);
@@ -207,7 +213,8 @@ public class FormularioJustificanteFrame extends JPanel {
 
     private String[] generarDias() {
         String[] d = new String[31];
-        for (int i = 1; i <= 31; i++) d[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            d[i - 1] = String.valueOf(i);
         return d;
     }
 
@@ -221,7 +228,8 @@ public class FormularioJustificanteFrame extends JPanel {
     private String[] generarAnios() {
         int base = LocalDate.now().getYear();
         String[] a = new String[6];
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 
@@ -274,8 +282,8 @@ private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, J
         idField.setEditable(false);
 
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
 
             ps.setInt(1, idActual);
             ResultSet rs = ps.executeQuery();
@@ -300,7 +308,7 @@ private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, J
 
     private int obtenerUltimoFolioInsertado() {
         try (Connection conn = ConexionSQLite.conectar();
-             PreparedStatement pst = conn.prepareStatement("SELECT MAX(folio) FROM JustificantePaciente")) {
+                PreparedStatement pst = conn.prepareStatement("SELECT MAX(folio) FROM JustificantePaciente")) {
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
