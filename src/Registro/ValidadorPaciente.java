@@ -43,4 +43,14 @@ public class ValidadorPaciente {
     public static boolean esAlfanumerico(String texto) {
         return texto.matches("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s.,;:!¿?()\\-]*");
     }
+
+    public static boolean estanTodosLlenos(String... campos) {
+        for (String campo : campos) {
+            if (campo == null || campo.trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

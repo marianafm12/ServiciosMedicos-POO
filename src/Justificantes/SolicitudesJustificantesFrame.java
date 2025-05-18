@@ -3,6 +3,7 @@ package Justificantes;
 import java.awt.event.ActionListener;
 import BaseDeDatos.ConexionSQLite;
 import Utilidades.ColoresUDLAP;
+import Utilidades.PanelManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -15,8 +16,11 @@ public class SolicitudesJustificantesFrame extends JFrame {
     private JTable tabla;
     private DefaultTableModel modelo;
     private JPanel panelCentro;
+    private final PanelManager panelManager;
 
-    public SolicitudesJustificantesFrame() {
+    public SolicitudesJustificantesFrame(PanelManager panelManager) {
+        this.panelManager = panelManager;
+
         setTitle("Solicitudes de Justificantes");
         setSize(950, 600);
         setLocationRelativeTo(null);
@@ -42,9 +46,11 @@ public class SolicitudesJustificantesFrame extends JFrame {
 
         JButton btnVer = new JButton("Ver Seleccionado");
         JButton btnEliminar = new JButton("Eliminar");
+        JButton btnRegresar = new JButton("Regresar");
 
         btnVer.setFont(new Font("Arial", Font.BOLD, 15));
         btnEliminar.setFont(new Font("Arial", Font.BOLD, 15));
+        btnRegresar.setFont(new Font("Arial", Font.BOLD, 15));
 
         btnVer.setBackground(new Color(0, 102, 0));
         btnVer.setForeground(Color.WHITE);
@@ -54,9 +60,18 @@ public class SolicitudesJustificantesFrame extends JFrame {
         btnEliminar.setForeground(Color.WHITE);
         btnEliminar.setFocusPainted(false);
 
+        btnRegresar.setBackground(Color.GRAY);
+        btnRegresar.setForeground(Color.WHITE);
+        btnRegresar.setFocusPainted(false);
+
         btnVer.addActionListener(e -> verSeleccionado());
         btnEliminar.addActionListener(e -> eliminarSeleccionado());
+        btnRegresar.addActionListener(e -> {
+            panelManager.showPanel("menuJustificantes");
+            dispose();
+        });
 
+        panelBotones.add(btnRegresar);
         panelBotones.add(btnVer);
         panelBotones.add(btnEliminar);
         add(panelBotones, BorderLayout.SOUTH);
@@ -92,11 +107,18 @@ public class SolicitudesJustificantesFrame extends JFrame {
                 "Folio", "ID Paciente", "Nombre", "Motivo", "Fecha Inicio", "Fecha Fin", "Estado"
         });
 
-        String sql = "SELECT folio, idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, estado FROM JustificantePaciente";
+ String sql = "SELECT folio, idPaciente, nombrePaciente, motivo, fechaInicio, fechaFin, estado " +
+             "FROM JustificantePaciente " +
+             "ORDER BY CASE estado " +
+             "  WHEN 'Pendiente' THEN 1 " +
+             "  WHEN 'Aprobado' THEN 2 " +
+             "  WHEN 'Rechazado' THEN 3 " +
+             "  ELSE 4 END";
+
 
         try (Connection con = ConexionSQLite.conectar();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 int folio = rs.getInt("folio");
@@ -141,7 +163,8 @@ public class SolicitudesJustificantesFrame extends JFrame {
 
         panelCentro.removeAll();
         panelCentro.setLayout(new BorderLayout());
-        panelCentro.add(new RevisarSolicitudFrame(folio, volverAction), BorderLayout.CENTER);
+        panelCentro.add(new RevisarSolicitudFrame(folio, volverAction, panelManager), BorderLayout.CENTER);
+
         panelCentro.revalidate();
         panelCentro.repaint();
     }
@@ -173,7 +196,7 @@ public class SolicitudesJustificantesFrame extends JFrame {
         String sql = "DELETE FROM JustificantePaciente WHERE folio = ?";
 
         try (Connection con = ConexionSQLite.conectar();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, folio);
             int eliminado = ps.executeUpdate();
@@ -194,6 +217,7 @@ public class SolicitudesJustificantesFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new SolicitudesJustificantesFrame().setVisible(true));
+        // Si deseas probarlo desde aquí, puedes inicializar con null
+        SwingUtilities.invokeLater(() -> new SolicitudesJustificantesFrame(null).setVisible(true));
     }
 }
