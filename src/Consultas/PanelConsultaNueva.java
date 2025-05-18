@@ -7,6 +7,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class PanelConsultaNueva extends FormularioMedicoBase implements PanelProvider {
 
@@ -42,24 +46,50 @@ public class PanelConsultaNueva extends FormularioMedicoBase implements PanelPro
         botones.add(btnLimpiar);
         add(botones, BorderLayout.SOUTH);
 
-        // Conexion lógica
+        // Referencias reales
         JTextField[] camposConsulta = getCamposTexto(0, 1, 2, 3, 7, 8, 9);
-        JTextField sintomas = new JTextField(((JTextArea) campos[4]).getText());
-        JTextField medicamentos = new JTextField(((JTextArea) campos[5]).getText());
-        JTextField diagnostico = new JTextField(((JTextArea) campos[6]).getText());
-        JTextArea receta = getAreaTexto(10);
+        JTextArea sintomas = (JTextArea) campos[4];
+        JTextArea medicamentos = (JTextArea) campos[5];
+        JTextArea diagnostico = (JTextArea) campos[6];
+        JTextArea receta = (JTextArea) campos[10];
 
-        JTextField[] consultaFinal = new JTextField[] {
-                camposConsulta[0], camposConsulta[1], camposConsulta[2], camposConsulta[3],
-                sintomas, medicamentos, diagnostico,
-                camposConsulta[4], camposConsulta[5], camposConsulta[6]
-        };
+        // Listener: ID Paciente (autollenado)
+        camposConsulta[0].addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                String id = camposConsulta[0].getText().trim();
+                if (!id.matches("\\d+"))
+                    return;
 
-        btnGuardar.addActionListener(new GuardarConsulta(consultaFinal, receta));
+                try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+                    String query = "SELECT Nombre, Correo, Edad FROM InformacionAlumno JOIN Registro USING(ID) WHERE ID = ?";
+                    PreparedStatement ps = conn.prepareStatement(query);
+                    ps.setInt(1, Integer.parseInt(id));
+                    ResultSet rs = ps.executeQuery();
+
+                    if (rs.next()) {
+                        camposConsulta[1].setText(rs.getString("Nombre"));
+                        camposConsulta[2].setText(rs.getString("Edad"));
+                        camposConsulta[3].setText(rs.getString("Correo"));
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No se encontró un paciente con ese ID.",
+                                "Paciente no encontrado", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, "Error al buscar paciente:\n" + ex.getMessage(),
+                            "Error de BD", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Acciones de botones
+        btnGuardar.addActionListener(new GuardarConsulta(camposConsulta, receta));
+
         btnBuscar.addActionListener(new BuscarPaciente(new JTextField[] {
                 (JTextField) campos[0], (JTextField) campos[1],
                 (JTextField) campos[2], (JTextField) campos[3]
         }));
+
         btnLimpiar.addActionListener(e -> limpiarCampos());
     }
 
@@ -82,11 +112,10 @@ public class PanelConsultaNueva extends FormularioMedicoBase implements PanelPro
         boton.setBackground(color);
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
-        boton.setBorderPainted(false); // ✅ Quita borde negro
+        boton.setBorderPainted(false);
         boton.setContentAreaFilled(true);
         boton.setOpaque(true);
         boton.setPreferredSize(size);
         boton.setFont(new Font("Arial", Font.BOLD, 14));
     }
-
 }
