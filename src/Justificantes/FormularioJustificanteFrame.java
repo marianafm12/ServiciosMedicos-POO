@@ -191,7 +191,9 @@ public class FormularioJustificanteFrame extends JPanel {
             int folioNuevo = obtenerUltimoFolioInsertado();
 
             if (folioNuevo > 0) {
-                panelManager.showPanel("agregarCorreos");
+                CorreosProfesoresPanel panelCorreos = new CorreosProfesoresPanel(folioNuevo, panelManager);
+                panelManager.mostrarPanelPersonalizado(panelCorreos);
+
             } else {
                 mensajeLabel.setForeground(Color.RED);
                 mensajeLabel.setText("No se pudo obtener el folio para agregar correos.");
@@ -223,12 +225,20 @@ public class FormularioJustificanteFrame extends JPanel {
         return a;
     }
 
-    private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+    try {
         int d = Integer.parseInt((String) dia.getSelectedItem());
         int m = mes.getSelectedIndex() + 1;
         int y = Integer.parseInt((String) anio.getSelectedItem());
         return LocalDate.of(y, m, d);
+    } catch (Exception e) {
+        mensajeLabel.setForeground(Color.RED);
+        mensajeLabel.setText("Fecha inválida. Verifique el día, mes y año seleccionados.");
+        return null;
     }
+}
+
+
 
     private JButton botonTransparente(String texto, Color base, Color hover) {
         JButton button = new JButton(texto) {

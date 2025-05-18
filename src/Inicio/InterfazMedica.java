@@ -13,6 +13,7 @@ import GestionCitas.NotificacionCitasFrame;
 import GestionEnfermedades.PanelHistorialMedico;
 import Justificantes.PanelJustificantesProvider;
 import Justificantes.PanelMenuJustificantes;
+import Justificantes.PanelJustificantesPacienteMenu;
 import Registro.PanelRegistroPaciente;
 
 import javax.swing.*;
@@ -117,7 +118,7 @@ public class InterfazMedica extends JFrame {
         panelManager.showPanel("panel0");
     }
 
-    private JPanel crearMenuPanel() {
+private JPanel crearMenuPanel() {
         JPanel menu = new JPanel();
         menu.setBackground(ColoresUDLAP.BLANCO);
         menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
@@ -131,13 +132,31 @@ public class InterfazMedica extends JFrame {
         Font btnFont = new Font("Arial", Font.BOLD, 20);
 
         for (int i = 0; i < items.length; i++) {
-            String texto = "<html><div style='text-align:center;'>" + items[i].replace("\n", "<br>") + "</div></html>";
-            Color base = (i % 2 == 0) ? ColoresUDLAP.VERDE : ColoresUDLAP.NARANJA;
-            Color hover = (i % 2 == 0) ? ColoresUDLAP.VERDE_HOVER : ColoresUDLAP.NARANJA_HOVER;
-            JButton boton = botonTransparente(texto, base, hover, btnFont);
+            String textoHtml = "<html><div style='text-align:center;'>"
+                    + items[i].replace("\n", "<br>")
+                    + "</div></html>";
+
+            // Determinamos color base y hover
+            Color baseColor;
+            Color hoverColor;
+
+            // Si es la opción de reportar emergencia (usuarios)
+            if (!esMedico && "Reportar Emergencia".equals(items[i])) {
+                baseColor = ColoresUDLAP.ROJO;
+                hoverColor = ColoresUDLAP.ROJO_HOVER;
+            }
+
+            else {
+                boolean par = (i % 2 == 0);
+                baseColor = par ? ColoresUDLAP.VERDE : ColoresUDLAP.NARANJA;
+                hoverColor = par ? ColoresUDLAP.VERDE_HOVER : ColoresUDLAP.NARANJA_HOVER;
+            }
+
+            JButton boton = botonTransparente(textoHtml, baseColor, hoverColor, btnFont);
             int idx = i;
             boton.addActionListener(e -> manejarClick(idx));
             boton.setMaximumSize(new Dimension(260, 80));
+
             menu.add(boton);
             menu.add(Box.createVerticalStrut(10));
         }
@@ -162,28 +181,26 @@ public class InterfazMedica extends JFrame {
 
             panelManager.registerPanel(new PanelProvider() {
                 public JPanel getPanel() {
-                    return new PanelMenuJustificantes();
+                    return new PanelMenuJustificantes(panelManager); // ✅ se pasa el PanelManager
                 }
-
                 public String getPanelName() {
                     return "justificantes";
                 }
             });
 
+
             panelManager.registerPanel(new PanelLlamadaEmergencia(esMedico, userId));
 
-            panelManager.registerPanel(new PanelProvider() {
-                public JPanel getPanel() {
-                    JPanel panel = new JPanel();
-                    panel.setBackground(Color.WHITE);
-                    panel.add(new JLabel("Formulario de Accidente (pendiente)"));
-                    return panel;
-                }
+           panelManager.registerPanel(new PanelProvider() {
+    public JPanel getPanel() {
+        return new Emergencias.FormularioAccidenteCompleto();  // Usa tu nueva clase aquí
+    }
 
-                public String getPanelName() {
-                    return "reporteAccidente";
-                }
-            });
+    public String getPanelName() {
+        return "reporteAccidente";
+    }
+});
+
 
         } else {
             panelManager.registerPanel(new PanelHistorialMedico(userId));
@@ -198,11 +215,16 @@ public class InterfazMedica extends JFrame {
                 }
             });
 
-            panelManager.registerPanel(new PanelJustificantesProvider() {
-                public String getPanelName() {
-                    return "justificantesPaciente";
-                }
-            });
+            panelManager.registerPanel(new PanelProvider() {
+            public JPanel getPanel() {
+                return new PanelJustificantesPacienteMenu(panelManager);
+            }
+
+            public String getPanelName() {
+                return "justificantesPaciente";
+            }
+        });
+
 
             panelManager.registerPanel(new PanelReportarEmergencia());
 

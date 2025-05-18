@@ -4,6 +4,9 @@ import Utilidades.ColoresUDLAP;
 import Utilidades.PanelManager;
 
 import javax.swing.*;
+
+import Inicio.SesionUsuario;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -20,7 +23,8 @@ public class RevisarSolicitudFrame extends JPanel {
     private File archivoReceta;
     private final int folio;
     private final Justificante justificante;
-    private final String medicoFirmante = "Dra. Laura Gómez";
+    private final String medicoFirmante = SesionUsuario.getMedicoActual();
+
     private final PanelManager panelManager;
 
     public RevisarSolicitudFrame(int folio, ActionListener volverAction, PanelManager panelManager) {
@@ -154,35 +158,87 @@ public class RevisarSolicitudFrame extends JPanel {
         add(filaBotones2, gbc);
 
         // Acción: Aprobar
-        btnAprobar.addActionListener(e -> {
-            LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
-            LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
-            if (inicio.isAfter(fin)) {
-                JOptionPane.showMessageDialog(this, "Fecha de inicio posterior a la de fin.");
-                return;
-            }
+btnAprobar.addActionListener(e -> {
+LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
+LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
 
-            String motivo = motivoField.getText();
-            String diag = diagnosticoArea.getText();
-            boolean ok = JustificanteDAO.aprobarJustificante(folio, motivo, diag, medicoFirmante, inicio, fin);
-            if (ok) {
-                JOptionPane.showMessageDialog(this, "Justificante aprobado.");
-                panelManager.mostrarPanelPersonalizado(new CorreosProfesoresPanel(folio, panelManager));
-                volverAction.actionPerformed(null);
-            }
-        });
+if (inicio == null || fin == null) {
+    return; // ya se mostró el mensaje de error en construirFecha
+}
 
-        // Acción: Rechazar
-        btnRechazar.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "¿Seguro que deseas rechazar esta solicitud?", "Confirmar rechazo", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                if (JustificanteDAO.rechazarJustificante(folio, medicoFirmante)) {
-                    JOptionPane.showMessageDialog(this, "Justificante rechazado.");
-                    volverAction.actionPerformed(null);
+if (inicio.isAfter(fin)) {
+    JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la fecha de fin.",
+            "Error de Fecha", JOptionPane.ERROR_MESSAGE);
+    return;
+}
+
+
+    String motivo = motivoField.getText().trim();
+    String diag = diagnosticoArea.getText().trim();
+
+    boolean ok = JustificanteDAO.aprobarJustificante(folio, motivo, diag, medicoFirmante, inicio, fin);
+    if (ok) {
+        JOptionPane.showMessageDialog(this, "Justificante aprobado.");
+
+        // REFRESCAR el objeto actualizado
+        Justificante justiActualizado = JustificanteDAO.obtenerPorFolio(folio).orElse(null);
+
+        if (justiActualizado != null) {
+            File pdf = GeneradorPDFJustificante.generar(justiActualizado);
+            if (pdf != null && pdf.exists()) {
+                try {
+                    Desktop.getDesktop().open(pdf);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Error al abrir el PDF.");
                 }
             }
-        });
+        }
+
+        // Deshabilitar botones y campos
+        motivoField.setEditable(false);
+        diagnosticoArea.setEditable(false);
+        diaInicio.setEnabled(false);
+        mesInicio.setEnabled(false);
+        anioInicio.setEnabled(false);
+        diaFin.setEnabled(false);
+        mesFin.setEnabled(false);
+        anioFin.setEnabled(false);
+        btnAprobar.setEnabled(false);
+        btnRechazar.setEnabled(false);
+        limpiarBtn.setEnabled(false);
+
+        volverAction.actionPerformed(null);
+        
+    }
+});
+
+
+        // Acción: Rechazar
+btnRechazar.addActionListener(e -> {
+    int confirm = JOptionPane.showConfirmDialog(this,
+            "¿Seguro que deseas rechazar esta solicitud?", "Confirmar rechazo", JOptionPane.YES_NO_OPTION);
+    if (confirm == JOptionPane.YES_OPTION) {
+        if (JustificanteDAO.rechazarJustificante(folio, medicoFirmante)) {
+            JOptionPane.showMessageDialog(this, "Justificante rechazado.");
+
+            // Deshabilitar UI
+            motivoField.setEditable(false);
+            diagnosticoArea.setEditable(false);
+            diaInicio.setEnabled(false);
+            mesInicio.setEnabled(false);
+            anioInicio.setEnabled(false);
+            diaFin.setEnabled(false);
+            mesFin.setEnabled(false);
+            anioFin.setEnabled(false);
+            btnAprobar.setEnabled(false);
+            btnRechazar.setEnabled(false);
+            limpiarBtn.setEnabled(false);
+
+            volverAction.actionPerformed(null);
+        }
+    }
+});
+
 
         limpiarBtn.addActionListener(e -> {
             diagnosticoArea.setText("");
@@ -281,10 +337,17 @@ public class RevisarSolicitudFrame extends JPanel {
         return a;
     }
 
-    private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+    try {
         int d = Integer.parseInt((String) dia.getSelectedItem());
         int m = mes.getSelectedIndex() + 1;
         int y = Integer.parseInt((String) anio.getSelectedItem());
         return LocalDate.of(y, m, d);
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Fecha inválida. Verifique el día, mes y año ingresados.",
+                "Error de Fecha", JOptionPane.ERROR_MESSAGE);
+        return null;
     }
+}
+
 }

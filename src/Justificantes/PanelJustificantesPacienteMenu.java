@@ -28,26 +28,21 @@ public class PanelJustificantesPacienteMenu extends JPanel {
         JButton btnSolicitar = crearBoton("Solicitar Justificante", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
         JButton btnVerJustificantes = crearBoton("Mis Justificantes", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
 
-        btnSolicitar.addActionListener(e -> {
-            removeAll();
-            setLayout(new BorderLayout());
+btnSolicitar.addActionListener(e -> {
+    FormularioJustificanteFrame panel = new FormularioJustificanteFrame(panelManager);
+    panel.setValoresDesdeSesion();
+    panelManager.mostrarPanelPersonalizado(panel);
+});
 
-            FormularioJustificanteFrame panel = new FormularioJustificanteFrame(panelManager);
-            panel.setValoresDesdeSesion();
 
-            add(panel, BorderLayout.CENTER);
-            revalidate();
-            repaint();
-        });
+btnVerJustificantes.addActionListener(e -> {
+    MisJustificantesPacientePanel panel = new MisJustificantesPacientePanel(
+            String.valueOf(SesionUsuario.getPacienteActual()),
+            panelManager
+    );
+    panelManager.mostrarPanelPersonalizado(panel);
+});
 
-        btnVerJustificantes.addActionListener(e -> {
-            removeAll();
-            setLayout(new BorderLayout());
-            add(new MisJustificantesPacientePanel(String.valueOf(SesionUsuario.getPacienteActual()), panelManager), BorderLayout.CENTER);
-
-            revalidate();
-            repaint();
-        });
 
         btnSolicitar.setMaximumSize(new Dimension(300, 50));
         btnVerJustificantes.setMaximumSize(new Dimension(300, 50));

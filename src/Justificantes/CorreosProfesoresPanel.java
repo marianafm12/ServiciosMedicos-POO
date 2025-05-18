@@ -8,6 +8,9 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import BaseDeDatos.ConexionSQLite;
 
 public class CorreosProfesoresPanel extends JPanel {
@@ -83,7 +86,9 @@ public class CorreosProfesoresPanel extends JPanel {
         menuBtn.addActionListener(e -> panelManager.showPanel("justificantesPaciente"));
 
         backBtn.addActionListener(e -> {
-            panelManager.showPanel("justificantesPaciente"); // o regresar a un formulario si tienes uno específico
+            FormularioJustificanteFrame formulario = new FormularioJustificanteFrame(panelManager);
+            formulario.setValoresDesdeSesion();
+            panelManager.mostrarPanelPersonalizado(formulario);
         });
     }
 
@@ -101,21 +106,46 @@ public class CorreosProfesoresPanel extends JPanel {
     }
 
     private boolean guardarCorreos() {
-        String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?, ?)";
-        try (Connection c = ConexionSQLite.conectar();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            for (Component comp : correosPanel.getComponents()) {
-                if (comp instanceof JTextField) {
-                    String mail = ((JTextField) comp).getText().trim();
-                    if (!mail.isEmpty()) {
-                        ps.setInt(1, folio);
-                        ps.setString(2, mail);
-                        ps.addBatch();
+        List<String> correos = new ArrayList<>();
+
+        for (Component comp : correosPanel.getComponents()) {
+            if (comp instanceof JTextField tf) {
+                String email = tf.getText().trim();
+                if (!email.isEmpty()) {
+                    if (!email.endsWith("@udlap.mx")) {
+                        JOptionPane.showMessageDialog(this,
+                                "El correo \"" + email + "\" no es válido. Solo se permiten correos @udlap.mx.",
+                                "Correo inválido",
+                                JOptionPane.WARNING_MESSAGE);
+                        return false;
                     }
+                    correos.add(email);
                 }
             }
+        }
+
+        if (correos.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Debes ingresar al menos un correo válido.",
+                    "Campo vacío",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        String sql = "INSERT INTO JustificanteProfesores(folio, correo) VALUES (?, ?)";
+
+        try (Connection c = ConexionSQLite.conectar();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            for (String correo : correos) {
+                ps.setInt(1, folio);
+                ps.setString(2, correo);
+                ps.addBatch();
+            }
+
             ps.executeBatch();
             return true;
+
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error al guardar correos.", "Error", JOptionPane.ERROR_MESSAGE);

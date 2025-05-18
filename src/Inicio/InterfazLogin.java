@@ -142,18 +142,21 @@ public class InterfazLogin extends JFrame {
 
             try (Connection con = ConexionSQLite.conectar()) {
                 // Médicos
-                String sqlMed = "SELECT 1 FROM InformacionMedico WHERE ID = ? AND Contraseña = ?";
-                try (PreparedStatement ps = con.prepareStatement(sqlMed)) {
-                    ps.setInt(1, id);
-                    ps.setString(2, password);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            new InterfazMedica(true, id).setVisible(true);
-                            dispose();
-                            return;
-                        }
+            String sqlMed = "SELECT Nombre, ApellidoPaterno FROM InformacionMedico WHERE ID = ? AND Contraseña = ?";
+            try (PreparedStatement ps = con.prepareStatement(sqlMed)) {
+                ps.setInt(1, id);
+                ps.setString(2, password);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String nombreCompleto = rs.getString("Nombre") + " " + rs.getString("ApellidoPaterno");
+                        SesionUsuario.iniciarSesionMedico(nombreCompleto); // ← AQUÍ se guarda el nombre del médico
+                        new InterfazMedica(true, id).setVisible(true);
+                        dispose();
+                        return;
                     }
                 }
+            }
+
                 // Pacientes
                 String sqlPac = "SELECT ID FROM InformacionAlumno WHERE ID = ? AND Contraseña = ?";
                 try (PreparedStatement ps = con.prepareStatement(sqlPac)) {
