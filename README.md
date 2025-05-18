@@ -6,9 +6,9 @@ Proyecto final de la materia Programación Orientada a Objetos en el cual se cre
   De dividó el proyecto en diferentes áreas, la cual se le asignó a cada uno de los integrantes del equipo.
   
       | Package | Descripción | Integrante | 
-      | ---- | -------- | --- | 
+      | ---------- | ------------- | ----------- | 
       | BaseDeDatos | Se incluyen los archivos de la base de datos como la conexión con SQLite y la clase con la que al ingresar el ID de un alumno automáticamnete se buscan sus otros datos | Mariana | 
-      | Consultas | Códigos del área de consultas destinado a cunado el médico se encuentra en consulta y se hace un registro de los síntomas, diagnósitco e infomación importante de la consulta | - | 
+      | Consultas | Códigos del área de consultas destinado a cunado el médico se encuentra en consulta y se hace un registro de los síntomas, diagnósitco e infomación importante de la consulta |  | 
       | Emergencias | Área destinada a las emergencias, tanto botón de pánico, registro de una llamada de mergencia y llenar el reporte de un accidente | Mariana
       | GestiónCitas | Área que se ejecuta desde el punto de vista del paciente en el que puede agendar una cita para diferentes usos como Consulta, Examen médico y Enfermería; estas sitas se pueden modificar o cancelar y si hay una fecha que ya está ocupada se puede agregar a una lista de espera y te notifica cuando ya está libre la fecha deseada | Arlette | 
       | GestionEnfermedades | äre en la que permite a un médico acceder al historial médico de un paciente en específico y desde el punto de vista del paciente le permite acceder a su propio hitoiral médico siendo visible la información del registro y las consultas que ha tenido | Robbie | 
