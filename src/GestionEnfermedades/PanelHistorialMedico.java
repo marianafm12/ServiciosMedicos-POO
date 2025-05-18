@@ -32,14 +32,39 @@ public class PanelHistorialMedico extends JPanel implements PanelProvider {
         JPanel panelInfo = obtenerDatosGenerales();
         if (panelInfo != null) {
             contenedorPrincipal.add(panelInfo);
+        } else {
+            JLabel notFound = new JLabel("No se encontró información del paciente con ID: " + idPaciente,
+                    SwingConstants.CENTER);
+            notFound.setFont(new Font("Arial", Font.BOLD, 16));
+            notFound.setForeground(Color.RED);
+            contenedorPrincipal.add(notFound);
         }
 
         contenedorPrincipal.add(Box.createVerticalStrut(15));
 
         // Historial de consultas
+        // Limpiar antes de volver a cargar historial
+        contenedorPrincipal.removeAll();
+        contenedorPrincipal.revalidate();
+        contenedorPrincipal.repaint();
+
         for (HistorialMedicoItem item : obtenerHistorialConsultas()) {
             contenedorPrincipal.add(item);
             contenedorPrincipal.add(Box.createVerticalStrut(10));
+        }
+
+        java.util.List<HistorialMedicoItem> historial = obtenerHistorialConsultas();
+        if (historial.isEmpty()) {
+            JLabel sinConsultas = new JLabel("Este paciente no tiene historial médico registrado.",
+                    SwingConstants.CENTER);
+            sinConsultas.setFont(new Font("Arial", Font.PLAIN, 16));
+            sinConsultas.setForeground(Color.GRAY);
+            contenedorPrincipal.add(sinConsultas);
+        } else {
+            for (HistorialMedicoItem item : historial) {
+                contenedorPrincipal.add(item);
+                contenedorPrincipal.add(Box.createVerticalStrut(10));
+            }
         }
 
         JScrollPane scroll = new JScrollPane(contenedorPrincipal);
