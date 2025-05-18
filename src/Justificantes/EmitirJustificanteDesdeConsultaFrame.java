@@ -165,8 +165,8 @@ public class EmitirJustificanteDesdeConsultaFrame extends JPanel {
                     int id = Integer.parseInt(input);
                     if (id >= 180000 && id <= 999999) {
                         try (Connection conn = ConexionSQLite.conectar();
-                             PreparedStatement pst = conn.prepareStatement(
-                                     "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
+                                PreparedStatement pst = conn.prepareStatement(
+                                        "SELECT Nombre, ApellidoPaterno, ApellidoMaterno FROM InformacionAlumno WHERE ID = ?")) {
                             pst.setInt(1, id);
                             ResultSet rs = pst.executeQuery();
                             if (rs.next()) {
@@ -243,80 +243,78 @@ public class EmitirJustificanteDesdeConsultaFrame extends JPanel {
         return button;
     }
 
-private void guardar() {
-    String id = idField.getText().trim();
-    String nombre = nombreField.getText().trim();
-    String motivo = motivoField.getText().trim();
-    String diagnostico = diagnosticoArea.getText().trim();
-    LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
-    LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
+    private void guardar() {
+        String id = idField.getText().trim();
+        String nombre = nombreField.getText().trim();
+        String motivo = motivoField.getText().trim();
+        String diagnostico = diagnosticoArea.getText().trim();
+        LocalDate inicio = construirFecha(diaInicio, mesInicio, anioInicio);
+        LocalDate fin = construirFecha(diaFin, mesFin, anioFin);
 
-    if (id.isEmpty() || motivo.isEmpty() || diagnostico.isEmpty()) {
-        mensajeError.setText("⚠️ Todos los campos son obligatorios.");
-        return;
+        if (id.isEmpty() || motivo.isEmpty() || diagnostico.isEmpty()) {
+            mensajeError.setText("⚠️ Todos los campos son obligatorios.");
+            return;
+        }
+
+        if (!inicio.isAfter(LocalDate.now())) {
+            mensajeError.setText("⚠️ La fecha de inicio debe ser posterior a hoy.");
+            return;
+        }
+
+        if (inicio.isAfter(fin)) {
+            mensajeError.setText("⚠️ La fecha de inicio no puede ser posterior a la fecha de fin.");
+            return;
+        }
+
+        Justificante j = new Justificante(id, nombre, motivo, inicio, fin, diagnostico, archivoReceta);
+        j.setEstado("Aprobado");
+
+        String medicoFirmante = SesionUsuario.getMedicoActual();
+        j.setResueltoPor(medicoFirmante);
+        j.setFechaResolucion(LocalDate.now());
+
+        boolean ok = JustificanteDAO.guardarJustificante(j);
+        if (ok) {
+            mensajeError.setForeground(new Color(0, 153, 0));
+            mensajeError.setText("Justificante emitido correctamente.");
+            guardarBtn.setEnabled(false);
+        } else {
+            mensajeError.setForeground(Color.RED);
+            mensajeError.setText("Error al guardar justificante.");
+        }
+
     }
 
-    if (!inicio.isAfter(LocalDate.now())) {
-        mensajeError.setText("⚠️ La fecha de inicio debe ser posterior a hoy.");
-        return;
+    private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
+        try {
+            int d = Integer.parseInt((String) dia.getSelectedItem());
+            int m = mes.getSelectedIndex() + 1;
+            int y = Integer.parseInt((String) anio.getSelectedItem());
+            return LocalDate.of(y, m, d);
+        } catch (Exception e) {
+            mensajeError.setForeground(Color.RED);
+            mensajeError.setText("Fecha inválida. Verifique el día, mes y año seleccionados.");
+            return null;
+        }
     }
-
-    if (inicio.isAfter(fin)) {
-        mensajeError.setText("⚠️ La fecha de inicio no puede ser posterior a la fecha de fin.");
-        return;
-    }
-
-    Justificante j = new Justificante(id, nombre, motivo, inicio, fin, diagnostico, archivoReceta);
-    j.setEstado("Aprobado");
-
-    String medicoFirmante = SesionUsuario.getMedicoActual();
-    j.setResueltoPor(medicoFirmante);
-    j.setFechaResolucion(LocalDate.now());
-
-    boolean ok = JustificanteDAO.guardarJustificante(j);
-if (ok) {
-    mensajeError.setForeground(new Color(0, 153, 0)); 
-    mensajeError.setText("Justificante emitido correctamente.");
-    guardarBtn.setEnabled(false); 
-} else {
-    mensajeError.setForeground(Color.RED);
-    mensajeError.setText("Error al guardar justificante.");
-}
-
-
-
-}
-
-
-private LocalDate construirFecha(JComboBox<String> dia, JComboBox<String> mes, JComboBox<String> anio) {
-    try {
-        int d = Integer.parseInt((String) dia.getSelectedItem());
-        int m = mes.getSelectedIndex() + 1;
-        int y = Integer.parseInt((String) anio.getSelectedItem());
-        return LocalDate.of(y, m, d);
-    } catch (Exception e) {
-        mensajeError.setForeground(Color.RED);
-        mensajeError.setText("Fecha inválida. Verifique el día, mes y año seleccionados.");
-        return null;
-    }
-}
-
 
     private String[] generarDias() {
         String[] dias = new String[31];
-        for (int i = 1; i <= 31; i++) dias[i - 1] = String.valueOf(i);
+        for (int i = 1; i <= 31; i++)
+            dias[i - 1] = String.valueOf(i);
         return dias;
     }
 
     private String[] generarMeses() {
-        return new String[]{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return new String[] { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     }
 
     private String[] generarAnios() {
         String[] a = new String[6];
         int base = LocalDate.now().getYear();
-        for (int i = 0; i < 6; i++) a[i] = String.valueOf(base + i);
+        for (int i = 0; i < 6; i++)
+            a[i] = String.valueOf(base + i);
         return a;
     }
 }
