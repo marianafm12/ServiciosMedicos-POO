@@ -7,7 +7,6 @@ import java.util.List;
 
 public class NotificacionDAO {
 
-    // Modelo interno para representar una notificación
     public static class Notificacion {
         public int idNotificacion;
         public int idPaciente;
@@ -24,27 +23,50 @@ public class NotificacionDAO {
         }
     }
 
-    // Agrega una notificación pendiente para un paciente
-    public static void agregarNotificacion(String idPaciente, String fecha, String hora, String servicio)
+    public synchronized static void agregarNotificacion(String idPaciente, String fecha, String hora, String servicio)
             throws SQLException {
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            String sql = "INSERT INTO Notificaciones (idPaciente, mensaje, estado, fecha, hora, servicio) VALUES (?, ?, 'pendiente', ?, ?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, idPaciente);
-                stmt.setString(2, "Se ha liberado una cita para " + servicio + " el " + fecha + " a las " + hora);
-                stmt.setString(3, fecha);
-                stmt.setString(4, hora);
-                stmt.setString(5, servicio);
-                stmt.executeUpdate();
+        final int MAX_REINTENTOS = 3;
+        int intentos = 0;
+        boolean completado = false;
+
+        while (intentos < MAX_REINTENTOS && !completado) {
+            try (Connection conn = ConexionSQLite.conectar()) {
+                String sql = "INSERT INTO Notificaciones (idPaciente, mensaje, estado, fecha, hora, servicio) " +
+                        "VALUES (?, ?, 'pendiente', ?, ?, ?)";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, idPaciente);
+                    stmt.setString(2, "Se ha liberado una cita para " + servicio + " el " + fecha + " a las " + hora);
+                    stmt.setString(3, fecha);
+                    stmt.setString(4, hora);
+                    stmt.setString(5, servicio);
+                    stmt.executeUpdate();
+                    completado = true;
+                }
+            } catch (SQLException e) {
+                if (e.getMessage().contains("database is locked")) {
+                    intentos++;
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    System.err.println("Error al agregar notificación: " + e.getMessage());
+                    throw e;
+                }
             }
+        }
+
+        if (!completado) {
+            throw new SQLException("No se pudo agregar la notificación tras varios intentos.");
         }
     }
 
-    // Devuelve todas las notificaciones pendientes de un paciente
     public static List<Notificacion> obtenerNotificaciones(int idPaciente) {
         List<Notificacion> notificaciones = new ArrayList<>();
 
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+        try (Connection conn = ConexionSQLite.conectar()) {
             String sql = "SELECT * FROM Notificaciones WHERE idPaciente = ? AND estado = 'pendiente'";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, idPaciente);
@@ -66,25 +88,11 @@ public class NotificacionDAO {
         return notificaciones;
     }
 
-    // Elimina una notificación por ID
-    public static void eliminarNotificacion(int idNotificacion) {
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            String sql = "DELETE FROM Notificaciones WHERE idNotificacion = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, idNotificacion);
-                stmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al eliminar notificación: " + e.getMessage());
-        }
-    }
-
-    // Verifica si un paciente tiene al menos una notificación pendiente
     public static boolean tieneNotificacionesNoLeidas(int idPaciente) {
         boolean tiene = false;
         String sql = "SELECT COUNT(*) FROM Notificaciones WHERE idPaciente = ? AND estado = 'pendiente'";
 
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar();
+        try (Connection conn = ConexionSQLite.conectar();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idPaciente);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -100,16 +108,71 @@ public class NotificacionDAO {
         return tiene;
     }
 
-    // Marcar como atendida una notificación específica (opcional si no se elimina)
-    public static void marcarComoAtendida(int idNotificacion) {
-        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
-            String sql = "UPDATE Notificaciones SET estado = 'atendida' WHERE idNotificacion = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, idNotificacion);
-                stmt.executeUpdate();
+    public synchronized static void eliminarNotificacion(int idNotificacion) {
+        final int MAX_REINTENTOS = 3;
+        int intentos = 0;
+        boolean completado = false;
+
+        while (intentos < MAX_REINTENTOS && !completado) {
+            try (Connection conn = ConexionSQLite.conectar()) {
+                String sql = "DELETE FROM Notificaciones WHERE idNotificacion = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, idNotificacion);
+                    stmt.executeUpdate();
+                    completado = true;
+                }
+            } catch (SQLException e) {
+                if (e.getMessage().contains("database is locked")) {
+                    intentos++;
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    System.err.println("Error al eliminar notificación: " + e.getMessage());
+                    break;
+                }
             }
-        } catch (SQLException e) {
-            System.err.println("Error al marcar como atendida: " + e.getMessage());
+        }
+
+        if (!completado) {
+            System.err.println("No se pudo eliminar notificación tras varios intentos.");
+        }
+    }
+
+    public synchronized static void marcarComoAtendida(int idNotificacion) {
+        final int MAX_REINTENTOS = 3;
+        int intentos = 0;
+        boolean completado = false;
+
+        while (intentos < MAX_REINTENTOS && !completado) {
+            try (Connection conn = ConexionSQLite.conectar()) {
+                String sql = "UPDATE Notificaciones SET estado = 'atendida' WHERE idNotificacion = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, idNotificacion);
+                    stmt.executeUpdate();
+                    completado = true;
+                }
+            } catch (SQLException e) {
+                if (e.getMessage().contains("database is locked")) {
+                    intentos++;
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    System.err.println("Error al marcar como atendida: " + e.getMessage());
+                    break;
+                }
+            }
+        }
+
+        if (!completado) {
+            System.err.println("No se pudo marcar notificación como atendida tras varios intentos.");
         }
     }
 }

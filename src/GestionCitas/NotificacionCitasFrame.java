@@ -1,9 +1,9 @@
 package GestionCitas;
 
+import Utilidades.ColoresUDLAP;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -25,10 +25,11 @@ public class NotificacionCitasFrame extends JFrame {
         this.idPaciente = idPaciente;
 
         setTitle("Notificación de Cita Disponible");
-        setSize(400, 300);
+        setSize(400, 280);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new GridBagLayout());
         setLocationRelativeTo(null);
+        getContentPane().setBackground(ColoresUDLAP.BLANCO);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -45,39 +46,53 @@ public class NotificacionCitasFrame extends JFrame {
         mensajeNotificacion.setEditable(false);
         mensajeNotificacion.setLineWrap(true);
         mensajeNotificacion.setWrapStyleWord(true);
+        mensajeNotificacion.setFont(new Font("Arial", Font.PLAIN, 14));
+        mensajeNotificacion.setBackground(ColoresUDLAP.BLANCO);
         add(mensajeNotificacion, gbc);
 
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        aceptarCitaButton = new JButton("Aceptar");
+        aceptarCitaButton = botonTransparente("Aceptar", ColoresUDLAP.VERDE, ColoresUDLAP.VERDE_HOVER);
         add(aceptarCitaButton, gbc);
 
         gbc.gridx = 1;
-        rechazarCitaButton = new JButton("Rechazar");
+        rechazarCitaButton = botonTransparente("Rechazar", ColoresUDLAP.NARANJA, ColoresUDLAP.NARANJA_HOVER);
         add(rechazarCitaButton, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
-        estadoLabel = new JLabel("");
+        estadoLabel = new JLabel("", SwingConstants.CENTER);
+        estadoLabel.setFont(new Font("Arial", Font.PLAIN, 13));
         estadoLabel.setForeground(Color.BLUE);
         add(estadoLabel, gbc);
 
-        aceptarCitaButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                aceptarCita();
-            }
-        });
-
-        rechazarCitaButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                rechazarCita();
-            }
-        });
+        aceptarCitaButton.addActionListener(e -> aceptarCita());
+        rechazarCitaButton.addActionListener(e -> rechazarCita());
 
         setVisible(true);
+    }
+
+    private JButton botonTransparente(String texto, Color base, Color hover) {
+        JButton button = new JButton(texto) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isRollover() ? hover : base);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return button;
     }
 
     private void aceptarCita() {
@@ -89,7 +104,6 @@ public class NotificacionCitasFrame extends JFrame {
             try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
                 conn.setAutoCommit(false);
 
-                // Insertar cita nueva
                 String sqlInsert = "INSERT INTO CitasMedicas(idPaciente, fecha, hora, servicio) VALUES(?,?,?,?)";
                 PreparedStatement stmt = conn.prepareStatement(sqlInsert);
                 stmt.setString(1, idPaciente);
@@ -98,7 +112,6 @@ public class NotificacionCitasFrame extends JFrame {
                 stmt.setString(4, servicio);
                 stmt.executeUpdate();
 
-                // Eliminar de ListaEspera
                 String sqlDelEspera = "DELETE FROM ListaEsperaCitas WHERE idPaciente = ? AND fechaDeseada = ? AND horaDeseada = ? AND servicio = ?";
                 PreparedStatement delStmt = conn.prepareStatement(sqlDelEspera);
                 delStmt.setString(1, idPaciente);
@@ -107,7 +120,6 @@ public class NotificacionCitasFrame extends JFrame {
                 delStmt.setString(4, servicio);
                 delStmt.executeUpdate();
 
-                // Marcar notificación como atendida
                 String sqlNotif = "UPDATE Notificaciones SET estado = 'atendida' WHERE idPaciente = ? AND fecha = ? AND hora = ? AND servicio = ?";
                 PreparedStatement upStmt = conn.prepareStatement(sqlNotif);
                 upStmt.setString(1, idPaciente);
@@ -166,9 +178,5 @@ public class NotificacionCitasFrame extends JFrame {
             estadoLabel.setForeground(Color.RED);
             estadoLabel.setText("Error al rechazar: " + ex.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        new NotificacionCitasFrame("2025-05-10", "14:00", "Consulta", "123456");
     }
 }

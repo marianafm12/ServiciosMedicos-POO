@@ -7,28 +7,21 @@ import javax.swing.*;
 public class AgregarRegistro implements ActionListener {
     private final JTextField[] campos;
 
-    // Constructor: asigna campos de texto y agrega un listener para cargar datos al perder foco
     public AgregarRegistro(JTextField[] campos) {
         this.campos = campos;
 
-        // Listener que se dispara cuando se pierde el foco de ciertos campos
         FocusAdapter cargaListener = new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
-                cargarDatosPersonales(); // Intenta cargar datos desde InformacionAlumno
+                cargarDatosPersonales();
             }
         };
 
-        // Asignar listener a los campos de ID, Nombre, Apellido Paterno, Apellido Materno y Correo
         for (int i = 0; i <= 4; i++) {
             campos[i].addFocusListener(cargaListener);
         }
     }
 
-    /**
-     * Este método carga automáticamente los datos del alumno desde la tabla InformacionAlumno
-     * cuando se llena el campo de ID o el conjunto de Nombre completo y Correo.
-     */
     private void cargarDatosPersonales() {
         String idText = campos[0].getText().trim();
         String nom = campos[1].getText().trim();
@@ -40,17 +33,12 @@ public class AgregarRegistro implements ActionListener {
         try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
             PreparedStatement ps;
 
-            // Buscar por ID si es válido
             if (!idText.isEmpty() && idText.matches("\\d+")) {
-                sql = "SELECT ID, Nombre, ApellidoPaterno, ApellidoMaterno, Correo "
-                        + "FROM InformacionAlumno WHERE ID = ?";
+                sql = "SELECT ID, Nombre, ApellidoPaterno, ApellidoMaterno, Correo FROM InformacionAlumno WHERE ID = ?";
                 ps = conn.prepareStatement(sql);
                 ps.setInt(1, Integer.parseInt(idText));
-
-            // Buscar por Nombre completo y Correo si todos están llenos
             } else if (!nom.isEmpty() && !apPat.isEmpty() && !apMat.isEmpty() && !correo.isEmpty()) {
-                sql = "SELECT ID, Nombre, ApellidoPaterno, ApellidoMaterno, Correo "
-                        + "FROM InformacionAlumno "
+                sql = "SELECT ID, Nombre, ApellidoPaterno, ApellidoMaterno, Correo FROM InformacionAlumno "
                         + "WHERE Nombre = ? AND ApellidoPaterno = ? AND ApellidoMaterno = ? AND Correo = ?";
                 ps = conn.prepareStatement(sql);
                 ps.setString(1, nom);
@@ -58,11 +46,9 @@ public class AgregarRegistro implements ActionListener {
                 ps.setString(3, apMat);
                 ps.setString(4, correo);
             } else {
-                // No hay suficientes datos para hacer la búsqueda
                 return;
             }
 
-            // Ejecutar consulta y llenar los campos si hay resultados
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     campos[0].setText(String.valueOf(rs.getInt("ID")));
@@ -80,112 +66,111 @@ public class AgregarRegistro implements ActionListener {
         }
     }
 
-    /**
-     * Este método se ejecuta al hacer clic en el botón "Agregar".
-     * Valida los campos, verifica que el alumno exista y guarda el registro médico.
-     */
-    
-     /**public boolean camposvacios(){
-                // Validar que todos los campos estén llenos
-        for (int i = 0; i <= 10; i++) {
-            if (campos[i].getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(null,
-                        "Todos los campos deben estar completos antes de guardar.",
-                        "Campos incompletos", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-    }
     @Override
-    public void actionPerformed(ActionEvent evento) {
-        // Validar que todos los campos estén llenos
-        if(camposvacios())
-        return;
-        }*/
+    public void actionPerformed(ActionEvent e) {
+        String id = campos[0].getText().trim();
+        String nombre = campos[1].getText().trim();
+        String apellidoP = campos[2].getText().trim();
+        String apellidoM = campos[3].getText().trim();
+        String correo = campos[4].getText().trim();
+        String edad = campos[5].getText().trim();
+        String altura = campos[6].getText().trim();
+        String peso = campos[7].getText().trim();
+        String enfermedades = campos[8].getText().trim();
+        String medicacion = campos[9].getText().trim();
+        String alergias = campos[10].getText().trim();
 
-    @Override
-    public void actionPerformed(ActionEvent evento) {
-        // Validar que todos los campos estén llenos
-        for (int i = 0; i <= 10; i++) {
-            if (campos[i].getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(null,
-                        "Todos los campos deben estar completos antes de guardar.",
-                        "Campos incompletos", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-        }
-
-        // Validar que el ID sea numérico
-        String idText = campos[0].getText().trim();
-        if (!idText.matches("\\d+")) {
-            JOptionPane.showMessageDialog(null,
-                    "El ID debe ser un número entero.",
-                    "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        int id = Integer.parseInt(idText);
-
-        // Validar y convertir Edad, Altura y Peso
-        int edad;
-        double altura, peso;
-        try {
-            edad = Integer.parseInt(campos[5].getText().trim());
-            altura = Double.parseDouble(campos[6].getText().trim());
-            peso = Double.parseDouble(campos[7].getText().trim());
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(null,
-                    "Formato numérico inválido en Edad, Altura o Peso.",
-                    "Error de Validación", JOptionPane.ERROR_MESSAGE);
+        if (!ValidadorPaciente.estanTodosLlenos(id, nombre, apellidoP, apellidoM, correo, edad, altura, peso,
+                enfermedades, medicacion, alergias)) {
+            JOptionPane.showMessageDialog(null, "Todos los campos deben estar llenos.");
             return;
         }
 
-        // Obtener datos médicos
-        String enfPre = campos[8].getText().trim();
-        String medic = campos[9].getText().trim();
-        String alerg = campos[10].getText().trim();
+        if (!ValidadorPaciente.esIDValido(id)) {
+            JOptionPane.showMessageDialog(null, "El ID debe estar entre 180000 y 999999.");
+            return;
+        }
 
-        try (Connection conexion = BaseDeDatos.ConexionSQLite.conectar()) {
-            // Verificar si el alumno existe en la tabla InformacionAlumno
-            String checkSQL = "SELECT 1 FROM InformacionAlumno WHERE ID = ?";
-            try (PreparedStatement psCheck = conexion.prepareStatement(checkSQL)) {
-                psCheck.setInt(1, id);
-                try (ResultSet rs = psCheck.executeQuery()) {
-                    if (!rs.next()) {
-                        JOptionPane.showMessageDialog(null,
-                                "No existe un alumno con ID " + id,
-                                "Error de Insertar", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                }
+        if (!ValidadorPaciente.esTextoAlfabetico(nombre) ||
+                !ValidadorPaciente.esTextoAlfabetico(apellidoP) ||
+                !ValidadorPaciente.esTextoAlfabetico(apellidoM)) {
+            JOptionPane.showMessageDialog(null, "Nombre y apellidos solo deben contener letras.");
+            return;
+        }
+
+        if (!ValidadorPaciente.esCorreoValido(correo)) {
+            JOptionPane.showMessageDialog(null, "El formato del correo no es válido.");
+            return;
+        }
+
+        if (!ValidadorPaciente.esNumerico(edad) || !ValidadorPaciente.esNumerico(altura)
+                || !ValidadorPaciente.esNumerico(peso)) {
+            JOptionPane.showMessageDialog(null, "Edad, altura y peso deben ser valores numéricos.");
+            return;
+        }
+
+        try (Connection conn = BaseDeDatos.ConexionSQLite.conectar()) {
+            int idInt = Integer.parseInt(id);
+
+            // 1. INFORMACION ALUMNO
+            PreparedStatement checkAlumno = conn.prepareStatement("SELECT ID FROM InformacionAlumno WHERE ID = ?");
+            checkAlumno.setInt(1, idInt);
+            ResultSet rsAlumno = checkAlumno.executeQuery();
+
+            if (rsAlumno.next()) {
+                PreparedStatement updateAlumno = conn.prepareStatement(
+                        "UPDATE InformacionAlumno SET Nombre=?, ApellidoPaterno=?, ApellidoMaterno=?, Correo=? WHERE ID=?");
+                updateAlumno.setString(1, nombre);
+                updateAlumno.setString(2, apellidoP);
+                updateAlumno.setString(3, apellidoM);
+                updateAlumno.setString(4, correo);
+                updateAlumno.setInt(5, idInt);
+                updateAlumno.executeUpdate();
+            } else {
+                PreparedStatement insertAlumno = conn.prepareStatement(
+                        "INSERT INTO InformacionAlumno (ID, Nombre, ApellidoPaterno, ApellidoMaterno, Correo) VALUES (?, ?, ?, ?, ?)");
+                insertAlumno.setInt(1, idInt);
+                insertAlumno.setString(2, nombre);
+                insertAlumno.setString(3, apellidoP);
+                insertAlumno.setString(4, apellidoM);
+                insertAlumno.setString(5, correo);
+                insertAlumno.executeUpdate();
             }
 
-            // Insertar datos en la tabla Registro
-            String insertSQL = "INSERT INTO Registro (ID, Edad, Altura, Peso, EnfermedadesPreexistentes, Medicacion, Alergias) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            // 2. REGISTRO MÉDICO
+            PreparedStatement checkRegistro = conn.prepareStatement("SELECT ID FROM Registro WHERE ID = ?");
+            checkRegistro.setInt(1, idInt);
+            ResultSet rsRegistro = checkRegistro.executeQuery();
 
-            try (PreparedStatement psIns = conexion.prepareStatement(insertSQL)) {
-                psIns.setInt(1, id);
-                psIns.setInt(2, edad);
-                psIns.setDouble(3, altura);
-                psIns.setDouble(4, peso);
-                psIns.setString(5, enfPre);
-                psIns.setString(6, medic);
-                psIns.setString(7, alerg);
-
-                int filas = psIns.executeUpdate();
-                if (filas > 0) {
-                    JOptionPane.showMessageDialog(null,
-                            "Registro guardado correctamente.",
-                            "Operación Exitosa", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null,
-                            "No se pudo guardar el registro.",
-                            "Error de Inserción", JOptionPane.ERROR_MESSAGE);
-                }
+            if (rsRegistro.next()) {
+                PreparedStatement updateRegistro = conn.prepareStatement(
+                        "UPDATE Registro SET Edad=?, Altura=?, Peso=?, EnfermedadesPreexistentes=?, Medicacion=?, Alergias=? WHERE ID=?");
+                updateRegistro.setString(1, edad);
+                updateRegistro.setString(2, altura);
+                updateRegistro.setString(3, peso);
+                updateRegistro.setString(4, enfermedades);
+                updateRegistro.setString(5, medicacion);
+                updateRegistro.setString(6, alergias);
+                updateRegistro.setInt(7, idInt);
+                updateRegistro.executeUpdate();
+            } else {
+                PreparedStatement insertRegistro = conn.prepareStatement(
+                        "INSERT INTO Registro (ID, Edad, Altura, Peso, EnfermedadesPreexistentes, Medicacion, Alergias) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                insertRegistro.setInt(1, idInt);
+                insertRegistro.setString(2, edad);
+                insertRegistro.setString(3, altura);
+                insertRegistro.setString(4, peso);
+                insertRegistro.setString(5, enfermedades);
+                insertRegistro.setString(6, medicacion);
+                insertRegistro.setString(7, alergias);
+                insertRegistro.executeUpdate();
             }
+
+            JOptionPane.showMessageDialog(null, "Datos guardados correctamente.");
 
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null,
-                    "Error en la base de datos:\n" + ex.getMessage(),
+                    "Error al guardar en la base de datos:\n" + ex.getMessage(),
                     "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }

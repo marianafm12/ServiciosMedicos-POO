@@ -1,189 +1,361 @@
 package Inicio;
 
+import Utilidades.*;
+import BaseDeDatos.ConexionSQLite;
+import Consultas.PanelConsultaNueva;
+import Emergencias.PanelLlamadaEmergencia;
+import Emergencias.PanelReportarEmergencia;
+import GestionCitas.NotificacionDAO;
+import GestionCitas.PanelGestionCitas;
+import GestionCitas.AgendaCitaFrame;
+import GestionCitas.ModificarCitaFrame;
+import GestionCitas.NotificacionCitasFrame;
+import GestionEnfermedades.PanelHistorialMedico;
+import GestionEnfermedades.PanelHistorialMedicoEditable;
+import Justificantes.PanelJustificantesProvider;
+import Justificantes.PanelMenuJustificantes;
+import Justificantes.PanelJustificantesPacienteMenu;
+import Registro.PanelRegistroPaciente;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.URL;
+import java.sql.*;
+import java.util.List;
 
 public class InterfazMedica extends JFrame {
-    private Point mouseDownCompCoords = null;
-    private final JLabel contentLabel = new JLabel("Selecciona una opción del menú", SwingConstants.CENTER);
+    private JPanel contentPanel;
+    private final boolean esMedico;
+    private final int userId;
+    private String nombreUsuario;
+    private PanelManager panelManager;
+    private JLabel notificationIcon;
+    private ImageIcon iconDefault, iconNew;
+    private boolean hasNewNotification = false;
 
-    public InterfazMedica() {
-        // 1) Ventana sin decoración nativa
+    public InterfazMedica(boolean esMedico, int userId) {
+        this.esMedico = esMedico;
+        this.userId = userId;
+        this.nombreUsuario = fetchNombreUsuario();
+        loadNotificationIcons();
+        initUI();
+        checkNotifications();
+    }
+
+    private void loadNotificationIcons() {
+        try {
+            URL u1 = getClass().getResource("/icons/bell.png");
+            URL u2 = getClass().getResource("/icons/bell_new.png");
+            iconDefault = new ImageIcon(new ImageIcon(u1).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
+            iconNew = new ImageIcon(new ImageIcon(u2).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
+        } catch (Exception e) {
+            iconDefault = new ImageIcon();
+            iconNew = new ImageIcon();
+        }
+    }
+
+    private void checkNotifications() {
+        if (!esMedico) {
+            hasNewNotification = NotificacionDAO.tieneNotificacionesNoLeidas(userId);
+            System.out.println("¿Tiene notificaciones pendientes? " + hasNewNotification);
+        }
+
+        if (notificationIcon != null) {
+            notificationIcon.setIcon(hasNewNotification ? iconNew : iconDefault);
+        }
+    }
+
+    private void mostrarNotificaciones() {
+        if (esMedico) {
+            JOptionPane.showMessageDialog(this,
+                    "Funcionalidad de notificaciones para médicos en desarrollo.",
+                    "Notificaciones Médicas",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        List<NotificacionDAO.Notificacion> lista = NotificacionDAO.obtenerNotificaciones(userId);
+        if (lista.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay nuevas notificaciones.",
+                    "Notificaciones", JOptionPane.INFORMATION_MESSAGE);
+            notificationIcon.setIcon(iconDefault);
+        } else {
+            for (NotificacionDAO.Notificacion n : lista) {
+                new NotificacionCitasFrame(n.fecha, n.hora, n.servicio, String.valueOf(userId));
+            }
+            hasNewNotification = false;
+            notificationIcon.setIcon(iconDefault);
+        }
+    }
+
+    private void initUI() {
         setUndecorated(true);
-        setSize(900, 600);
+        setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // 2) Barra de controles (naranja)
-        JPanel controlBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        controlBar.setPreferredSize(new Dimension(0, 30));
-        controlBar.setBackground(new Color(255, 102, 0));
-        controlBar.add(createControlButton("_"));
-        controlBar.add(createControlButton("□"));
-        controlBar.add(createControlButton("✕"));
-        enableDrag(controlBar);
-        add(controlBar, BorderLayout.NORTH);
+        JPanel contenedorBarras = new JPanel();
+        contenedorBarras.setLayout(new BoxLayout(contenedorBarras, BoxLayout.Y_AXIS));
+        contenedorBarras.add(new BarraVentanaUDLAP(this));
+        contenedorBarras.add(crearTopPanel());
+        add(contenedorBarras, BorderLayout.NORTH);
 
-        // 3) Panel menú (izquierda), ocupa toda la altura bajo la barra
-        JPanel panelMenu = new JPanel(new BorderLayout());
-        panelMenu.setPreferredSize(new Dimension(120, 0));
-        panelMenu.setBackground(new Color(240, 240, 245));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(ColoresUDLAP.BLANCO);
+        add(mainPanel, BorderLayout.CENTER);
 
-        // 3.1) Encabezado del menú: “Hola, usuario” arriba y “Menú”
-        JPanel menuHeader = new JPanel(new GridLayout(2, 1));
-        menuHeader.setBackground(panelMenu.getBackground());
-        JLabel lblUsuario = new JLabel("Hola, usuario", SwingConstants.CENTER);
-        lblUsuario.setFont(lblUsuario.getFont().deriveFont(Font.PLAIN, 12f));
-        JLabel lblMenu = new JLabel("Menú", SwingConstants.CENTER);
-        lblMenu.setFont(lblMenu.getFont().deriveFont(Font.BOLD, 14f));
-        menuHeader.add(lblUsuario);
-        menuHeader.add(lblMenu);
-        panelMenu.add(menuHeader, BorderLayout.NORTH);
+        JPanel menuPanel = crearMenuPanel();
+        mainPanel.add(menuPanel, BorderLayout.WEST);
 
-        // 3.2) Botones del menú incluyendo SOS al final
-        JPanel panelButtons = new JPanel(new GridLayout(5, 1));
-        panelButtons.setBackground(panelMenu.getBackground());
-        String[] textos = { "Btn 1", "Btn 2", "Btn 3", "Btn 4" };
-        // Verde UDLAP según tu encabezado HTML
-        Color verdeUDLAP = Color.decode("#006400");
+        contentPanel = new JPanel(new CardLayout());
+        contentPanel.setBackground(Color.WHITE);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        for (int i = 0; i < textos.length; i++) {
-            JButton b = new JButton(textos[i]);
-            b.setFocusPainted(false);
-            b.setOpaque(true);
-            b.setContentAreaFilled(true);
-            b.setBackground(verdeUDLAP); // Aquí aplicamos el verde UDLAP
-            b.setForeground(Color.WHITE); // Texto en blanco
-            b.setBorder(BorderFactory.createMatteBorder(
-                    0, 0, 1, 0, new Color(200, 200, 200)));
-            final int idx = i + 1;
-            b.addActionListener(e -> contentLabel.setText("Contenido de Btn " + idx));
-            panelButtons.add(b);
-        }
-
-        // Escalar la imagen del botón SOS
-        ImageIcon sosIcon = new ImageIcon(
-                "C:\\Users\\cosa2\\OneDrive - Fundacion Universidad de las Americas Puebla\\4° Semestre\\Programación Orientada a Objetos\\ServiciosMedicos-POO\\SOS.png");
-        Image img = sosIcon.getImage();
-
-        // Definir el tamaño del botón
-        int buttonWidth = 120; // Establecer el tamaño deseado del botón
-        int buttonHeight = 120;
-
-        // Escalar la imagen proporcionalmente
-        Image scaledImg = img.getScaledInstance(buttonWidth, buttonHeight, Image.SCALE_SMOOTH);
-
-        // Crear el botón con la imagen ajustada
-        sosIcon = new ImageIcon(scaledImg);
-        JButton btnSOS = new JButton(sosIcon);
-        btnSOS.setFocusPainted(false);
-        btnSOS.setBackground(panelMenu.getBackground());
-        btnSOS.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Ajuste del borde
-        btnSOS.addActionListener(e -> JOptionPane.showMessageDialog(this, "¡SOS activado!"));
-        panelButtons.add(btnSOS);
-
-        panelMenu.add(panelButtons, BorderLayout.CENTER);
-        add(panelMenu, BorderLayout.WEST);
-
-        // 4) Contenedor central a la derecha del menú
-        JPanel centerContainer = new JPanel(new BorderLayout());
-        add(centerContainer, BorderLayout.CENTER);
-
-        // 4.1) Encabezado “Servicios Médicos UDLAP”
-        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setPreferredSize(new Dimension(0, 60));
-        String texto = "<html>"
-                + "<span style='font-size:18pt; font-weight:bold; color:#006400;'>"
-                + "Servicios Médicos"
-                + "</span> "
-                + "<span style='font-size:18pt; font-weight:bold; color:#FF6600;'>"
-                + "UDLAP"
-                + "</span>"
-                + "</html>";
-        JLabel lblHeader = new JLabel(texto, SwingConstants.CENTER);
-
-        // Botón “Cerrar sesión”
-        JButton btnLogout = new JButton("Cerrar sesión");
-        btnLogout.setFont(new Font("Dialog", Font.PLAIN, 12));
-        btnLogout.setBackground(Color.WHITE);
-        btnLogout.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        btnLogout.setFocusPainted(false);
-        btnLogout.addActionListener(e -> System.exit(0));
-
-        headerPanel.add(lblHeader, BorderLayout.CENTER);
-        headerPanel.add(btnLogout, BorderLayout.EAST);
-        centerContainer.add(headerPanel, BorderLayout.NORTH);
-
-        // 4.2) Área de contenido
-        JPanel panelContenido = new JPanel(new BorderLayout());
-        panelContenido.setBackground(Color.WHITE);
-        panelContenido.add(contentLabel, BorderLayout.NORTH);
-        centerContainer.add(panelContenido, BorderLayout.CENTER);
+        panelManager = new PanelManager(contentPanel);
+        registrarPaneles();
+        panelManager.showPanel("panel0");
     }
 
-    // Crea los botones de control de la ventana
-    private JButton createControlButton(String texto) {
-        JButton b = new JButton(texto);
-        b.setFont(new Font("Dialog", Font.BOLD, 12));
-        b.setPreferredSize(new Dimension(45, 30));
-        b.setFocusPainted(false);
-        b.setBorder(null);
-        b.setForeground(Color.WHITE);
-        b.setBackground(new Color(255, 102, 0));
-        b.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                b.setBackground(new Color(230, 80, 0));
+private JPanel crearMenuPanel() {
+        JPanel menu = new JPanel();
+        menu.setBackground(ColoresUDLAP.BLANCO);
+        menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
+        menu.setBorder(BorderFactory.createEmptyBorder(15, 8, 8, 8));
+
+        String[] items = esMedico
+                ? new String[] { "Registrar Paciente", "Consulta Nueva", "Historial Médico", "Justificantes",
+                        "Emergencias", "Accidente" }
+                : new String[] { "Mis Citas", "Historial Médico", "Justificantes", "Reportar Emergencia" };
+
+        Font btnFont = new Font("Arial", Font.BOLD, 20);
+
+        for (int i = 0; i < items.length; i++) {
+            String textoHtml = "<html><div style='text-align:center;'>"
+                    + items[i].replace("\n", "<br>")
+                    + "</div></html>";
+
+            // Determinamos color base y hover
+            Color baseColor;
+            Color hoverColor;
+
+            // Si es la opción de reportar emergencia (usuarios)
+            if (!esMedico && "Reportar Emergencia".equals(items[i])) {
+                baseColor = ColoresUDLAP.ROJO;
+                hoverColor = ColoresUDLAP.ROJO_HOVER;
             }
 
-            public void mouseExited(MouseEvent e) {
-                b.setBackground(new Color(255, 102, 0));
+            else {
+                boolean par = (i % 2 == 0);
+                baseColor = par ? ColoresUDLAP.VERDE : ColoresUDLAP.NARANJA;
+                hoverColor = par ? ColoresUDLAP.VERDE_HOVER : ColoresUDLAP.NARANJA_HOVER;
             }
-        });
-        switch (texto) {
-            case "_":
-                b.addActionListener(e -> setState(Frame.ICONIFIED));
-                break;
-            case "□":
-                b.addActionListener(e -> toggleMaximize());
-                break;
-            case "✕":
-                b.addActionListener(e -> System.exit(0));
-                break;
+
+            JButton boton = botonTransparente(textoHtml, baseColor, hoverColor, btnFont);
+            int idx = i;
+            boton.addActionListener(e -> manejarClick(idx));
+            boton.setMaximumSize(new Dimension(260, 80));
+
+            menu.add(boton);
+            menu.add(Box.createVerticalStrut(10));
         }
-        return b;
+
+        return menu;
     }
 
-    private void toggleMaximize() {
-        if ((getExtendedState() & Frame.MAXIMIZED_BOTH) != Frame.MAXIMIZED_BOTH) {
-            setExtendedState(Frame.MAXIMIZED_BOTH);
+    private void manejarClick(int idx) {
+        String[] medicoKeys = { "formularioRegistro", "consultaNueva", "historialMedico", "justificantes",
+                "llamadaEmergencia", "reporteAccidente" };
+        String[] pacienteKeys = { "panelGestionCitas", "historialMedico", "justificantesPaciente",
+                "reportarEmergencia" };
+        String key = esMedico ? medicoKeys[idx] : pacienteKeys[idx];
+        panelManager.showPanel(key);
+    }
+
+    // Fragmento de InterfazMedica.java con registrarPaneles() actualizado para usar
+    // PanelHistorialMedicoEditable
+
+    private void registrarPaneles() {
+        if (esMedico) {
+            panelManager.registerPanel(new PanelRegistroPaciente());
+            panelManager.registerPanel(new PanelConsultaNueva(userId, nombreUsuario));
+
+            // Mostrar historial médico editable con campo ID fijo
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new PanelHistorialMedicoEditable();
+                }
+
+                public String getPanelName() {
+                    return "historialMedico";
+                }
+            });
+
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new PanelMenuJustificantes(panelManager); // ✅ se pasa el PanelManager
+                }
+                public String getPanelName() {
+                    return "justificantes";
+                }
+            });
+
+
+            panelManager.registerPanel(new PanelLlamadaEmergencia(esMedico, userId));
+
+           panelManager.registerPanel(new PanelProvider() {
+    public JPanel getPanel() {
+        return new Emergencias.FormularioAccidenteCompleto();  // Usa tu nueva clase aquí
+    }
+
+    public String getPanelName() {
+        return "reporteAccidente";
+    }
+});
+
+
         } else {
-            setExtendedState(Frame.NORMAL);
+            // Paneles para el paciente (sin cambios)
+            panelManager.registerPanel(new PanelHistorialMedico(userId));
+
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new PanelGestionCitas(userId, panelManager);
+                }
+
+                public String getPanelName() {
+                    return "panelGestionCitas";
+                }
+            });
+
+            panelManager.registerPanel(new PanelProvider() {
+            public JPanel getPanel() {
+                return new PanelJustificantesPacienteMenu(panelManager);
+            }
+
+            public String getPanelName() {
+                return "justificantesPaciente";
+            }
+        });
+
+
+            panelManager.registerPanel(new PanelReportarEmergencia());
+
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new AgendaCitaFrame(userId, panelManager);
+                }
+
+                public String getPanelName() {
+                    return "agendarCita";
+                }
+            });
+
+            panelManager.registerPanel(new PanelProvider() {
+                public JPanel getPanel() {
+                    return new ModificarCitaFrame(userId, panelManager);
+                }
+
+                public String getPanelName() {
+                    return "modificarCita";
+                }
+            });
         }
     }
 
-    // Permite mover la ventana arrastrando el componente
-    private void enableDrag(JComponent comp) {
-        comp.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                mouseDownCompCoords = e.getPoint();
-            }
+    private JPanel crearTopPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(ColoresUDLAP.BLANCO);
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
+        panel.setPreferredSize(new Dimension(0, 56));
 
-            public void mouseReleased(MouseEvent e) {
-                mouseDownCompCoords = null;
+        JLabel saludo = new JLabel("Hola, " + nombreUsuario);
+        saludo.setForeground(ColoresUDLAP.VERDE_OSCURO);
+        saludo.setFont(new Font("Arial", Font.PLAIN, 18));
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 12));
+        left.setOpaque(false);
+        left.add(saludo);
+
+        JLabel titulo = new JLabel(
+                "<html><span style='font-size:25pt;font-weight:bold;color:#006400;'>Servicios Médicos</span> <span style='font-size:25pt;font-weight:bold;color:#FF6600;'>UDLAP</span></html>",
+                SwingConstants.CENTER);
+        JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
+        center.setOpaque(false);
+        center.add(titulo);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 5));
+        right.setOpaque(false);
+
+        notificationIcon = new JLabel(iconDefault);
+        notificationIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        notificationIcon.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                mostrarNotificaciones();
             }
         });
-        comp.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                Point curr = e.getLocationOnScreen();
-                setLocation(curr.x - mouseDownCompCoords.x, curr.y - mouseDownCompCoords.y);
-            }
+        right.add(notificationIcon);
+
+        JButton cerrarSesion = new JButton("Cerrar sesión");
+        cerrarSesion.setFont(new Font("Arial", Font.BOLD, 15));
+        cerrarSesion.setBackground(ColoresUDLAP.NARANJA_BARRA);
+        cerrarSesion.setForeground(Color.WHITE);
+        cerrarSesion.setFocusPainted(false);
+        cerrarSesion.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cerrarSesion.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        cerrarSesion.addActionListener(e -> {
+            new InterfazLogin().setVisible(true);
+            dispose();
         });
+        right.add(cerrarSesion);
+
+        panel.add(left, BorderLayout.WEST);
+        panel.add(center, BorderLayout.CENTER);
+        panel.add(right, BorderLayout.EAST);
+        return panel;
+    }
+
+    private JButton botonTransparente(String texto, Color base, Color hover, Font font) {
+        JButton button = new JButton(texto) {
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isRollover() ? hover : base);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        button.setFont(font);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return button;
+    }
+
+    private String fetchNombreUsuario() {
+        String sql = esMedico
+                ? "SELECT Nombre||' '||ApellidoPaterno FROM InformacionMedico WHERE ID=?"
+                : "SELECT Nombre||' '||ApellidoPaterno FROM InformacionAlumno WHERE ID=?";
+        try (Connection con = ConexionSQLite.conectar();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return rs.getString(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return "Usuario";
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new InterfazMedica().setVisible(true));
+        SwingUtilities.invokeLater(() -> new InterfazMedica(true, 1).setVisible(true));
     }
 }
