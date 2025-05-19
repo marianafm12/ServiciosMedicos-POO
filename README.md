@@ -23,3 +23,9 @@
 | Modelo                | Código para gestionar la lista de espera de citas.                                                                                                                                                         | Arlette    |
 | Registro              | Código para el registro de nuevos pacientes, creación de expediente médico y altas de pacientes.                                                                                                           | Sebastián  |
 | Utilidades            | Clases base (colores de interfaces, barra de controles, etc.) y componentes reutilizables empleados en toda la aplicación.                                                                               | Mariana    |
+
+
+
+## Mejoras Visuales (GUI)
+  * Incialmente se implementaron las interfaces gráficas para la intercción del usuario con el programa, sin embargo, para la entrega final, además del uso de los JFrames, se implementaron JPanels. Estos cambios hacían nuestra interfaz visualmente más atractiva y funcional, ya que sólo se cambian los paneles y no toda la interfaz, haciendo el proyecto mucho más fluido. Además este cambio nos ayudó a cambiar la paleta de colores por colores UDLAP.
+  * Encargadas de las mejoras visuales: Arlette y Mariana
