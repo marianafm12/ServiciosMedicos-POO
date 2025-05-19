@@ -7,6 +7,9 @@
   * La branch de dev es en la que se hacían todos los merge y cuando ya se revisaba el correcto funcionamiento, se hacía el merge con el main.
   * Se automatizó la actualización de las branches para que cuando los integrantes modificaran sus branches e hicieran los pull request, push y merge a dev las demás branches se actualizaran de igual forma haciendo que sea más llevadero el proceso para los integrantes optimizando el tiempo al reducir la cantidad de pulls que tuvieran que hacer.
   * Los cambios del main están bloqueados para así evitar que se hiciera un cambio que no funcionara y reducir de manera significativa el riesgo general del mal funcionamiento del programa.
+  * **Inicio de sesión**
+    * Para iniciar sesiónd desde el punto de vista del médico se puede ingresar un ID entre 5000 y 5030, y la contraseña es passID, por ejemplo; ID: 5009 contraseña: pass5009
+    * Para iniciar sesión desde el punto de vista del paciente se puede ingresar un IS entre 180000 y 180030, y la contraseña funciona de forma similar a la de médico, se ingresa passID; por ejemplo: ID: 180000 contraseña: pas18000
 
 # Estructura del Proyecto
   Se dividó el proyecto en diferentes áreas, la cual se le asignó a cada uno de los integrantes del equipo.
