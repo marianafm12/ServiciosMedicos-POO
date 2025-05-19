@@ -1,15 +1,15 @@
 # ServiciosMedicos-POO
-  Proyecto final de la materia Programación Orientada a Objetos en el cual se creó un sistema desde cero enfocado para otimizar servicios médicos UDLAP
+  Proyecto final de la materia Programación Orientada a Objetos en el cual se creó un sistema desde cero enfocado para optimizar servicios médicos UDLAP.
 
 # Intrucciones de uso del programa y sobre el repositorio
   ### El proyecto inicialmente se tiene que ejecutar desde **\src\Inicio\InterfazLogin**, en donde saltará la interfaz gráfica para iniciar sesión y de ahí se sigue automáticamente el flujo del programa
 
-  * La branch de dev es en la que se hacían todos los merge y cunado ya se revisaba el correcto funcionamiento se hacía el merge con el main.
-  * Se automatizó la actualización de las branches para que cuando los integrantes modificaran sus branches e hicieran los pull request, push y merge a dev las demás branches se actualizaran de igual forma haciendo que sea más llevadero el proceso para los integrantes optimiznaod el tiempo al reducir la cantidad de pulls que tuvieran que hacer.
-  * Los cambios del main están bloqueados para así evitar que se hiciera un cambio que on funcionara y reducir de manera significativa el riesgo general del funcionamiento del programa.
+  * La branch de dev es en la que se hacían todos los merge y cuando ya se revisaba el correcto funcionamiento, se hacía el merge con el main.
+  * Se automatizó la actualización de las branches para que cuando los integrantes modificaran sus branches e hicieran los pull request, push y merge a dev las demás branches se actualizaran de igual forma haciendo que sea más llevadero el proceso para los integrantes optimizando el tiempo al reducir la cantidad de pulls que tuvieran que hacer.
+  * Los cambios del main están bloqueados para así evitar que se hiciera un cambio que no funcionara y reducir de manera significativa el riesgo general del mal funcionamiento del programa.
 
 # Estructura del Proyecto
-  De dividó el proyecto en diferentes áreas, la cual se le asignó a cada uno de los integrantes del equipo.
+  Se dividó el proyecto en diferentes áreas, la cual se le asignó a cada uno de los integrantes del equipo.
   
 | Package               | Descripción                                                                                                                                                                                               | Integrante |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
